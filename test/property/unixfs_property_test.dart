@@ -8,13 +8,16 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_resolver.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
 import 'package:test/test.dart';
 
 import '../fuzz/_fuzz_helpers.dart';
+import '../mocks/mock_block_store.dart';
 
 void main() {
   final rng = makeRandom();
@@ -185,6 +188,69 @@ void main() {
       }
       expect(reassembled, equals(data.toList()));
     });
+
+    test(
+      'directories: links are name-sorted, Tsize is cumulative, and every '
+      'entry resolves back to its child',
+      () async {
+        for (var i = 0; i < 25; i++) {
+          final store = MockBlockStore();
+          await store.start();
+          final resolver = UnixFSPathResolver(store: store);
+
+          final entryCount = rng.nextInt(12);
+          final entries = <UnixFSDirectoryEntry>[];
+          final expectedChildTsize = <String, int>{};
+          for (var j = 0; j < entryCount; j++) {
+            final data = randomBytesRange(rng, 1, 4000);
+            final leaf = UnixFSBuilder()
+                .build(Stream.value(data.toList()))
+                .last;
+            final leafBlock = await leaf;
+            await store.putBlock(leafBlock);
+            final name = 'file_${j}_${rng.nextInt(1 << 20)}.bin';
+            entries.add(
+              UnixFSDirectoryEntry(
+                name: name,
+                cid: leafBlock.cid,
+                tsize: 0,
+              ),
+            );
+            expectedChildTsize[name] = leafBlock.data.length;
+          }
+
+          final dir = await createDirectory(store, entries);
+          expect(dir.isDirectory, isTrue);
+
+          // Links sorted lexicographically by name, unique names.
+          final names = dir.pbNode.links.map((l) => l.name).toList();
+          final sortedNames = List<String>.from(names)
+            ..sort(compareEntryNamesUtf8);
+          expect(names, equals(sortedNames));
+          expect(names.toSet().length, equals(names.length));
+
+          // Each link Tsize equals the child's cumulative DAG size.
+          for (final link in dir.pbNode.links) {
+            expect(
+              link.size.toInt(),
+              equals(expectedChildTsize[link.name]),
+            );
+            final resolved = await resolver.resolve(dir.cid, link.name);
+            expect(
+              resolved.toBytes(),
+              equals(Uint8List.fromList(link.hash)),
+            );
+          }
+
+          // Directory cumulative Tsize = dir block + all child DAGs.
+          var expected = dir.data.length;
+          for (final link in dir.pbNode.links) {
+            expected += link.size.toInt();
+          }
+          expect(await computeTsize(store, dir.cid), equals(expected));
+        }
+      },
+    );
 
     test('CIDv0 option produces CIDv0 blocks', () async {
       final data = randomBytesRange(rng, 100, 5000);

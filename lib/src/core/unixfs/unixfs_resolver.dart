@@ -146,6 +146,7 @@ class UnixFSPathResolver {
       final nextRemaining = remaining.sublist(1);
 
       if (node.isDirectory) {
+        _checkDuplicateLinkNames(node);
         final link = findLinkByName(node.pbNode.links, segment);
         if (link == null) {
           throw PathResolutionError('Path not found: $segment');
@@ -225,6 +226,21 @@ class UnixFSPathResolver {
     }
 
     return stack;
+  }
+
+  /// Enforces the UnixFS rule that a directory's link names are unique.
+  ///
+  /// The spec requires decoders to fail when two links in a directory carry
+  /// byte-for-byte identical names.
+  void _checkDuplicateLinkNames(UnixFSNode node) {
+    final seen = <String>{};
+    for (final link in node.pbNode.links) {
+      if (!seen.add(link.name)) {
+        throw PathResolutionError(
+          'Directory ${node.cid} has duplicate link name: ${link.name}',
+        );
+      }
+    }
   }
 
   bool _isHAMTSubShardLink(UnixFSNode node, dag_pb.PBLink link) {

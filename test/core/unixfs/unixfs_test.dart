@@ -38,8 +38,6 @@ void main() {
         blocks.add(block);
       }
 
-      print('DEBUG: Generated ${blocks.length} blocks for ${totalSize} bytes');
-
       // Verify block count
       // 1MB / 256KB = 4 chunks
       // 100KB is 5th chunk
