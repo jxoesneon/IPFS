@@ -1,4 +1,5 @@
 // src/core/unixfs/unixfs_node.dart
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -77,9 +78,13 @@ class UnixFSNode {
   int get serializedSize => data.length;
 
   /// For symlinks, the target path stored in the UnixFS data field.
+  ///
+  /// The target is stored as UTF-8 bytes on the wire; malformed sequences are
+  /// replaced rather than rejected so resolution can still surface a useful
+  /// error downstream.
   String? get symlinkTarget {
     if (!isSymlink) return null;
-    return String.fromCharCodes(unixfsData!.data);
+    return utf8.decode(unixfsData!.data, allowMalformed: true);
   }
 
   /// For files, the logical file size in bytes.
