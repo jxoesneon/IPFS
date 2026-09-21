@@ -20,7 +20,8 @@ import 'package:fixnum/fixnum.dart';
 /// - Raw bytes encoded as plain CBOR byte strings (no non-standard tag 45).
 /// - Canonical map key ordering (by length, then lexicographic byte order).
 /// - Big integers via CBOR tags 2 (positive) and 3 (negative).
-/// - 64-bit double-precision floats only; non-finite values are rejected.
+/// - 64-bit double-precision floats only; non-finite values are rejected and
+///   `-0.0` is normalized to `0.0` on encode.
 /// - Strict decoding by default with optional lenient mode.
 ///
 /// See also:
@@ -58,8 +59,10 @@ class EnhancedCBORHandler {
   /// - Duplicate map keys.
   /// - Indefinite-length strings, bytes, arrays, or maps.
   /// - Non-string map keys.
-  /// - Non-finite floats and unsupported simple values.
-  /// - Non-canonical integer/length encodings.
+  /// - Non-finite floats, `-0.0`, and unsupported simple values.
+  /// - Non-canonical integer/length encodings (including a non-`0xd82a`
+  ///   encoding of tag 42).
+  /// - Big-integer tags applied to values that fit in major types 0/1.
   ///
   /// In lenient mode, non-canonical integer/length encodings and out-of-order
   /// map keys are accepted, but CIDs and big integers are still decoded
@@ -329,9 +332,12 @@ class EnhancedCBORHandler {
     if (!value.isFinite) {
       throw IPLDEncodingError('Non-finite floats are not allowed in DAG-CBOR');
     }
+    // DAG-CBOR has a single canonical form for zero: -0.0 must be encoded as
+    // 0.0 (all-zero 64-bit pattern).
+    final canonical = value == 0.0 ? 0.0 : value;
     // Canonical DAG-CBOR always uses 64-bit double precision.
     writer.addByte(0xfb);
-    _writeFloat64(writer, value);
+    _writeFloat64(writer, canonical);
   }
 
   static void _encodeString(_CborWriter writer, String value) {
@@ -369,35 +375,61 @@ class EnhancedCBORHandler {
       throw IPLDEncodingError('Map exceeds maximum size');
     }
 
-    // Sort keys canonically: by UTF-8 length, then lexicographic byte order.
-    entries.sort((a, b) {
-      final aBytes = utf8.encode(a.key);
-      final bBytes = utf8.encode(b.key);
-      if (aBytes.length != bBytes.length) {
-        return aBytes.length.compareTo(bBytes.length);
+    // Pre-encode keys so ordering and duplicate detection operate on the
+    // exact bytes that will be emitted (major type 3 payload).
+    final encodedKeys = entries
+        .map((entry) => Uint8List.fromList(utf8.encode(entry.key)))
+        .toList();
+
+    // Sort keys canonically: by encoded length first, then bytewise
+    // lexicographic order (RFC 8949 deterministic encoding / DAG-CBOR spec).
+    final order = List<int>.generate(entries.length, (i) => i)
+      ..sort(
+        (a, b) => _compareCanonicalKeyOrder(encodedKeys[a], encodedKeys[b]),
+      );
+
+    // Duplicate keys cannot be represented canonically; reject them rather
+    // than emitting a map that a strict decoder would refuse.
+    for (var i = 1; i < order.length; i++) {
+      if (_compareCanonicalKeyOrder(
+            encodedKeys[order[i - 1]],
+            encodedKeys[order[i]],
+          ) ==
+          0) {
+        throw IPLDEncodingError('Duplicate map key: ${entries[order[i]].key}');
       }
-      for (var i = 0; i < aBytes.length; i++) {
-        final cmp = aBytes[i].compareTo(bBytes[i]);
-        if (cmp != 0) return cmp;
-      }
-      return 0;
-    });
+    }
 
     _encodeLength(writer, 5, entries.length);
-    for (final entry in entries) {
-      _encodeString(writer, entry.key);
-      _encodeNode(writer, entry.value, options, depth + 1);
+    for (final index in order) {
+      _encodeLength(writer, 3, encodedKeys[index].length);
+      writer.addBytes(encodedKeys[index]);
+      _encodeNode(writer, entries[index].value, options, depth + 1);
     }
   }
 
   static void _encodeLink(_CborWriter writer, IPLDLink link) {
     Uint8List cidBytes;
     if (link.version == 0) {
+      // A CIDv0 is a bare sha2-256 multihash: 0x12 0x20 + 32-byte digest.
+      if (link.multihash.length != 34 ||
+          link.multihash[0] != 0x12 ||
+          link.multihash[1] != 0x20) {
+        throw IPLDEncodingError(
+          'CIDv0 links must be a 34-byte sha2-256 multihash',
+        );
+      }
       cidBytes = Uint8List.fromList(link.multihash);
+    } else if (link.version == 1) {
+      try {
+        final mh = Multihash.decode(Uint8List.fromList(link.multihash));
+        final cid = CID.v1(link.codec, mh);
+        cidBytes = cid.toBytes();
+      } catch (e) {
+        throw IPLDEncodingError('Failed to encode CIDv1 link: $e');
+      }
     } else {
-      final mh = Multihash.decode(Uint8List.fromList(link.multihash));
-      final cid = CID.v1(link.codec, mh);
-      cidBytes = cid.toBytes();
+      throw IPLDEncodingError('Unsupported CID version: ${link.version}');
     }
 
     // Tag 42 with the multibase identity prefix 0x00.
@@ -550,7 +582,11 @@ class EnhancedCBORHandler {
         }
         return _makeFloatNode(_readFloat32(reader));
       case 27:
-        return _makeFloatNode(_readFloat64(reader));
+        final value = _readFloat64(reader);
+        if (strict && _isNegativeZero(value)) {
+          throw IPLDDecodingError('Negative zero is not allowed in DAG-CBOR');
+        }
+        return _makeFloatNode(value);
       default:
         throw IPLDDecodingError('Unsupported CBOR simple/float type');
     }
@@ -591,10 +627,14 @@ class EnhancedCBORHandler {
     if (!value.isFinite) {
       throw IPLDDecodingError('Non-finite floats are not allowed in DAG-CBOR');
     }
+    // Normalize -0.0 (accepted only in lenient mode, e.g. via 16/32-bit
+    // encodings) to the canonical 0.0 so re-encoding is canonical.
     return IPLDNode()
       ..kind = Kind.FLOAT
-      ..floatValue = value;
+      ..floatValue = (value == 0.0 ? 0.0 : value);
   }
+
+  static bool _isNegativeZero(double value) => value == 0.0 && value.isNegative;
 
   static IPLDNode _makeListNode(
     _CborReader reader,
@@ -685,6 +725,13 @@ class EnhancedCBORHandler {
         throw IPLDDecodingError('Non-minimal big-integer byte string');
       }
       final value = _minimalBytesToBigInt(inner.bytesValue);
+      // Values that fit in major type 0 must not use tag 2: the tag is
+      // superfluous and therefore non-canonical.
+      if (strict && value <= _maxUnsignedInt64) {
+        throw IPLDDecodingError(
+          'Tag 2 used for a value representable without a tag',
+        );
+      }
       return _makeIntNode(value);
     }
     if (tag == BigInt.from(3)) {
@@ -696,6 +743,13 @@ class EnhancedCBORHandler {
         throw IPLDDecodingError('Non-minimal big-integer byte string');
       }
       final n = _minimalBytesToBigInt(inner.bytesValue);
+      // Tag 3 represents -(1 + n); values with n <= 2^64 - 1 fit in major
+      // type 1 and must not use the tag.
+      if (strict && n <= _maxUnsignedInt64) {
+        throw IPLDDecodingError(
+          'Tag 3 used for a value representable without a tag',
+        );
+      }
       // CBOR tag 3 represents -(1 + n).
       return _makeIntNode(-(n + BigInt.one));
     }
@@ -728,6 +782,9 @@ class EnhancedCBORHandler {
   /// in the dart_ipfs codebase.
   static BigInt _decodeInternalBigInt(List<int> bytes) {
     if (bytes.isEmpty) return BigInt.zero;
+    if (bytes[0] != 0 && bytes[0] != 1) {
+      throw IPLDEncodingError('Malformed big-integer sign byte: ${bytes[0]}');
+    }
     final isNegative = bytes[0] == 1;
     final value = _minimalBytesToBigInt(bytes.sublist(1));
     return isNegative ? -value : value;
