@@ -57,8 +57,9 @@ class KuboClient with PubsubRpc {
   }
 
   /// `POST /api/v0/ping?arg=<peerId>` — streams `{Success, Time, Text}`
-  /// objects. Returns the RTT in nanoseconds of the first successful
-  /// response; throws when no success arrives within [timeout].
+  /// objects: a `PING <peer>` header, one entry per pong (`Time` is the
+  /// RTT in nanoseconds), and an "Average latency" summary. Returns the
+  /// first real pong's RTT; throws when no pong arrives within 30s.
   Future<int> pingPeer(String peerId, {int count = 1}) async {
     final uri = Uri.http('$host:$port', '/api/v0/ping', {
       'arg': peerId,
@@ -75,7 +76,7 @@ class KuboClient with PubsubRpc {
           'Kubo RPC ping returned ${response.statusCode}: $body',
         );
       }
-      String? failureText;
+      final texts = <String>[];
       await for (final line
           in response
               .transform(utf8.decoder)
@@ -84,11 +85,15 @@ class KuboClient with PubsubRpc {
         final trimmed = line.trim();
         if (trimmed.isEmpty) continue;
         final json = jsonDecode(trimmed) as Map<String, dynamic>;
-        if (json['Success'] == true) return (json['Time'] as num).toInt();
-        failureText ??= json['Text'] as String?;
+        final text = json['Text'] as String? ?? '';
+        if (text.isNotEmpty) texts.add(text);
+        // A pong carries a positive RTT; header/summary lines have Time 0.
+        if (json['Success'] == true && (json['Time'] as num? ?? 0) > 0) {
+          return (json['Time'] as num).toInt();
+        }
       }
       throw HttpException(
-        'Kubo ping to $peerId produced no success${failureText != null ? ': $failureText' : ''}',
+        'Kubo ping to $peerId produced no pong (stream: $texts)',
       );
     } finally {
       client.close();

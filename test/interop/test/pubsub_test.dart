@@ -72,8 +72,22 @@ void main() {
       final dartPeerId = (await dartIpfs.id())['ID'] as String;
       final heliaPeerId = (await helia.id())['ID'] as String;
 
-      final dartPeers = await dartIpfs.pubsubPeers(topic);
-      final heliaPeers = await helia.pubsubPeers(topic);
+      // Subscription announcements propagate through gossipsub's peer
+      // tracking asynchronously — poll both directions rather than
+      // asserting a single snapshot.
+      List<String> dartPeers = const [];
+      List<String> heliaPeers = const [];
+      final deadline = DateTime.now().add(const Duration(seconds: 45));
+      while (DateTime.now().isBefore(deadline) &&
+          !(dartPeers.contains(heliaPeerId) &&
+              heliaPeers.contains(dartPeerId))) {
+        dartPeers = await dartIpfs.pubsubPeers(topic);
+        heliaPeers = await helia.pubsubPeers(topic);
+        if (!(dartPeers.contains(heliaPeerId) &&
+            heliaPeers.contains(dartPeerId))) {
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+        }
+      }
 
       expect(
         dartPeers,

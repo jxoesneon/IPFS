@@ -73,7 +73,7 @@ jobs:
           KUBO_VERSION: ${{ steps.kubo_version.outputs.KUBO_VERSION }}
         run: |
           docker compose -f test/interop/docker-compose.yml run --rm test-runner \
-            dart test --enable-experiment=native-assets --tags p0 --reporter expanded
+            dart test --enable-experiment=native-assets --preset interop --tags p0 --reporter expanded
 
       - name: Collect container logs on failure
         if: failure()
@@ -153,7 +153,7 @@ jobs:
           KUBO_VERSION: ${{ steps.kubo_version.outputs.KUBO_VERSION }}
         run: |
           docker compose -f test/interop/docker-compose.yml run --rm test-runner \
-            dart test --enable-experiment=native-assets --tags p1 --reporter expanded
+            dart test --enable-experiment=native-assets --preset interop --tags p1 --reporter expanded
 
       - name: Collect container logs
         if: always()
