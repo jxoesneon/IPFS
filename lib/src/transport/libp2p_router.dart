@@ -112,6 +112,10 @@ class Libp2pRouter implements RouterInterface {
   final Map<String, int> _sessionStreamQueueDepth = {};
   static const int _maxSessionStreamQueueDepth = 64;
 
+  /// Deadline for a single write on a session stream. Generous for LAN
+  /// payloads but bounded so a stalled reader cannot wedge the queue.
+  static const Duration _sessionStreamWriteTimeout = Duration(seconds: 30);
+
   // DHT routing table for distance-based peer selection
   DHTRoutingTable? _dhtRoutingTable;
 
@@ -593,6 +597,7 @@ class Libp2pRouter implements RouterInterface {
         } catch (_) {}
       }
       _sessionStreamWrites.clear();
+      _sessionStreamQueueDepth.clear();
 
       if (_host != null) {
         await _host!.close().timeout(
@@ -827,7 +832,11 @@ class Libp2pRouter implements RouterInterface {
     for (var attempt = 0; attempt < 2; attempt++) {
       final stream = await _sessionStreamFor(key, peerIdStr, protocol);
       try {
-        await stream.write(payload);
+        // Bounded write: without a deadline a peer that stalls its read
+        // window wedges this queue slot (and the whole serialized chain
+        // behind it) forever — go-libp2p-pubsub uses a write deadline for
+        // exactly this reason.
+        await stream.write(payload).timeout(_sessionStreamWriteTimeout);
         return;
       } catch (e) {
         _logger.warning(
