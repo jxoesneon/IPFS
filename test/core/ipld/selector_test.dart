@@ -1,4 +1,3 @@
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';

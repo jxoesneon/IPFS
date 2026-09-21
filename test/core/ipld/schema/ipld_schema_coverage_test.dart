@@ -342,7 +342,9 @@ void main() {
     });
 
     test('validate throws for missing kind in schema', () async {
-      final schema = IPLDSchema('test', {'invalidType': {}});
+      final schema = IPLDSchema('test', {
+        'invalidType': <String, dynamic>{},
+      });
 
       final node = IPLDNode()
         ..kind = Kind.STRING
