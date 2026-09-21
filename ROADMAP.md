@@ -67,8 +67,8 @@ dart_ipfs **v1.16.2** is **multi-platform production ready** with:
 - [x] `IpfsBuilder<T>` & `IpfsStreamBuilder<T>`: Reactive widgets binding content-addressed streams to Flutter widgets.
 - [x] `IpfsText`: Declarative text widget.
 - [x] `IpfsCacheManager`: Multi-tier in-memory LRU bitmap cache.
-- [ ] Local-First CAR State Sync: Drift / Hive integration templates for offline-first mobile apps.
-- [ ] Production sample apps: "Offline-First Mobile Photo Vault" and "Encrypted P2P PubSub Mesh".
+- [x] Local-First CAR State Sync: Drift / Hive integration templates for offline-first mobile apps.
+- [x] Production sample apps: "Offline-First Mobile Photo Vault" and "Encrypted P2P PubSub Mesh".
 
 ---
 

@@ -8,6 +8,7 @@ Welcome to the documentation for **dart_ipfs**, a production-ready IPFS implemen
 - [Architecture](ARCHITECTURE.md)
 - [WebRTC Transport](../README.md#networking--nat-traversal)
 - [Protobuf 6.0.0 Compatibility](PROTOBUF_COMPATIBILITY.md)
+- [Local-First CAR State Sync](LOCAL_FIRST_CAR_SYNC.md)
 - [Roadmap](../ROADMAP.md)
 
 ## v2.0+ Parity & Superiority Specifications
