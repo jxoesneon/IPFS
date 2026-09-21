@@ -2,8 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed
+- **DAG-PB canonical field order**: `PBNode` encodes `data` on field 1 and `links` on field 2 per the merkledag spec (they were previously swapped). Blocks now hash to the same CIDs as Kubo for identical content, and Kubo-encoded nodes decode correctly instead of surfacing raw dag-pb bytes through `cat`.
+- **Kademlia wire interop**: DHT traffic now uses raw protobuf request/response on a single stream, the form Kubo and Helia speak, instead of the internal envelope framing. Inbound packets fall back to a raw parse when the envelope's inner payload does not decode, so raw kad requests are no longer silently dropped. All outbound paths offer `/ipfs/lan/kad/1.0.0` first with `/ipfs/kad/1.0.0` fallback for private-network peers.
+- **Identify advertises dialable addresses**: `Libp2pRouter.listeningAddresses` returns the host's resolved interface addresses instead of the `/ip4/0.0.0.0` wildcard, so peers (and Kubo's bitswap broadcast targeting) see a usable address.
+- **IPNS `self` is the node identity**: `name/publish` resolves `self` to the libp2p identity keypair derived from the identity seed instead of consulting the encrypted keystore, matching Kubo — publishing works without an `unlockKeystore` call.
+- **Binary-safe pubsub**: `publishData` carries raw bytes end-to-end; the router dispatches empty length-prefixed frames on session-stream protocols so the gossipsub hello is delivered and dart↔dart peers negotiate meshsub capability.
+
 ### Added
 - **Configurable public gateway**: `BitswapConfig.publicGatewayUrl` (default `https://ipfs.io/ipfs`) controls which gateway `GatewayMode.public` fetches through, allowing alternative public gateways and hermetic gateway tests.
+
+### Internal
+- **Interop CI actually selects interop tests**: the P0/P1 jobs run explicit file lists (tag filters did not compose with the interop preset, so the jobs previously ran the whole suite or nothing), and the P0/P1 budgets were raised now that the suites execute for real.
 
 ## [1.17.0] - 2026-09-19
 
