@@ -1,0 +1,14 @@
+name: photo_vault
+description: "Offline-First Mobile Photo Vault sample for dart_ipfs."
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dependencies:
+  dart_ipfs:
+    path: ../../
+
+dev_dependencies:
+  lints: ^3.0.0

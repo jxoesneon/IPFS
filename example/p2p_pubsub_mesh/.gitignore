@@ -1,0 +1,7 @@
+.dart_tool/
+pubspec.lock
+
+# Runtime node data produced by `dart run bin/main.dart`
+ipfs_data/
+ipfs_keystore
+*.log

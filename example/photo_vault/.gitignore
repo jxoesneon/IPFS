@@ -1,0 +1,7 @@
+.dart_tool/
+pubspec.lock
+
+# Runtime artifacts produced by `dart run bin/main.dart`
+.photo_vault/
+blocks/
+*.log
