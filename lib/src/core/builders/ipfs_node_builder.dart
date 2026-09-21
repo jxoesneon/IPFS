@@ -302,6 +302,15 @@ class IPFSNodeBuilder {
     );
 
     if (_container.isRegistered(DHTHandler)) {
+      // `self` is the node identity in Kubo, so derive its keypair from the
+      // router's identity seed — name/publish then works without unlocking
+      // the encrypted keystore.
+      SimpleKeyPair? selfKeyPair;
+      final ipnsSeed = router is Libp2pRouter ? router.identitySeed : null;
+      if (ipnsSeed != null) {
+        selfKeyPair = await Ed25519Signer().keyPairFromSeed(ipnsSeed);
+      }
+
       final ipnsHandler = IPNSHandler(
         _config,
         _container.get<SecurityManager>(),
@@ -309,6 +318,7 @@ class IPFSNodeBuilder {
         _container.isRegistered(PubSubHandler)
             ? _container.get<PubSubHandler>()
             : null,
+        selfKeyPair,
       );
       _container.registerSingleton(ipnsHandler);
       _container.get<LifecycleManager>().register(ipnsHandler);

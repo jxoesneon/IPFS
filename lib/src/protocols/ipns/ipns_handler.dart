@@ -32,6 +32,7 @@ class IPNSHandler implements ILifecycle {
     this._securityManager,
     this._dhtHandler,
     this._pubsubHandler,
+    this._selfKeyPair,
   ]) : _config = config,
        _cache = <String, _CacheEntry>{},
        _maxCacheSize = config.ipnsCacheSize,
@@ -45,6 +46,11 @@ class IPNSHandler implements ILifecycle {
   final dynamic _securityManager;
   final dynamic _dhtHandler;
   final dynamic _pubsubHandler;
+
+  /// The node's own identity keypair. In Kubo the `self` key IS the node
+  /// identity, so `publish(keyName: 'self')` resolves to this key without
+  /// requiring an unlocked keystore.
+  final SimpleKeyPair? _selfKeyPair;
 
   final Map<String, _CacheEntry> _cache;
   final int _maxCacheSize;
@@ -318,21 +324,29 @@ class IPNSHandler implements ILifecycle {
 
     final resolvedKeyName = keyName ?? 'self';
 
-    if (_securityManager == null) {
-      throw StateError('SecurityManager not available');
-    }
-
     final SimpleKeyPair keyPair;
-    try {
-      keyPair =
-          await _securityManager.getSecureKey(resolvedKeyName) as SimpleKeyPair;
-    } catch (e) {
-      // Fail loudly: publishing under a throwaway key would succeed locally
-      // but produce an IPNS name nobody can reach, so the publish must
-      // surface the keystore failure instead.
-      throw StateError(
-        'Keystore is locked or key $resolvedKeyName not found: $e',
-      );
+    final selfKeyPair = _selfKeyPair;
+    if (resolvedKeyName == 'self' && selfKeyPair != null) {
+      // `self` is the node identity, not a keystore entry — matching Kubo,
+      // where name/publish signs with the node's own private key.
+      keyPair = selfKeyPair;
+    } else {
+      final securityManager = _securityManager;
+      if (securityManager == null) {
+        throw StateError('SecurityManager not available');
+      }
+      try {
+        keyPair =
+            await securityManager.getSecureKey(resolvedKeyName)
+                as SimpleKeyPair;
+      } catch (e) {
+        // Fail loudly: publishing under a throwaway key would succeed locally
+        // but produce an IPNS name nobody can reach, so the publish must
+        // surface the keystore failure instead.
+        throw StateError(
+          'Keystore is locked or key $resolvedKeyName not found: $e',
+        );
+      }
     }
     return publishWithKeyPair(CID.decode(cid), keyPair);
   }

@@ -233,4 +233,101 @@ void main() {
       await handler.stop();
     });
   });
+
+  group('IPNSHandler.publish self', () {
+    test(
+      'uses the node identity keypair without consulting the keystore',
+      () async {
+        final stored = <String, Value>{};
+        final dht = _CapturingDHTHandler(stored);
+        final selfKeyPair = await Ed25519().newKeyPair();
+        final handler = IPNSHandler(
+          IPFSConfig(offline: true),
+          _ThrowingSecurityManager(),
+          dht,
+          null,
+          selfKeyPair,
+        );
+        await handler.start();
+
+        final block = await Block.fromData(
+          Uint8List.fromList(utf8.encode('self publish')),
+        );
+        final name = await handler.publish(block.cid.encode());
+
+        final pub = await selfKeyPair.extractPublicKey();
+        expect(name, deriveIpnsName(Uint8List.fromList(pub.bytes)));
+        expect(stored, isNotEmpty);
+
+        await handler.stop();
+      },
+    );
+
+    test('named keys still resolve through the security manager', () async {
+      final handler = IPNSHandler(
+        IPFSConfig(offline: true),
+        _ThrowingSecurityManager(),
+        _StubDHTHandler(Value(Uint8List(0))),
+        null,
+        await Ed25519().newKeyPair(),
+      );
+      await handler.start();
+
+      final block = await Block.fromData(Uint8List.fromList([1]));
+      await expectLater(
+        handler.publish(block.cid.encode(), keyName: 'other'),
+        throwsA(isA<StateError>()),
+      );
+
+      await handler.stop();
+    });
+  });
+}
+
+/// IDHTHandler stub that records putValue calls.
+class _CapturingDHTHandler implements IDHTHandler {
+  _CapturingDHTHandler(this.stored);
+
+  final Map<String, Value> stored;
+
+  @override
+  Future<void> start() async {}
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> provideAll(List<CID> cids) async {}
+
+  @override
+  Future<Value> getValue(Key key) async =>
+      stored[key.bytes.toString()] ?? Value(Uint8List(0));
+
+  @override
+  Future<List<V_PeerInfo>> findPeer(PeerId id) async => [];
+
+  @override
+  Future<void> provide(CID cid) async {}
+
+  @override
+  Future<List<V_PeerInfo>> findProviders(CID cid) async => [];
+
+  @override
+  Future<void> putValue(Key key, Value value) async {
+    stored[key.bytes.toString()] = value;
+  }
+
+  @override
+  Future<void> handleRoutingTableUpdate(V_PeerInfo peer) async {}
+
+  @override
+  Future<void> handleProvideRequest(CID cid, PeerId provider) async {}
+}
+
+/// SecurityManager stand-in: every keystore access throws, so any code path
+/// that consults it fails loudly.
+class _ThrowingSecurityManager {
+  Future<SimpleKeyPair> getSecureKey(String keyName) async {
+    throw StateError('keystore must not be consulted');
+  }
 }
