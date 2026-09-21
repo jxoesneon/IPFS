@@ -137,6 +137,27 @@ If you must modify a dependency (e.g., `p2plib`) locally:
 3. **CRITICAL**: Remove the `.git` directory from the vendored package (`rm -rf packages/p2plib/.git`).
 4. Commit the entire folder as source code.
 
+### 1a. The `ipfs_libp2p` Fork
+
+The project depends on `ipfs_libp2p` (a `dart_libp2p` fork published to
+pub.dev) rather than upstream directly. The fork carries changes upstream
+has not absorbed: stream write deadlines, respond-first close semantics,
+session-stream support, and assorted interop fixes that Kubo/Helia
+require. Upstream `dart_libp2p` 1.x is **not** a drop-in replacement.
+
+Maintenance cadence:
+
+- **On every upstream `dart_libp2p` release**: review the upstream diff
+  against the fork and selectively merge anything relevant (protocol
+  fixes, resilience, spec compliance). Keep a short running list of
+  fork-only deltas so the review stays cheap.
+- **Before each `dart_ipfs` release**: confirm the pinned `ipfs_libp2p`
+  floor resolves on pub.dev and that no unmerged upstream fix affects a
+  code path this release touches.
+- **Periodically**: propose fork deltas upstream where they are generic
+  (deadlines, framing bugs) so the divergence shrinks over time. If
+  upstream absorbs everything, retire the fork.
+
 ### 2. CI/CD Safety
 - **Never retag** an existing version on remote if CI/CD has already run. Bump the patch version instead (e.g., `v1.2.0` -> `v1.2.1`).
 - Ensure `pubspec.yaml` dependencies are strictly versioned or overridden correctly to prevent build failures on fresh clones.
