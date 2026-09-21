@@ -1,6 +1,8 @@
 // lib/src/transport/dns_multiaddr_resolver_io.dart
 import 'dart:io';
 
+import 'package:meta/meta.dart';
+
 import '../utils/logger.dart';
 
 final _logger = Logger('DnsMultiaddrResolver');
@@ -9,17 +11,32 @@ final _logger = Logger('DnsMultiaddrResolver');
 /// bootstrap/service name do not pay a DNS round trip every connect.
 final Map<String, (List<InternetAddress>, DateTime)> _lookupCache = {};
 const _lookupCacheTtl = Duration(seconds: 60);
-const _lookupCacheMaxEntries = 1024;
+
+/// Maximum number of cached host lookups; mutable so tests can exercise
+/// eviction without a thousand real DNS round trips.
+@visibleForTesting
+int dnsLookupCacheMaxEntries = 1024;
+
+/// Overrides [InternetAddress.lookup] in tests so family-mismatch and
+/// failure paths can be exercised without real DNS answers.
+@visibleForTesting
+Future<List<InternetAddress>> Function(String host)? dnsLookupOverride;
+
+/// Clears the lookup cache. Intended for tests that manipulate
+/// [dnsLookupOverride] or [dnsLookupCacheMaxEntries].
+@visibleForTesting
+void clearDnsLookupCache() => _lookupCache.clear();
 
 Future<List<InternetAddress>> _lookup(String host) {
   final cached = _lookupCache[host];
   if (cached != null && cached.$2.isAfter(DateTime.now())) {
     return Future.value(cached.$1);
   }
-  return InternetAddress.lookup(host).then((results) {
+  final lookup = dnsLookupOverride ?? InternetAddress.lookup;
+  return lookup(host).then((results) {
     // Hosts are peer-supplied — bound the cache so a swarm feeding us
     // unique names cannot grow it forever. Insertion-ordered eviction.
-    while (_lookupCache.length >= _lookupCacheMaxEntries) {
+    while (_lookupCache.length >= dnsLookupCacheMaxEntries) {
       _lookupCache.remove(_lookupCache.keys.first);
     }
     _lookupCache[host] = (results, DateTime.now().add(_lookupCacheTtl));

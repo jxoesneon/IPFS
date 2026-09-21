@@ -258,12 +258,22 @@ void main() {
     test(
       'drops publishes sourced from a peer we are not connected to',
       () async {
-        await client.start();
+        // Lax mode so the unsigned test message survives signature
+        // screening and reaches the connectivity check.
+        final laxClient = PubSubClient(
+          mockRouter,
+          localPeerId,
+          strictAuthentication: false,
+        );
+        addTearDown(() async {
+          if (laxClient.isStarted) await laxClient.stop();
+        });
+        await laxClient.start();
         final handler = handlerFor(_meshsub);
         when(mockRouter.isConnectedPeer(kuboPeer)).thenReturn(false);
 
         var delivered = false;
-        final sub = client.messagesStream.listen((_) => delivered = true);
+        final sub = laxClient.messagesStream.listen((_) => delivered = true);
         addTearDown(sub.cancel);
 
         deliverGossipSub(

@@ -1644,6 +1644,19 @@ void main() {
       expect(response.statusCode, equals(500));
     });
 
+    test('handlePubsubPublish rejects an oversized body', () async {
+      // Bodies are capped at 1 MiB; an oversized payload is a client
+      // error, not a node failure.
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/pub?arg=topic-a'),
+        body: Uint8List(1024 * 1024 + 1),
+      );
+      final response = await handlers.handlePubsubPublish(request);
+      expect(response.statusCode, equals(400));
+      verifyNever(mockNode.publishData(any, any));
+    });
+
     test('handlePubsubSubscribe decodes multibase base64url arg', () async {
       final controller = StreamController<PubSubMessage>();
       when(mockNode.pubsubMessages).thenAnswer((_) => controller.stream);
@@ -1841,6 +1854,49 @@ void main() {
         await controller.close();
       },
     );
+
+    test(
+      'handlePubsubSubscribe swallows unsubscribe failures on disconnect',
+      () async {
+        final controller = StreamController<PubSubMessage>();
+        when(mockNode.pubsubMessages).thenAnswer((_) => controller.stream);
+        when(mockNode.pubsubLs()).thenReturn(const []);
+        when(mockNode.unsubscribe('topic-a')).thenThrow(Exception('gone'));
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/pubsub/sub?arg=topic-a'),
+        );
+        final response = await handlers.handlePubsubSubscribe(request);
+        expect(response.statusCode, equals(200));
+
+        // The cleanup path must not propagate a failed unsubscribe — the
+        // client is already gone.
+        await response.read().listen((_) {}).cancel();
+        verify(mockNode.unsubscribe('topic-a')).called(1);
+        await controller.close();
+      },
+    );
+
+    test('handlePubsubLs surfaces node errors', () async {
+      when(mockNode.pubsubLs()).thenThrow(Exception('ls failed'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/ls'),
+      );
+      final response = await handlers.handlePubsubLs(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handlePubsubPeers surfaces node errors', () async {
+      when(mockNode.pubsubPeers('topic-a')).thenThrow(Exception('peers'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/peers?arg=topic-a'),
+      );
+      final response = await handlers.handlePubsubPeers(request);
+      expect(response.statusCode, equals(500));
+    });
 
     test('handlePubsubLs returns the topic list', () async {
       when(mockNode.pubsubLs()).thenReturn(['a', 'b']);

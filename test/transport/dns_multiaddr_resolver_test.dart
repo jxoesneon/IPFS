@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dart_ipfs/src/transport/dns_multiaddr_resolver_io.dart';
 import 'package:test/test.dart';
 
@@ -25,19 +27,52 @@ void main() {
     });
 
     test('preserves trailing protocol segments', () async {
-      final result = await resolveDnsMultiAddr(
-        '/dns4/localhost/tcp/4001/ws',
-      );
+      final result = await resolveDnsMultiAddr('/dns4/localhost/tcp/4001/ws');
       expect(result, matches(r'^/ip4/\d+\.\d+\.\d+\.\d+/tcp/4001/ws$'));
     });
 
     test('throws ArgumentError when the host cannot be resolved', () async {
       expect(
-        () => resolveDnsMultiAddr(
-          '/dns4/nonexistent.invalid./tcp/4001',
-        ),
+        () => resolveDnsMultiAddr('/dns4/nonexistent.invalid./tcp/4001'),
         throwsArgumentError,
       );
+    });
+
+    test('dns6 throws when the host has no IPv6 address', () async {
+      dnsLookupOverride = (host) async => [InternetAddress('127.0.0.1')];
+      clearDnsLookupCache();
+      addTearDown(() {
+        dnsLookupOverride = null;
+        clearDnsLookupCache();
+      });
+
+      expect(
+        () => resolveDnsMultiAddr('/dns6/v4only.test/tcp/4001'),
+        throwsArgumentError,
+      );
+    });
+
+    test('the lookup cache evicts the oldest entry at capacity', () async {
+      var lookups = 0;
+      dnsLookupOverride = (host) async {
+        lookups++;
+        return [InternetAddress('10.0.0.1')];
+      };
+      clearDnsLookupCache();
+      final priorMax = dnsLookupCacheMaxEntries;
+      dnsLookupCacheMaxEntries = 1;
+      addTearDown(() {
+        dnsLookupOverride = null;
+        dnsLookupCacheMaxEntries = priorMax;
+        clearDnsLookupCache();
+      });
+
+      await resolveDnsMultiAddr('/dns4/a.test/tcp/1');
+      await resolveDnsMultiAddr('/dns4/b.test/tcp/1');
+      // With the cap at 1, caching b.test evicted a.test — resolving it
+      // again is a third lookup rather than a cache hit.
+      await resolveDnsMultiAddr('/dns4/a.test/tcp/1');
+      expect(lookups, equals(3));
     });
   });
 }
