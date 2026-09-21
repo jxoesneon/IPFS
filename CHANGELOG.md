@@ -8,8 +8,11 @@
 - **Identify advertises dialable addresses**: `Libp2pRouter.listeningAddresses` returns the host's resolved interface addresses instead of the `/ip4/0.0.0.0` wildcard, so peers (and Kubo's bitswap broadcast targeting) see a usable address.
 - **IPNS `self` is the node identity**: `name/publish` resolves `self` to the libp2p identity keypair derived from the identity seed instead of consulting the encrypted keystore, matching Kubo — publishing works without an `unlockKeystore` call.
 - **Binary-safe pubsub**: `publishData` carries raw bytes end-to-end; the router dispatches empty length-prefixed frames on session-stream protocols so the gossipsub hello is delivered and dart↔dart peers negotiate meshsub capability.
+- **`pubsub/sub` backpressure**: messages are dropped for a paused subscriber instead of accumulating unboundedly in the response buffer — pubsub delivery is real-time and lossy by design.
+- **Daemon logs reach collectors**: the daemon honors `IPFS_LOG_STDOUT`/`IPFS_LOG_LEVEL`, and the log writer appends via a persistent sink instead of truncating the log file on every write.
 
 ### Added
+- **Kubo-compatible pubsub RPC endpoints**: `POST /api/v0/pubsub/pub`, `/sub`, `/ls`, and `/peers` with the Kubo wire shape (multibase `u`-prefixed binary fields, NDJSON streaming subscriptions).
 - **Configurable public gateway**: `BitswapConfig.publicGatewayUrl` (default `https://ipfs.io/ipfs`) controls which gateway `GatewayMode.public` fetches through, allowing alternative public gateways and hermetic gateway tests.
 
 ### Internal
