@@ -22,37 +22,13 @@ import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
 import 'dht_client_coverage_test.mocks.dart';
 
-/// Mocks [router].sendMessage by echoing the captured request id back inside a
-/// [DHTEnvelope] so the DHT client's request/response correlation can match
-/// the response to the outstanding request.
-void _mockEnvelopeResponse(
-  MockRouterInterface router,
-  String srcPeerId,
-  kad.Message response,
-) {
-  final capturedHandlers = verify(
-    router.registerProtocolHandler(any, captureAny),
-  ).captured;
-  final lastHandler = capturedHandlers.last as void Function(NetworkPacket);
+/// Mocks the same-stream request/response exchange: [router].sendRequest
+/// returns [response] encoded as raw kad protobuf — the wire form every
+/// libp2p-kad-dht implementation speaks.
+void _mockRawResponse(MockRouterInterface router, kad.Message response) {
   when(
-    router.sendMessage(any, any, protocolId: anyNamed('protocolId')),
-  ).thenAnswer((invocation) async {
-    final dst = invocation.positionalArguments[0] as String;
-    final data = invocation.positionalArguments[1] as Uint8List;
-    final envelope = DHTEnvelope.tryParse(data);
-    if (envelope == null) return;
-    Future<void>.delayed(const Duration(milliseconds: 1), () {
-      lastHandler(
-        NetworkPacket(
-          srcPeerId: dst.isNotEmpty ? dst : srcPeerId,
-          datagram: DHTEnvelope(
-            requestId: envelope.requestId,
-            payload: response.writeToBuffer(),
-          ).toBytes(),
-        ),
-      );
-    });
-  });
+    router.sendRequest(any, any, any),
+  ).thenAnswer((invocation) async => response.writeToBuffer());
 }
 
 @GenerateNiceMocks([
@@ -173,36 +149,24 @@ void main() {
       expect(result, isFalse);
     });
 
-    test(
-      'sendMessageRaw throws TimeoutException when no response arrives',
-      () async {
-        // A tiny requestTimeout makes the pending-request expiry fire quickly.
-        final fastConfig = IPFSConfig(
-          dht: const DHTConfig(requestTimeout: Duration(milliseconds: 50)),
-        );
-        when(mockNetworkHandler.config).thenReturn(fastConfig);
+    test('sendMessageRaw throws when both kad variants fail', () async {
+      await client.initialize();
 
-        final timeoutClient = DHTClient(
-          networkHandler: mockNetworkHandler,
-          router: mockRouter,
-        );
-        await timeoutClient.initialize();
+      // Fire-and-forget raw send: when neither kad protocol negotiates, the
+      // call must surface the failure rather than hang awaiting a response
+      // that ADD_PROVIDER never produces.
+      when(
+        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+      ).thenThrow(Exception('no protocol'));
 
-        // The send succeeds but the peer never answers: the completer must
-        // expire via onTimeout, drop the pending request, and throw.
-        when(
-          mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
-        ).thenAnswer((_) async {});
-
-        final peer = PeerId.fromBase58(
-          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
-        );
-        await expectLater(
-          timeoutClient.sendMessageRaw(peer, Uint8List.fromList([1, 2, 3])),
-          throwsA(isA<TimeoutException>()),
-        );
-      },
-    );
+      final peer = PeerId.fromBase58(
+        'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+      );
+      await expectLater(
+        client.sendMessageRaw(peer, Uint8List.fromList([1, 2, 3])),
+        throwsA(anything),
+      );
+    });
 
     test('listsEqual', () {
       expect(client.listsEqual([1, 2], [1, 2]), isTrue);
@@ -232,7 +196,7 @@ void main() {
             ..addrs.add(libp2p.MultiAddr('/ip4/127.0.0.1/tcp/4001').toBytes()),
         );
 
-      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+      _mockRawResponse(mockRouter, responseMsg);
 
       final providers = await client.findProviders(
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
@@ -331,7 +295,7 @@ void main() {
       final responseMsg = kad.Message()
         ..type = kad.Message_MessageType.ADD_PROVIDER;
 
-      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+      _mockRawResponse(mockRouter, responseMsg);
 
       await client.addProvider(
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
@@ -352,7 +316,7 @@ void main() {
         ..type = kad.Message_MessageType.GET_VALUE
         ..record = (dht_proto.Record()..value = Uint8List.fromList([1, 2, 3]));
 
-      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+      _mockRawResponse(mockRouter, responseMsg);
 
       final result = await client.checkValueOnPeer(otherPeer, Uint8List(32));
       expect(result, isTrue);
@@ -368,7 +332,7 @@ void main() {
       final responseMsg = kad.Message()
         ..type = kad.Message_MessageType.PUT_VALUE;
 
-      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+      _mockRawResponse(mockRouter, responseMsg);
 
       final result = await client.storeValue(Uint8List(32), Uint8List(10));
       expect(result, isTrue);
@@ -386,7 +350,7 @@ void main() {
         ..type = kad.Message_MessageType.GET_VALUE
         ..record = (dht_proto.Record()..value = value);
 
-      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+      _mockRawResponse(mockRouter, responseMsg);
 
       final result = await client.getValue(Uint8List(32));
       expect(result, equals(value));
@@ -403,7 +367,7 @@ void main() {
         ..type = kad.Message_MessageType.FIND_NODE
         ..closerPeers.add(kad.Peer()..id = otherPeer.value);
 
-      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+      _mockRawResponse(mockRouter, responseMsg);
 
       final result = await client.findPeer(otherPeer);
       expect(result?.toBase58(), equals(otherPeer.toBase58()));
@@ -433,18 +397,10 @@ void main() {
       );
       await client.kademliaRoutingTable.addPeer(otherPeer, otherPeer);
 
-      // Don't mock a response, so it will timeout
-      when(
-        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
-      ).thenAnswer((_) async {});
-
-      final result = await client
-          .getValue(Uint8List(32))
-          .timeout(
-            const Duration(milliseconds: 100),
-            onTimeout: () => Uint8List(0),
-          );
-      expect(result, isEmpty);
+      // Don't mock a response: the same-stream sendRequest returns null and
+      // getValue gives up on the peer without blocking on a dead stream.
+      final result = await client.getValue(Uint8List(32));
+      expect(result, isNull);
     });
 
     test('findPeer with no closer peers returns null', () async {
@@ -461,7 +417,7 @@ void main() {
         ..type = kad.Message_MessageType.FIND_NODE
         ..closerPeers.clear(); // No closer peers
 
-      _mockEnvelopeResponse(mockRouter, knownPeer.toBase58(), responseMsg);
+      _mockRawResponse(mockRouter, responseMsg);
 
       final result = await client.findPeer(target);
       expect(result, isNull);
@@ -488,16 +444,14 @@ void main() {
           ..type = kad.Message_MessageType.FIND_NODE
           ..closerPeers.add(kad.Peer()..id = closerPeer.value);
 
-        _mockEnvelopeResponse(mockRouter, knownPeer.toBase58(), responseMsg);
+        _mockRawResponse(mockRouter, responseMsg);
 
         final result = await client
             .findPeer(target)
             .timeout(const Duration(seconds: 10), onTimeout: () => null);
         expect(result, isNull);
         // The advertised peer was queried too — proof it entered the queue.
-        verify(
-          mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
-        ).called(greaterThan(1));
+        verify(mockRouter.sendRequest(any, any, any)).called(greaterThan(1));
       },
     );
 
@@ -518,7 +472,7 @@ void main() {
         ..record = dht_proto.Record()
         ..closerPeers.add(kad.Peer()..id = closerPeer.value);
 
-      _mockEnvelopeResponse(mockRouter, knownPeer.toBase58(), responseMsg);
+      _mockRawResponse(mockRouter, responseMsg);
 
       final result = await client
           .getValue(Uint8List(32))
@@ -639,7 +593,7 @@ void main() {
       final responseMsg = kad.Message()
         ..type = kad.Message_MessageType.GET_VALUE;
 
-      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+      _mockRawResponse(mockRouter, responseMsg);
 
       final result = await client.checkValueOnPeer(otherPeer, Uint8List(32));
       expect(result, isFalse);
@@ -793,9 +747,14 @@ void main() {
         client.kademliaRoutingTable.containsPeer(PeerId.fromBase58(peerStr)),
         isTrue,
       );
-      // _bootstrapPeer sent a self-lookup FIND_NODE to the peer.
+      // _bootstrapPeer sent a self-lookup FIND_NODE to the peer — the LAN
+      // variant is offered first for private-network peers.
       verify(
-        mockRouter.sendMessage(peerStr, any, protocolId: DHTClient.protocolDht),
+        mockRouter.sendMessage(
+          peerStr,
+          any,
+          protocolId: DHTClient.protocolDhtLan,
+        ),
       ).called(1);
     });
   });
@@ -1142,7 +1101,11 @@ void main() {
 
       expect(result, isTrue);
       verify(
-        mockRouter.sendMessage(peerStr, any, protocolId: DHTClient.protocolDht),
+        mockRouter.sendMessage(
+          peerStr,
+          any,
+          protocolId: DHTClient.protocolDhtLan,
+        ),
       ).called(1);
     });
 
@@ -1194,7 +1157,7 @@ void main() {
           ..record = (dht_proto.Record()
             ..key = dhtKey
             ..value = freshRecord.toIpnsEntry());
-        _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+        _mockRawResponse(mockRouter, responseMsg);
 
         final result = await client.getValue(dhtKey);
         expect(result, equals(freshRecord.toIpnsEntry()));
@@ -1231,7 +1194,7 @@ void main() {
         ..record = (dht_proto.Record()
           ..key = dhtKey
           ..value = Uint8List.fromList([1, 2, 3]));
-      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+      _mockRawResponse(mockRouter, responseMsg);
 
       final result = await client.getValue(dhtKey);
       expect(result, equals(localRecord.toIpnsEntry()));

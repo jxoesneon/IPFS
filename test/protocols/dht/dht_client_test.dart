@@ -6,8 +6,6 @@ import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_envelope.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
 import 'dht_client_coverage_test.mocks.dart';
@@ -48,42 +46,17 @@ void main() {
     );
   });
 
-  void Function(NetworkPacket) _captureHandler(MockRouterInterface router) {
-    final captured = verify(
-      router.registerProtocolHandler(any, captureAny),
-    ).captured;
-    return captured.last as void Function(NetworkPacket);
-  }
-
-  void mockEnvelopeResponse(
-    MockRouterInterface router,
-    String srcPeerId,
-    kad.Message response, {
-    void Function(NetworkPacket)? handler,
-  }) {
-    final lastHandler = handler ?? _captureHandler(router);
+  /// Mocks the same-stream request/response exchange: [router].sendRequest
+  /// returns [response] encoded as raw kad protobuf — the wire form every
+  /// libp2p-kad-dht implementation speaks.
+  void mockRawResponse(MockRouterInterface router, kad.Message response) {
     when(
-      router.sendMessage(any, any, protocolId: anyNamed('protocolId')),
-    ).thenAnswer((invocation) async {
-      final data = invocation.positionalArguments[1] as Uint8List;
-      final envelope = DHTEnvelope.tryParse(data);
-      if (envelope == null) return;
-      Future<void>.delayed(const Duration(milliseconds: 1), () {
-        lastHandler(
-          NetworkPacket(
-            srcPeerId: srcPeerId,
-            datagram: DHTEnvelope(
-              requestId: envelope.requestId,
-              payload: response.writeToBuffer(),
-            ).toBytes(),
-          ),
-        );
-      });
-    });
+      router.sendRequest(any, any, any),
+    ).thenAnswer((invocation) async => response.writeToBuffer());
   }
 
   group('DHTClient integration spec', () {
-    test('request/response correlation uses envelope request id', () async {
+    test('requests use raw kad protobuf on the same stream', () async {
       await client.initialize();
       final peer = PeerId.fromBase58(
         'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
@@ -92,36 +65,25 @@ void main() {
         'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w',
       );
       await client.kademliaRoutingTable.addPeer(peer, peer);
-      final handler = _captureHandler(mockRouter);
 
-      String? capturedRequestId;
+      final sentDatagrams = <Uint8List>[];
       final response = kad.Message()
         ..type = kad.Message_MessageType.FIND_NODE
         ..closerPeers.add(kad.Peer()..id = target.value);
 
-      when(
-        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
-      ).thenAnswer((invocation) async {
-        final data = invocation.positionalArguments[1] as Uint8List;
-        final envelope = DHTEnvelope.fromBytes(data);
-        capturedRequestId = envelope.requestId;
-        Future<void>.delayed(const Duration(milliseconds: 1), () {
-          handler(
-            NetworkPacket(
-              srcPeerId: peer.toBase58(),
-              datagram: DHTEnvelope(
-                requestId: envelope.requestId,
-                payload: response.writeToBuffer(),
-              ).toBytes(),
-            ),
-          );
-        });
+      when(mockRouter.sendRequest(any, any, any)).thenAnswer((
+        invocation,
+      ) async {
+        sentDatagrams.add(invocation.positionalArguments[2] as Uint8List);
+        return response.writeToBuffer();
       });
 
-      await client.findPeer(target);
-      expect(capturedRequestId, isNotNull);
-      expect(capturedRequestId!.isNotEmpty, isTrue);
-      expect(capturedRequestId, startsWith('dht-'));
+      final result = await client.findPeer(target);
+      expect(result, isNotNull);
+      // The wire request must be a raw kad.Message — no DHTEnvelope
+      // framing — so Kubo/Helia can parse it.
+      final request = kad.Message.fromBuffer(sentDatagrams.first);
+      expect(request.type, kad.Message_MessageType.FIND_NODE);
     });
 
     test('findProviders returns validated provider records', () async {
@@ -142,7 +104,7 @@ void main() {
             ..addrs.add(libp2p.MultiAddr('/ip4/127.0.0.1/tcp/4001').toBytes()),
         );
 
-      mockEnvelopeResponse(mockRouter, peer.toBase58(), response);
+      mockRawResponse(mockRouter, response);
 
       final providers = await client.findProviders(
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
@@ -165,7 +127,7 @@ void main() {
         ..type = kad.Message_MessageType.GET_PROVIDERS
         ..providerPeers.add(kad.Peer()..id = provider.value);
 
-      mockEnvelopeResponse(mockRouter, peer.toBase58(), response);
+      mockRawResponse(mockRouter, response);
 
       final providers = await client.findProviders(
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
@@ -182,21 +144,16 @@ void main() {
         'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w',
       );
       await client.kademliaRoutingTable.addPeer(seedPeer, seedPeer);
-      final handler = _captureHandler(mockRouter);
 
       final provider = PeerId.fromBase58(
         'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8x',
       );
       var requestCount = 0;
 
-      when(
-        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
-      ).thenAnswer((invocation) async {
+      when(mockRouter.sendRequest(any, any, any)).thenAnswer((
+        invocation,
+      ) async {
         requestCount++;
-        final dst = invocation.positionalArguments[0] as String;
-        final data = invocation.positionalArguments[1] as Uint8List;
-        final envelope = DHTEnvelope.tryParse(data);
-        if (envelope == null) return;
 
         final response = kad.Message()
           ..type = kad.Message_MessageType.GET_PROVIDERS;
@@ -215,17 +172,7 @@ void main() {
           );
         }
 
-        Future<void>.delayed(const Duration(milliseconds: 1), () {
-          handler(
-            NetworkPacket(
-              srcPeerId: dst,
-              datagram: DHTEnvelope(
-                requestId: envelope.requestId,
-                payload: response.writeToBuffer(),
-              ).toBytes(),
-            ),
-          );
-        });
+        return response.writeToBuffer();
       });
 
       final providers = await client.findProviders(
@@ -250,7 +197,7 @@ void main() {
         ..type = kad.Message_MessageType.FIND_NODE
         ..closerPeers.add(kad.Peer()..id = target.value);
 
-      mockEnvelopeResponse(mockRouter, seedPeer.toBase58(), response);
+      mockRawResponse(mockRouter, response);
 
       final result = await client.findPeer(target);
       expect(result, isNotNull);
@@ -269,7 +216,7 @@ void main() {
 
       final response = kad.Message()
         ..type = kad.Message_MessageType.ADD_PROVIDER;
-      mockEnvelopeResponse(mockRouter, peer.toBase58(), response);
+      mockRawResponse(mockRouter, response);
 
       await client.addProvider(
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
