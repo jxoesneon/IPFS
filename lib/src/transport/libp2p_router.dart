@@ -92,6 +92,19 @@ class Libp2pRouter implements RouterInterface {
   final Map<String, List<void Function(dynamic)>> _eventHandlers = {};
   final Map<String, StreamController<Uint8List>> _peerMessageStreams = {};
 
+  /// Session-scoped outbound streams for long-lived protocols
+  /// (gossipsub/floodsub), keyed by `'$peerId|$protocolId'`.
+  ///
+  /// PubSub peers hold a single stream per direction for the life of the
+  /// connection; opening a fresh stream per RPC and closing it makes the
+  /// remote tear down its RPC queue for us (observed against Kubo as
+  /// "rpc queue closed" followed by peer removal).
+  final Map<String, libp2p.P2PStream<dynamic>> _sessionStreams = {};
+
+  /// Serializes writes per session stream so concurrent senders cannot
+  /// interleave bytes on the wire.
+  final Map<String, Future<void>> _sessionStreamWrites = {};
+
   // DHT routing table for distance-based peer selection
   DHTRoutingTable? _dhtRoutingTable;
 
@@ -508,6 +521,7 @@ class Libp2pRouter implements RouterInterface {
             final remotePeerId = conn.remotePeer.toString();
             _connectedPeers.remove(remotePeerId);
             _peerAddresses.remove(remotePeerId);
+            _closeSessionStreamsForPeer(remotePeerId);
             _connectionEventsController.add(
               ConnectionEvent(
                 peerId: remotePeerId,
@@ -557,6 +571,14 @@ class Libp2pRouter implements RouterInterface {
     _logger.debug('Stopping Libp2pRouter...');
 
     try {
+      for (final key in _sessionStreams.keys.toList()) {
+        final stream = _sessionStreams.remove(key);
+        try {
+          await stream?.close();
+        } catch (_) {}
+      }
+      _sessionStreamWrites.clear();
+
       if (_host != null) {
         await _host!.close().timeout(
           const Duration(seconds: 5),
@@ -669,6 +691,7 @@ class Libp2pRouter implements RouterInterface {
         // usually handled via Connection Manager or closing streams.
         // We remove it from our tracked set.
         _connectedPeers.remove(peerIdStr);
+        _closeSessionStreamsForPeer(peerIdStr);
 
         // Close the peer's message stream controller to emit done event.
         final controller = _peerMessageStreams.remove(peerIdStr);
@@ -701,16 +724,20 @@ class Libp2pRouter implements RouterInterface {
     _logger.verbose('Sending message to $peerIdStr via protocol $protocol');
 
     try {
-      final peerId = libp2p.PeerId.fromString(peerIdStr);
-      final context = libp2p.Context(timeout: const Duration(seconds: 15));
-      final stream = await _host!.newStream(peerId, [protocol], context);
+      if (_isSessionStreamProtocol(protocol)) {
+        await _sendOnSessionStream(peerIdStr, protocol, message);
+      } else {
+        final peerId = libp2p.PeerId.fromString(peerIdStr);
+        final context = libp2p.Context(timeout: const Duration(seconds: 15));
+        final stream = await _host!.newStream(peerId, [protocol], context);
 
-      try {
-        // Write length-prefixed message
-        final lengthPrefix = _encodeLengthPrefix(message.length);
-        await stream.write(Uint8List.fromList([...lengthPrefix, ...message]));
-      } finally {
-        await stream.close();
+        try {
+          // Write length-prefixed message
+          final lengthPrefix = _encodeLengthPrefix(message.length);
+          await stream.write(Uint8List.fromList([...lengthPrefix, ...message]));
+        } finally {
+          await stream.close();
+        }
       }
 
       _logger.verbose('Message sent successfully to $peerIdStr');
@@ -719,6 +746,101 @@ class Libp2pRouter implements RouterInterface {
       throw NetworkException('Failed to send message: $e');
     }
   }
+
+  /// Whether [protocolId] is session-scoped: peers hold the stream open for
+  /// the life of the connection and exchange a sequence of length-prefixed
+  /// messages, instead of one request/response per stream.
+  static bool _isSessionStreamProtocol(String protocolId) =>
+      protocolId.startsWith('/meshsub/') || protocolId == '/floodsub/1.0.0';
+
+  /// Sends [message] on the persistent session stream for
+  /// `(peerIdStr, protocol)`, reopening it once if the write fails.
+  /// Concurrent sends are serialized per stream.
+  Future<void> _sendOnSessionStream(
+    String peerIdStr,
+    String protocol,
+    Uint8List message,
+  ) {
+    final key = '$peerIdStr|$protocol';
+    final previous = _sessionStreamWrites[key] ?? Future.value();
+    final next = previous.then(
+      (_) => _writeSessionStreamMessage(key, peerIdStr, protocol, message),
+    );
+    // A failed write must not wedge the queue for later sends; callers still
+    // see the error through [next].
+    _sessionStreamWrites[key] = next.catchError((_) {});
+    return next;
+  }
+
+  Future<void> _writeSessionStreamMessage(
+    String key,
+    String peerIdStr,
+    String protocol,
+    Uint8List message,
+  ) async {
+    final payload = Uint8List.fromList([
+      ..._encodeLengthPrefix(message.length),
+      ...message,
+    ]);
+    for (var attempt = 0; attempt < 2; attempt++) {
+      final stream = await _sessionStreamFor(key, peerIdStr, protocol);
+      try {
+        await stream.write(payload);
+        return;
+      } catch (e) {
+        _logger.warning(
+          'Session stream write to $peerIdStr on $protocol failed: $e',
+        );
+        await _dropSessionStream(key, stream);
+        if (attempt == 1) rethrow;
+      }
+    }
+  }
+
+  Future<libp2p.P2PStream<dynamic>> _sessionStreamFor(
+    String key,
+    String peerIdStr,
+    String protocol,
+  ) async {
+    final existing = _sessionStreams[key];
+    if (existing != null && !existing.isClosed) return existing;
+    _sessionStreams.remove(key);
+
+    final peerId = libp2p.PeerId.fromString(peerIdStr);
+    final context = libp2p.Context(timeout: const Duration(seconds: 15));
+    final stream = await _host!.newStream(peerId, [protocol], context);
+    _sessionStreams[key] = stream;
+    return stream;
+  }
+
+  Future<void> _dropSessionStream(
+    String key,
+    libp2p.P2PStream<dynamic> stream,
+  ) async {
+    if (identical(_sessionStreams[key], stream)) _sessionStreams.remove(key);
+    try {
+      await stream.close();
+    } catch (_) {}
+  }
+
+  /// Closes every session stream to [peerIdStr]. Called when the peer
+  /// disconnects so the next send reopens instead of writing to a corpse.
+  void _closeSessionStreamsForPeer(String peerIdStr) {
+    final prefix = '$peerIdStr|';
+    for (final key in _sessionStreams.keys.toList()) {
+      if (!key.startsWith(prefix)) continue;
+      final stream = _sessionStreams.remove(key);
+      _sessionStreamWrites.remove(key);
+      if (stream != null) {
+        unawaited(stream.close().catchError((_) {}));
+      }
+    }
+  }
+
+  /// Snapshot of the live session stream pool, exposed for tests.
+  @visibleForTesting
+  Map<String, libp2p.P2PStream<dynamic>> get sessionStreams =>
+      Map.unmodifiable(_sessionStreams);
 
   @override
   Future<Uint8List?> sendRequest(
@@ -740,7 +862,10 @@ class Libp2pRouter implements RouterInterface {
         await stream.write(Uint8List.fromList([...lengthPrefix, ...request]));
 
         // Read response
-        final response = await _readLengthPrefixedMessage(stream);
+        final response = await _readLengthPrefixedMessage(
+          stream,
+          idleTimeout: inboundReadIdleTimeout,
+        );
         return response;
       } finally {
         await stream.close();
@@ -775,7 +900,10 @@ class Libp2pRouter implements RouterInterface {
         await stream.write(Uint8List.fromList([...lengthPrefix, ...message]));
 
         // Read response
-        final response = await _readLengthPrefixedMessage(stream);
+        final response = await _readLengthPrefixedMessage(
+          stream,
+          idleTimeout: inboundReadIdleTimeout,
+        );
         if (response == null) {
           throw TimeoutException('No response received from $peerId');
         }
@@ -835,7 +963,13 @@ class Libp2pRouter implements RouterInterface {
         }
       }
 
-      final streamDeadline = DateTime.now().add(_maxStreamLifetime);
+      // Session-scoped protocols (gossipsub/floodsub) hold streams open for
+      // the life of the connection; peers legitimately go quiet between
+      // heartbeats, so the generic idle/lifetime bounds do not apply.
+      // Closing an idle meshsub stream makes the remote tear down its RPC
+      // queue for us (Kubo: "rpc queue closed" → PEERDOWN every 30 s).
+      final isSessionStream = _isSessionStreamProtocol(protocolId);
+      final streamDeadline = DateTime.now().add(maxStreamLifetime);
       try {
         // Some protocols (e.g. libp2p identify) speak response-first: the
         // dialer opens the stream and waits without sending a request.
@@ -854,14 +988,17 @@ class Libp2pRouter implements RouterInterface {
         // Some protocols (e.g. Bitswap) send multiple length-prefixed
         // messages on a single stream, so read until the stream is closed.
         while (true) {
-          if (DateTime.now().isAfter(streamDeadline)) {
+          if (!isSessionStream && DateTime.now().isAfter(streamDeadline)) {
             _logger.warning(
               'Closing stream from $remoteIdStr on $protocolId: '
               'exceeded maximum stream lifetime',
             );
             break;
           }
-          final data = await _readLengthPrefixedMessage(stream);
+          final data = await _readLengthPrefixedMessage(
+            stream,
+            idleTimeout: isSessionStream ? null : inboundReadIdleTimeout,
+          );
           if (data == null) {
             break;
           }
@@ -998,13 +1135,15 @@ class Libp2pRouter implements RouterInterface {
   }
 
   /// Idle deadline applied to each read on an inbound stream.
-  static const Duration _inboundReadIdleTimeout =
+  @visibleForTesting
+  static Duration inboundReadIdleTimeout =
       inbound.InboundMessageBounds.readIdleTimeout;
 
   /// Total lifetime of an inbound stream. Without this, a peer can hold a
   /// stream open indefinitely by sending a byte inside each idle window
   /// (drip-feed DoS). Multi-message protocols get a generous bound.
-  static const Duration _maxStreamLifetime =
+  @visibleForTesting
+  static Duration maxStreamLifetime =
       inbound.InboundMessageBounds.maxStreamLifetime;
 
   /// Protocols where the responder speaks first — the dialer opens the
@@ -1026,11 +1165,12 @@ class Libp2pRouter implements RouterInterface {
   }
 
   Future<Uint8List?> _readLengthPrefixedMessage(
-    libp2p.P2PStream<dynamic> stream,
-  ) async {
+    libp2p.P2PStream<dynamic> stream, {
+    Duration? idleTimeout,
+  }) async {
     try {
       return await readLengthPrefixedMessage(
-        (size) => _readChunk(stream, size),
+        (size) => _readChunk(stream, size, idleTimeout: idleTimeout),
       );
     } on FormatException catch (e) {
       _logger.warning('Rejected malformed inbound message: $e');
@@ -1053,10 +1193,13 @@ class Libp2pRouter implements RouterInterface {
 
   Future<Uint8List?> _readChunk(
     libp2p.P2PStream<dynamic> stream,
-    int size,
-  ) async {
+    int size, {
+    Duration? idleTimeout,
+  }) async {
     try {
-      final data = await stream.read(size).timeout(_inboundReadIdleTimeout);
+      final pending = stream.read(size);
+      final data =
+          idleTimeout == null ? await pending : await pending.timeout(idleTimeout);
       if (data.isEmpty) return null;
       return Uint8List.fromList(data);
     } catch (e) {

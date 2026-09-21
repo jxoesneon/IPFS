@@ -195,5 +195,158 @@ void main() {
         await host.close();
       }
     }, timeout: Timeout(Duration(seconds: 60)));
+
+    test('session-stream protocols reuse one stream and survive idle', () async {
+      // Compress the inbound idle bound so the test exercises the
+      // session-protocol exemption in milliseconds instead of 30 s.
+      final priorIdle = Libp2pRouter.inboundReadIdleTimeout;
+      Libp2pRouter.inboundReadIdleTimeout =
+          const Duration(milliseconds: 150);
+      addTearDown(
+        () => Libp2pRouter.inboundReadIdleTimeout = priorIdle,
+      );
+
+      await routerA.start();
+      await routerB.start();
+      await routerA.connect(getLocalConnectAddress(routerB));
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final received = <String>[];
+      final enough = Completer<void>();
+      routerB.registerProtocolHandler('/meshsub/1.1.0', (packet) {
+        received.add(utf8.decode(packet.datagram));
+        if (received.length >= 4 && !enough.isCompleted) enough.complete();
+      });
+
+      Future<void> send(String text) => routerA.sendMessage(
+            routerB.peerID,
+            Uint8List.fromList(utf8.encode(text)),
+            protocolId: '/meshsub/1.1.0',
+          );
+
+      await send('m1');
+      // Let the inbound stream sit idle longer than the generic read
+      // timeout — a session stream must not be reaped for silence.
+      await Future.delayed(const Duration(milliseconds: 400));
+      expect(routerA.sessionStreams, hasLength(1));
+      expect(
+        routerA.sessionStreams.values.single.isClosed,
+        isFalse,
+        reason: 'Idle session stream must stay open past the generic bound',
+      );
+
+      // Serialized writers preserve order even when sends overlap.
+      final concurrent = [send('m2'), send('m3')];
+      await Future.wait(concurrent);
+      await send('m4');
+
+      await enough.future.timeout(const Duration(seconds: 5));
+      expect(received, equals(['m1', 'm2', 'm3', 'm4']));
+      expect(routerA.sessionStreams, hasLength(1));
+    }, timeout: Timeout(Duration(seconds: 60)));
+
+    test('session stream reopens after the remote closes it', () async {
+      await routerA.start();
+      await routerB.start();
+      await routerA.connect(getLocalConnectAddress(routerB));
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final received = Completer<String>();
+      routerB.registerProtocolHandler('/meshsub/1.1.0', (packet) {
+        if (!received.isCompleted) {
+          received.complete(utf8.decode(packet.datagram));
+        }
+      });
+
+      Future<void> send(String text) => routerA.sendMessage(
+            routerB.peerID,
+            Uint8List.fromList(utf8.encode(text)),
+            protocolId: '/meshsub/1.1.0',
+          );
+
+      await send('first');
+      final firstStream = routerA.sessionStreams.values.single;
+
+      // Simulate the remote tearing the stream down between sends.
+      await firstStream.close();
+      expect(routerA.sessionStreams.values.single.isClosed, isTrue);
+
+      await send('second');
+      expect(
+        identical(routerA.sessionStreams.values.single, firstStream),
+        isFalse,
+        reason: 'A dead session stream must be replaced on the next send',
+      );
+      expect(
+        await received.future.timeout(const Duration(seconds: 5)),
+        'first',
+      );
+    }, timeout: Timeout(Duration(seconds: 60)));
+
+    test('non-session protocols still enforce the inbound idle timeout',
+        () async {
+      final priorIdle = Libp2pRouter.inboundReadIdleTimeout;
+      Libp2pRouter.inboundReadIdleTimeout =
+          const Duration(milliseconds: 150);
+      addTearDown(
+        () => Libp2pRouter.inboundReadIdleTimeout = priorIdle,
+      );
+
+      await routerB.start();
+      final addrB = getLocalConnectAddress(routerB);
+
+      final received = <String>[];
+      routerB.registerProtocolHandler('/test/idle/1.0.0', (packet) {
+        received.add(utf8.decode(packet.datagram));
+      });
+
+      // A raw client keeps a request/response-class stream open but silent;
+      // the inbound bounds must still reap it.
+      final keyPair = await crypto.generateEd25519KeyPair();
+      final host = await config.Libp2p.new_([
+        config.Libp2p.transport(
+          TCPTransport(
+            resourceManager: ResourceManagerImpl(limiter: FixedLimiter()),
+          ),
+        ),
+        config.Libp2p.listenAddrs([libp2p.MultiAddr('/ip4/0.0.0.0/tcp/0')]),
+        config.Libp2p.identity(keyPair),
+      ]);
+      await host.start();
+
+      try {
+        final maddr = libp2p.MultiAddr(addrB);
+        final peerId = libp2p.PeerId.fromString(addrB.split('/p2p/').last);
+        await host.peerStore.addrBook.addAddrs(
+          peerId,
+          [maddr],
+          const Duration(minutes: 5),
+        );
+        await host.connect(libp2p.AddrInfo(peerId, [maddr]));
+
+        final stream = await host.newStream(
+          peerId,
+          ['/test/idle/1.0.0'],
+          libp2p.Context(),
+        );
+
+        Uint8List frame(String text) {
+          final body = utf8.encode(text);
+          return Uint8List.fromList([body.length, ...body]);
+        }
+
+        await stream.write(frame('first'));
+        await Future.delayed(const Duration(milliseconds: 300));
+        expect(received, equals(['first']));
+
+        // Past the idle bound the router must have closed the stream:
+        // a further write is lost, and the read side reports EOF.
+        await stream.write(frame('second')).catchError((_) => Uint8List(0));
+        await Future.delayed(const Duration(milliseconds: 400));
+        expect(received, equals(['first']));
+      } finally {
+        await host.close();
+      }
+    }, timeout: Timeout(Duration(seconds: 60)));
   });
 }

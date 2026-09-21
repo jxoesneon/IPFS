@@ -224,6 +224,10 @@ mixin PubsubRpc {
   }
 
   /// Lists subscribed topics via `POST /api/v0/pubsub/ls`.
+  ///
+  /// Kubo emits the topic list multibase-base64url encoded
+  /// (`pubsub.go`: `l[n] = encoder.Encode([]byte(topic))`), so entries are
+  /// decoded when [pubsubMultibaseArgs] is set.
   Future<List<String>> pubsubLs() async {
     final uri = Uri.http('$host:$port', '/api/v0/pubsub/ls');
     final client = HttpClient();
@@ -235,9 +239,21 @@ mixin PubsubRpc {
         throw HttpException('pubsub/ls returned ${response.statusCode}: $body');
       }
       final json = jsonDecode(body) as Map<String, dynamic>;
-      return [for (final s in json['Strings'] as List? ?? const []) '$s'];
+      return [
+        for (final s in json['Strings'] as List? ?? const [])
+          _decodeListedTopic('$s'),
+      ];
     } finally {
       client.close();
+    }
+  }
+
+  String _decodeListedTopic(String value) {
+    if (!pubsubMultibaseArgs) return value;
+    try {
+      return utf8.decode(decodeMultibaseBase64Url(value), allowMalformed: true);
+    } catch (_) {
+      return value;
     }
   }
 
