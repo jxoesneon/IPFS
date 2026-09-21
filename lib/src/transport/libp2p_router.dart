@@ -105,6 +105,13 @@ class Libp2pRouter implements RouterInterface {
   /// interleave bytes on the wire.
   final Map<String, Future<void>> _sessionStreamWrites = {};
 
+  /// Number of sends queued per session-stream key, parallel to
+  /// [_sessionStreamWrites]. A peer that stalls its read window must not
+  /// grow our queue without bound — session protocols (gossipsub/
+  /// floodsub) are lossy by design, so excess sends are dropped.
+  final Map<String, int> _sessionStreamQueueDepth = {};
+  static const int _maxSessionStreamQueueDepth = 64;
+
   // DHT routing table for distance-based peer selection
   DHTRoutingTable? _dhtRoutingTable;
 
@@ -770,13 +777,40 @@ class Libp2pRouter implements RouterInterface {
     Uint8List message,
   ) {
     final key = '$peerIdStr|$protocol';
+    final depth = _sessionStreamQueueDepth[key] ?? 0;
+    if (depth >= _maxSessionStreamQueueDepth) {
+      _logger.warning(
+        'Dropping session-stream send to $peerIdStr on $protocol: '
+        'queue depth $depth exceeds $_maxSessionStreamQueueDepth',
+      );
+      return Future.value();
+    }
+    _sessionStreamQueueDepth[key] = depth + 1;
+
     final previous = _sessionStreamWrites[key] ?? Future.value();
     final next = previous.then(
       (_) => _writeSessionStreamMessage(key, peerIdStr, protocol, message),
     );
     // A failed write must not wedge the queue for later sends; callers still
     // see the error through [next].
-    _sessionStreamWrites[key] = next.catchError((_) {});
+    final tail = next.catchError((_) {});
+    _sessionStreamWrites[key] = tail;
+    // Self-clean once the chain drains: without this, a peer whose stream
+    // open fails (e.g. it never negotiated the protocol) leaves a permanent
+    // entry — one per peer ever connected.
+    unawaited(
+      tail.then((_) {
+        final remaining = (_sessionStreamQueueDepth[key] ?? 1) - 1;
+        if (remaining <= 0) {
+          _sessionStreamQueueDepth.remove(key);
+        } else {
+          _sessionStreamQueueDepth[key] = remaining;
+        }
+        if (identical(_sessionStreamWrites[key], tail)) {
+          _sessionStreamWrites.remove(key);
+        }
+      }),
+    );
     return next;
   }
 
@@ -833,12 +867,14 @@ class Libp2pRouter implements RouterInterface {
 
   /// Closes every session stream to [peerIdStr]. Called when the peer
   /// disconnects so the next send reopens instead of writing to a corpse.
+  /// Write-queue entries are intentionally left in place — dropping them
+  /// mid-chain would let a concurrent send start a parallel chain and
+  //  interleave bytes; drained chains remove themselves.
   void _closeSessionStreamsForPeer(String peerIdStr) {
     final prefix = '$peerIdStr|';
     for (final key in _sessionStreams.keys.toList()) {
       if (!key.startsWith(prefix)) continue;
       final stream = _sessionStreams.remove(key);
-      _sessionStreamWrites.remove(key);
       if (stream != null) {
         unawaited(stream.close().catchError((_) {}));
       }
@@ -878,8 +914,11 @@ class Libp2pRouter implements RouterInterface {
       } finally {
         await stream.close();
       }
-    } catch (e, stackTrace) {
-      _logger.error('Request to $peerId failed', e, stackTrace);
+    } catch (e) {
+      // Null is the routine "peer didn't answer / didn't negotiate" signal —
+      // callers like DHTClient fall back to another protocol variant, so a
+      // stack-traced error per failed attempt is pure log noise.
+      _logger.debug('Request to $peerId via $protocolId failed: $e');
       return null;
     }
   }

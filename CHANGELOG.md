@@ -8,15 +8,19 @@
 - **Identify advertises dialable addresses**: `Libp2pRouter.listeningAddresses` returns the host's resolved interface addresses instead of the `/ip4/0.0.0.0` wildcard, so peers (and Kubo's bitswap broadcast targeting) see a usable address.
 - **IPNS `self` is the node identity**: `name/publish` resolves `self` to the libp2p identity keypair derived from the identity seed instead of consulting the encrypted keystore, matching Kubo — publishing works without an `unlockKeystore` call.
 - **Binary-safe pubsub**: `publishData` carries raw bytes end-to-end; the router dispatches empty length-prefixed frames on session-stream protocols so the gossipsub hello is delivered and dart↔dart peers negotiate meshsub capability.
-- **`pubsub/sub` backpressure**: messages are dropped for a paused subscriber instead of accumulating unboundedly in the response buffer — pubsub delivery is real-time and lossy by design.
+- **`pubsub/sub` lifecycle and backpressure**: disconnecting the stream now releases the topic subscription (Kubo parity, refcounted so concurrent subscribers and pre-existing subscriptions are unaffected), and messages are dropped for a paused subscriber instead of accumulating unboundedly in the response buffer.
+- **Session-stream bounds**: sends on persistent gossipsub/floodsub streams are capped at 64 queued messages per peer (dropped past the bound — pubsub is lossy by design), write-queue entries self-clean once drained, and stream state is fully released on disconnect.
+- **DNS multiaddr resolution**: `/dns4`, `/dns6`, and `/dnsaddr` components in transport addresses are resolved before dialing (dnsaddr degrades to a plain A/AAAA lookup with a logged caveat), with a 60-second bounded result cache — fixing dials to service names and bootstrap DNS addresses.
 - **Daemon logs reach collectors**: the daemon honors `IPFS_LOG_STDOUT`/`IPFS_LOG_LEVEL`, and the log writer appends via a persistent sink instead of truncating the log file on every write.
 
 ### Added
+- **`PubSubMessage.data`**: incoming pubsub messages now carry the raw wire bytes alongside the lossy UTF-8 `content` view, and `publishData` is exposed on `IPubSub`, `IPFSNode`, and `IPFS`.
 - **Kubo-compatible pubsub RPC endpoints**: `POST /api/v0/pubsub/pub`, `/sub`, `/ls`, and `/peers` with the Kubo wire shape (multibase `u`-prefixed binary fields, NDJSON streaming subscriptions).
 - **Configurable public gateway**: `BitswapConfig.publicGatewayUrl` (default `https://ipfs.io/ipfs`) controls which gateway `GatewayMode.public` fetches through, allowing alternative public gateways and hermetic gateway tests.
 
 ### Internal
 - **Interop CI actually selects interop tests**: the P0/P1 jobs run explicit file lists (tag filters did not compose with the interop preset, so the jobs previously ran the whole suite or nothing), and the P0/P1 budgets were raised now that the suites execute for real.
+- **Two-node e2e ungated on Windows/macOS**: the libp2p two-node suite no longer skips non-Linux CI runners — the underlying connectivity failures it guarded against were fixed by the protocol work above, verified green on all three platforms (#111).
 
 ## [1.17.0] - 2026-09-19
 

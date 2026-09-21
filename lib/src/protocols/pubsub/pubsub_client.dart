@@ -1073,7 +1073,7 @@ class PubSubClient implements IPubSub {
       }
       unawaited(_sendGossipSubSubscriptions(packet.srcPeerId));
     }
-    _logger.info(
+    _logger.verbose(
       'Received gossipsub RPC from ${packet.srcPeerId}: '
       'subs=${rpc.subscriptions.length} publish=${rpc.publish.length} '
       'control=${rpc.control == null ? 'none' : 'present'}',
@@ -1142,7 +1142,7 @@ class PubSubClient implements IPubSub {
     final sender = Base58().encode(from);
     final msgId = hex.encode(gossipSubDefaultMessageId(msg));
     if (_seenMessages[topic]?.contains(msgId) ?? false) {
-      _logger.info(
+      _logger.verbose(
         'Dropped duplicate gossipsub message $msgId from $sender on $topic',
       );
       return;
@@ -1188,7 +1188,7 @@ class PubSubClient implements IPubSub {
     // the message author (`from`) is the original publisher and need not
     // be a direct peer — relayed delivery is the gossipsub norm.
     if (!_router.isConnectedPeer(srcPeer)) {
-      _logger.warning(
+      _logger.verbose(
         'Dropped gossipsub message on $topic from disconnected peer $srcPeer',
       );
       return;
@@ -1202,7 +1202,7 @@ class PubSubClient implements IPubSub {
       _gossipsubMessageCache.remove(_gossipsubMessageCache.keys.first);
     }
 
-    _logger.info(
+    _logger.verbose(
       'Delivering gossipsub message from $sender on $topic '
       '(${msg.data?.length ?? 0} bytes)',
     );

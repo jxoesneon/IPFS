@@ -5,6 +5,28 @@ import '../utils/logger.dart';
 
 final _logger = Logger('DnsMultiaddrResolver');
 
+/// Successful lookups are cached briefly so repeated dials to the same
+/// bootstrap/service name do not pay a DNS round trip every connect.
+final Map<String, (List<InternetAddress>, DateTime)> _lookupCache = {};
+const _lookupCacheTtl = Duration(seconds: 60);
+const _lookupCacheMaxEntries = 1024;
+
+Future<List<InternetAddress>> _lookup(String host) {
+  final cached = _lookupCache[host];
+  if (cached != null && cached.$2.isAfter(DateTime.now())) {
+    return Future.value(cached.$1);
+  }
+  return InternetAddress.lookup(host).then((results) {
+    // Hosts are peer-supplied — bound the cache so a swarm feeding us
+    // unique names cannot grow it forever. Insertion-ordered eviction.
+    while (_lookupCache.length >= _lookupCacheMaxEntries) {
+      _lookupCache.remove(_lookupCache.keys.first);
+    }
+    _lookupCache[host] = (results, DateTime.now().add(_lookupCacheTtl));
+    return results;
+  });
+}
+
 /// Resolves DNS components in a transport multiaddr so transports that only
 /// understand /ip4/ and /ip6/ can dial it.
 ///
@@ -26,7 +48,7 @@ Future<String> resolveDnsMultiAddr(String transportAddr) async {
     final host = parts[i + 1];
     final List<InternetAddress> results;
     try {
-      results = await InternetAddress.lookup(host);
+      results = await _lookup(host);
     } on SocketException catch (e) {
       throw ArgumentError.value(
         transportAddr,

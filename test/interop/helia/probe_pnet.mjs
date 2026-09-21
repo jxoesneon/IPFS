@@ -7,7 +7,10 @@ import { multiaddr } from "@multiformats/multiaddr";
 import { readFileSync } from "node:fs";
 
 const target = process.argv[2];
-const swarmKey = readFileSync("/home/eduardo/IPFS/test/interop/swarm.key");
+const keyPath =
+  process.argv[3] ??
+  new URL("../swarm.key", import.meta.url).pathname;
+const swarmKey = readFileSync(keyPath);
 const helia = await createHelia({
   libp2p: {
     addresses: { listen: ["/ip4/127.0.0.1/tcp/14061"] },

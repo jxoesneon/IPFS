@@ -56,6 +56,14 @@ class RPCHandlers {
   /// payload is a single message, so 1 MiB is generous.
   static const int _maxPubsubPubBytes = 1024 * 1024;
 
+  /// Active `pubsub/sub` stream count per topic. The node-level
+  /// subscription is released only when the last stream disconnects.
+  final Map<String, int> _pubsubSubRefs = {};
+
+  /// Topics already subscribed when the first `pubsub/sub` stream
+  /// arrived — teardown must not unsubscribe what it did not create.
+  final Set<String> _pubsubExternalTopics = {};
+
   /// Traversal bounds for DAG export, matching the gateway CAR export
   /// conventions (`_defaultMaxCarDepth`/`_defaultMaxCarBlocks` in
   /// `gateway_handler.dart`).
@@ -1198,9 +1206,16 @@ class RPCHandlers {
     }
     final topic = _decodeTopicArg(arg);
 
+    final refs = _pubsubSubRefs[topic] ?? 0;
+    if (refs == 0 && node.pubsubLs().contains(topic)) {
+      _pubsubExternalTopics.add(topic);
+    }
+    _pubsubSubRefs[topic] = refs + 1;
+
     try {
       await node.subscribe(topic);
     } catch (e, st) {
+      await _releasePubsubSubRef(topic);
       _logger.error('pubsub/sub failed for topic $topic', e, st);
       return _errorResponse('Failed to subscribe: $e');
     }
@@ -1217,7 +1232,10 @@ class RPCHandlers {
             utf8.encode('${jsonEncode(_encodePubsubMessage(message))}\n'),
           );
         }, onError: controller.addError);
-    controller.onCancel = subscription.cancel;
+    controller.onCancel = () async {
+      await subscription.cancel();
+      await _releasePubsubSubRef(topic);
+    };
 
     return Response.ok(
       controller.stream,
@@ -1255,6 +1273,25 @@ class RPCHandlers {
     } catch (e, st) {
       _logger.error('pubsub/peers failed', e, st);
       return _errorResponse('Failed to list pubsub peers');
+    }
+  }
+
+  /// Releases one `pubsub/sub` reference on [topic]. Kubo cancels the
+  /// subscription when the stream closes — mirrored here by unsubscribing
+  /// once the last RPC subscriber leaves, unless the topic was subscribed
+  /// outside this RPC surface.
+  Future<void> _releasePubsubSubRef(String topic) async {
+    final remaining = (_pubsubSubRefs[topic] ?? 1) - 1;
+    if (remaining > 0) {
+      _pubsubSubRefs[topic] = remaining;
+      return;
+    }
+    _pubsubSubRefs.remove(topic);
+    if (_pubsubExternalTopics.remove(topic)) return;
+    try {
+      await node.unsubscribe(topic);
+    } catch (e) {
+      _logger.debug('pubsub/sub cleanup: unsubscribe $topic failed: $e');
     }
   }
 
