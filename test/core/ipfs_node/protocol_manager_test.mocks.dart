@@ -5,19 +5,20 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
 import 'dart:async' as _i10;
+import 'dart:typed_data' as _i12;
 
-import 'package:dart_ipfs/src/core/cid.dart' as _i14;
+import 'package:dart_ipfs/src/core/cid.dart' as _i15;
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart' as _i2;
 import 'package:dart_ipfs/src/core/di/service_container.dart' as _i7;
 import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart'
-    as _i16;
+    as _i17;
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart' as _i9;
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as _i5;
-import 'package:dart_ipfs/src/core/types/peer_id.dart' as _i15;
+import 'package:dart_ipfs/src/core/types/peer_id.dart' as _i16;
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
-    as _i13;
+    as _i14;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart' as _i3;
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart' as _i12;
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart' as _i13;
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart' as _i6;
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart' as _i11;
 import 'package:dart_ipfs/src/transport/router_interface.dart' as _i4;
@@ -191,6 +192,15 @@ class MockPubSubHandler extends _i1.Mock implements _i9.PubSubHandler {
           as _i10.Future<void>);
 
   @override
+  _i10.Future<void> publishData(String? topic, _i12.Uint8List? data) =>
+      (super.noSuchMethod(
+            Invocation.method(#publishData, [topic, data]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
+
+  @override
   void onMessage(String? topic, void Function(String)? handler) =>
       super.noSuchMethod(
         Invocation.method(#onMessage, [topic, handler]),
@@ -236,7 +246,7 @@ class MockPubSubHandler extends _i1.Mock implements _i9.PubSubHandler {
 /// A class which mocks [DHTHandler].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
+class MockDHTHandler extends _i1.Mock implements _i13.DHTHandler {
   @override
   _i3.DHTClient get dhtClient =>
       (super.noSuchMethod(
@@ -301,17 +311,17 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
           as _i10.Future<void>);
 
   @override
-  _i10.Future<List<_i13.V_PeerInfo>> findProviders(_i14.CID? cid) =>
+  _i10.Future<List<_i14.V_PeerInfo>> findProviders(_i15.CID? cid) =>
       (super.noSuchMethod(
             Invocation.method(#findProviders, [cid]),
-            returnValue: _i10.Future<List<_i13.V_PeerInfo>>.value(
-              <_i13.V_PeerInfo>[],
+            returnValue: _i10.Future<List<_i14.V_PeerInfo>>.value(
+              <_i14.V_PeerInfo>[],
             ),
-            returnValueForMissingStub: _i10.Future<List<_i13.V_PeerInfo>>.value(
-              <_i13.V_PeerInfo>[],
+            returnValueForMissingStub: _i10.Future<List<_i14.V_PeerInfo>>.value(
+              <_i14.V_PeerInfo>[],
             ),
           )
-          as _i10.Future<List<_i13.V_PeerInfo>>);
+          as _i10.Future<List<_i14.V_PeerInfo>>);
 
   @override
   _i10.Future<void> putValue(_i6.Key? key, _i6.Value? value) =>
@@ -383,7 +393,7 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
 
   @override
   bool isValidProviderRecord(
-    _i15.PeerId? provider,
+    _i16.PeerId? provider,
     String? cid,
     DateTime? ttl,
   ) =>
@@ -403,20 +413,20 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
           as String?);
 
   @override
-  _i10.Future<List<_i13.V_PeerInfo>> findPeer(_i15.PeerId? id) =>
+  _i10.Future<List<_i14.V_PeerInfo>> findPeer(_i16.PeerId? id) =>
       (super.noSuchMethod(
             Invocation.method(#findPeer, [id]),
-            returnValue: _i10.Future<List<_i13.V_PeerInfo>>.value(
-              <_i13.V_PeerInfo>[],
+            returnValue: _i10.Future<List<_i14.V_PeerInfo>>.value(
+              <_i14.V_PeerInfo>[],
             ),
-            returnValueForMissingStub: _i10.Future<List<_i13.V_PeerInfo>>.value(
-              <_i13.V_PeerInfo>[],
+            returnValueForMissingStub: _i10.Future<List<_i14.V_PeerInfo>>.value(
+              <_i14.V_PeerInfo>[],
             ),
           )
-          as _i10.Future<List<_i13.V_PeerInfo>>);
+          as _i10.Future<List<_i14.V_PeerInfo>>);
 
   @override
-  _i10.Future<void> provide(_i14.CID? cid) =>
+  _i10.Future<void> provide(_i15.CID? cid) =>
       (super.noSuchMethod(
             Invocation.method(#provide, [cid]),
             returnValue: _i10.Future<void>.value(),
@@ -425,7 +435,7 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
           as _i10.Future<void>);
 
   @override
-  _i10.Future<void> provideAll(List<_i14.CID>? cids) =>
+  _i10.Future<void> provideAll(List<_i15.CID>? cids) =>
       (super.noSuchMethod(
             Invocation.method(#provideAll, [cids]),
             returnValue: _i10.Future<void>.value(),
@@ -434,7 +444,7 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
           as _i10.Future<void>);
 
   @override
-  _i10.Future<void> handleRoutingTableUpdate(_i13.V_PeerInfo? peer) =>
+  _i10.Future<void> handleRoutingTableUpdate(_i14.V_PeerInfo? peer) =>
       (super.noSuchMethod(
             Invocation.method(#handleRoutingTableUpdate, [peer]),
             returnValue: _i10.Future<void>.value(),
@@ -444,8 +454,8 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
 
   @override
   _i10.Future<void> handleProvideRequest(
-    _i14.CID? cid,
-    _i15.PeerId? provider,
+    _i15.CID? cid,
+    _i16.PeerId? provider,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#handleProvideRequest, [cid, provider]),
@@ -455,13 +465,13 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
           as _i10.Future<void>);
 
   @override
-  List<_i15.PeerId> getLocalProvidersForCid(String? cidStr) =>
+  List<_i16.PeerId> getLocalProvidersForCid(String? cidStr) =>
       (super.noSuchMethod(
             Invocation.method(#getLocalProvidersForCid, [cidStr]),
-            returnValue: <_i15.PeerId>[],
-            returnValueForMissingStub: <_i15.PeerId>[],
+            returnValue: <_i16.PeerId>[],
+            returnValueForMissingStub: <_i16.PeerId>[],
           )
-          as List<_i15.PeerId>);
+          as List<_i16.PeerId>);
 
   @override
   _i10.Future<String?> resolveDNSLink(String? domainName) =>
@@ -490,7 +500,7 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockContentRoutingHandler extends _i1.Mock
-    implements _i16.ContentRoutingHandler {
+    implements _i17.ContentRoutingHandler {
   @override
   _i10.Future<void> start() =>
       (super.noSuchMethod(

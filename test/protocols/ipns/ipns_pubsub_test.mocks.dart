@@ -540,6 +540,15 @@ class MockPubSubHandler extends _i1.Mock implements _i19.PubSubHandler {
           as _i11.Future<void>);
 
   @override
+  _i11.Future<void> publishData(String? topic, _i12.Uint8List? data) =>
+      (super.noSuchMethod(
+            Invocation.method(#publishData, [topic, data]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   void onMessage(String? topic, void Function(String)? handler) =>
       super.noSuchMethod(
         Invocation.method(#onMessage, [topic, handler]),

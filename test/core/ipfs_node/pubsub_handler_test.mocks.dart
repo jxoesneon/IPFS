@@ -9,8 +9,8 @@ import 'dart:typed_data' as _i8;
 
 import 'package:dart_ipfs/src/core/crypto/peer_key_registry.dart' as _i2;
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart' as _i3;
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart' as _i11;
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart' as _i12;
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart' as _i9;
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart' as _i10;
 import 'package:dart_ipfs/src/transport/router_events.dart' as _i7;
 import 'package:dart_ipfs/src/transport/router_interface.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
@@ -337,7 +337,7 @@ class MockRouterInterface extends _i1.Mock implements _i4.RouterInterface {
 /// A class which mocks [PubSubClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockPubSubClient extends _i1.Mock implements _i11.PubSubClient {
+class MockPubSubClient extends _i1.Mock implements _i9.PubSubClient {
   @override
   _i2.PeerKeyRegistry get keyRegistry =>
       (super.noSuchMethod(
@@ -381,13 +381,13 @@ class MockPubSubClient extends _i1.Mock implements _i11.PubSubClient {
           as List<String>);
 
   @override
-  _i6.Stream<_i12.PubSubMessage> get messagesStream =>
+  _i6.Stream<_i10.PubSubMessage> get messagesStream =>
       (super.noSuchMethod(
             Invocation.getter(#messagesStream),
-            returnValue: _i6.Stream<_i12.PubSubMessage>.empty(),
-            returnValueForMissingStub: _i6.Stream<_i12.PubSubMessage>.empty(),
+            returnValue: _i6.Stream<_i10.PubSubMessage>.empty(),
+            returnValueForMissingStub: _i6.Stream<_i10.PubSubMessage>.empty(),
           )
-          as _i6.Stream<_i12.PubSubMessage>);
+          as _i6.Stream<_i10.PubSubMessage>);
 
   @override
   Set<String> peersForTopic(String? topic) =>
@@ -438,6 +438,15 @@ class MockPubSubClient extends _i1.Mock implements _i11.PubSubClient {
   _i6.Future<void> publish(String? topic, String? message) =>
       (super.noSuchMethod(
             Invocation.method(#publish, [topic, message]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> publishData(String? topic, _i8.Uint8List? data) =>
+      (super.noSuchMethod(
+            Invocation.method(#publishData, [topic, data]),
             returnValue: _i6.Future<void>.value(),
             returnValueForMissingStub: _i6.Future<void>.value(),
           )

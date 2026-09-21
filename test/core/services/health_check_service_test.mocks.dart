@@ -367,6 +367,15 @@ class MockIPFSNode extends _i1.Mock implements _i11.IPFSNode {
           as _i13.Future<void>);
 
   @override
+  _i13.Future<void> publishData(String? topic, _i16.Uint8List? data) =>
+      (super.noSuchMethod(
+            Invocation.method(#publishData, [topic, data]),
+            returnValue: _i13.Future<void>.value(),
+            returnValueForMissingStub: _i13.Future<void>.value(),
+          )
+          as _i13.Future<void>);
+
+  @override
   List<String> pubsubLs() =>
       (super.noSuchMethod(
             Invocation.method(#pubsubLs, []),
