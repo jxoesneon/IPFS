@@ -305,7 +305,7 @@ void main() {
         expect(response.statusCode, equals(200));
         expect(
           response.headers['content-type'],
-          equals('application/vnd.ipfs.raw-block'),
+          equals('application/vnd.ipld.raw'),
         );
       });
 
@@ -322,7 +322,7 @@ void main() {
         expect(response.statusCode, equals(200));
         expect(
           response.headers['content-type'],
-          equals('application/vnd.ipfs.car'),
+          startsWith('application/vnd.ipld.car'),
         );
       });
     });

@@ -109,6 +109,107 @@ void main() {
       expect(dataFound, isTrue);
     });
 
+    test('Accept header negotiates application/vnd.ipld.raw', () async {
+      final testData = utf8.encode('Accept negotiation test');
+      final cid = await dartIpfs.blockPut(testData, codec: 'raw');
+
+      final result = await _gatewayRequest(
+        '/ipfs/$cid',
+        headers: {'accept': 'application/vnd.ipld.raw'},
+      );
+
+      expect(result.statusCode, equals(200));
+      expect(
+        result.headers.value('content-type'),
+        equals('application/vnd.ipld.raw'),
+      );
+      // Spec: negotiated responses identify the selected representation.
+      expect(
+        result.headers.value('content-location'),
+        contains('format=raw'),
+      );
+      expect(result.body, equals(testData));
+    });
+
+    test('?format=dag-json returns serialized IPLD node', () async {
+      final testData = utf8.encode('dag-json test');
+      final cid = await dartIpfs.blockPut(testData, codec: 'raw');
+
+      final result = await _gatewayRequest('/ipfs/$cid?format=dag-json');
+
+      expect(result.statusCode, equals(200));
+      expect(
+        result.headers.value('content-type'),
+        equals('application/vnd.ipld.dag-json'),
+      );
+      // Raw blocks serialize to {"/": {"bytes": "<base64>"}} per DAG-JSON.
+      final node = jsonDecode(utf8.decode(result.body)) as Map;
+      expect(node, contains('/'));
+    });
+
+    test('?format=dag-cbor returns serialized IPLD node', () async {
+      final testData = utf8.encode('dag-cbor test');
+      final cid = await dartIpfs.blockPut(testData, codec: 'raw');
+
+      final result = await _gatewayRequest('/ipfs/$cid?format=dag-cbor');
+
+      expect(result.statusCode, equals(200));
+      expect(
+        result.headers.value('content-type'),
+        equals('application/vnd.ipld.dag-cbor'),
+      );
+      expect(result.body, isNotEmpty);
+    });
+
+    test('raw response carries spec Content-Disposition filename', () async {
+      final testData = utf8.encode('disposition test');
+      final cid = await dartIpfs.blockPut(testData, codec: 'raw');
+
+      final result = await _gatewayRequest('/ipfs/$cid?format=raw');
+
+      expect(result.statusCode, equals(200));
+      expect(
+        result.headers.value('content-disposition'),
+        contains('filename="$cid.bin"'),
+      );
+    });
+
+    test('unsupported format request returns 406 Not Acceptable', () async {
+      final testData = utf8.encode('not acceptable test');
+      final cid = await dartIpfs.blockPut(testData, codec: 'raw');
+
+      // 'tar' is a valid path-gateway format this implementation does not
+      // produce, so the trustless contract requires 406 — never HTML.
+      final result = await _gatewayRequest('/ipfs/$cid?format=tar');
+
+      expect(result.statusCode, equals(406));
+      expect(
+        result.headers.value('content-type') ?? '',
+        isNot(contains('text/html')),
+      );
+    });
+
+    test('?format=ipns-record returns a signed IPNS record', () async {
+      final testData = utf8.encode('ipns record test');
+      final cid = await dartIpfs.blockPut(testData, codec: 'raw');
+
+      // Publish the CID under the node's own IPNS key.
+      final published = await dartIpfs.namePublish('/ipfs/$cid');
+      final name = (published['Name'] ?? published['name']) as String;
+
+      final result = await _gatewayRequest(
+        '/ipns/$name?format=ipns-record',
+      );
+
+      expect(result.statusCode, equals(200));
+      expect(
+        result.headers.value('content-type'),
+        equals('application/vnd.ipfs.ipns-record'),
+      );
+      // Signed IpnsEntry protobuf bytes.
+      expect(result.body.length, greaterThan(20));
+    });
+
     test('default gateway response returns the original content', () async {
       // Create test data
       final testData = utf8.encode('Default gateway test content');
@@ -128,6 +229,41 @@ void main() {
       expect(fetchedData.length, equals(testData.length));
     });
   });
+}
+
+/// A gateway HTTP response: status, headers, and body bytes.
+class _GatewayResult {
+  _GatewayResult(this.statusCode, this.headers, this.body);
+
+  final int statusCode;
+  final HttpHeaders headers;
+  final List<int> body;
+}
+
+/// Performs a GET against the dart_ipfs trustless gateway, returning the
+/// full response so tests can assert on status, headers, and body.
+Future<_GatewayResult> _gatewayRequest(
+  String path, {
+  Map<String, String>? headers,
+}) async {
+  // Uri.parse keeps the ?query intact; Uri.http would percent-encode it.
+  final uri = Uri.parse(
+    'http://$kDartIpfsGatewayHost:$kDartIpfsGatewayPort$path',
+  );
+  final client = HttpClient();
+  try {
+    final request = await client.getUrl(uri);
+    headers?.forEach(request.headers.add);
+    final response = await request.close();
+    final chunks = await response.toList();
+    return _GatewayResult(
+      response.statusCode,
+      response.headers,
+      chunks.expand((e) => e).toList(),
+    );
+  } finally {
+    client.close();
+  }
 }
 
 /// Helper to search for a byte sequence within a larger byte array.

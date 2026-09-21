@@ -2,10 +2,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
+import 'package:dart_ipfs/src/core/ipld/codecs/ipld_codec.dart';
 import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
@@ -19,6 +21,9 @@ import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart' as utils_dnslink;
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs/src/utils/varint.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart'
+    show MultibaseUtils, Multicodec, MultihashInfo;
 import 'package:mime/mime.dart';
 import 'package:multibase/multibase.dart';
 import 'package:shelf/shelf.dart';
@@ -83,6 +88,74 @@ enum TrustlessFormat {
 
   /// Canonical DAG-CBOR response format.
   dagCbor,
+}
+
+/// Result of trustless format negotiation for a single request.
+class _TrustlessNegotiation {
+  _TrustlessNegotiation({
+    this.format,
+    this.formatFromQuery = false,
+    this.acceptFormat,
+    this.carAcceptParams = const {},
+    this.error,
+  });
+
+  /// The negotiated trustless format, or `null` when the request did not
+  /// ask for one (descriptive path-gateway handling applies).
+  final TrustlessFormat? format;
+
+  /// Whether the format came from the `?format=` query parameter.
+  final bool formatFromQuery;
+
+  /// The format negotiated from the `Accept` header, if any. Used to detect
+  /// `format`/`Accept` mismatches for `Content-Location` reporting.
+  final TrustlessFormat? acceptFormat;
+
+  /// CAR content-type parameters (`version`, `order`, `dups`) negotiated via
+  /// the `Accept` header entry that selected the CAR format.
+  final Map<String, String> carAcceptParams;
+
+  /// A ready-made error response (400/406) when negotiation failed.
+  final Response? error;
+}
+
+/// A single parsed `Accept` header entry.
+class _AcceptEntry {
+  _AcceptEntry(this.mediaType, this.q, this.params);
+
+  /// The lowercased media type.
+  final String mediaType;
+
+  /// The parsed `q` weight (defaults to 1.0).
+  final double q;
+
+  /// Content-type parameters attached to this entry (excluding `q`).
+  final Map<String, String> params;
+}
+
+/// Result of parsing an `Accept` header.
+class _AcceptResult {
+  _AcceptResult(this.format, this.carParams);
+
+  /// The selected trustless format.
+  final TrustlessFormat format;
+
+  /// CAR content-type parameters, merged with `car-*` query overrides.
+  final Map<String, String> carParams;
+}
+
+/// Mutable traversal state shared across a CAR generation walk.
+class _CarTraversal {
+  _CarTraversal({required this.dedup});
+
+  /// Whether repeated CIDs are written only once (`dups=n`).
+  final bool dedup;
+
+  /// CIDs already emitted (populated only when [dedup] is true).
+  final Set<String> seen = {};
+
+  /// Total blocks written so far, regardless of dedup.
+  int written = 0;
 }
 
 /// Handles IPFS Gateway HTTP requests following the IPFS Gateway specs.
@@ -213,10 +286,13 @@ class GatewayHandler {
         if (denylisted != null) {
           response = denylisted;
         } else {
-          final cid = CID.decode(cidStr);
-          final format = _detectTrustlessFormat(request);
-          if (format != null) {
-            response = await _serveTrustless(cid, subPath, format, request);
+          final cid = _decodeCid(cidStr);
+          final negotiation = _negotiateTrustless(request);
+          final negError = negotiation.error;
+          if (negError != null) {
+            response = negError;
+          } else if (negotiation.format != null) {
+            response = await _serveTrustless(cid, subPath, negotiation, request);
           } else {
             response = await _serveContent(cidStr, subPath, request);
           }
@@ -242,18 +318,29 @@ class GatewayHandler {
         if (denylisted != null) {
           response = denylisted;
         } else {
-          final format = _detectTrustlessFormat(request);
-          if (format == TrustlessFormat.ipnsRecord) {
-            response = await _serveIpnsRecord(name, request);
+          final negotiation = _negotiateTrustless(request);
+          final negError = negotiation.error;
+          if (negError != null) {
+            response = negError;
+          } else if (negotiation.format == TrustlessFormat.ipnsRecord) {
+            if (subPath.isNotEmpty) {
+              // application/vnd.ipfs.ipns-record only applies to the IPNS
+              // name itself; paths under it are a 400 per the spec.
+              response = Response.badRequest(
+                body: 'IPNS record requests do not support sub-paths',
+              );
+            } else {
+              response = await _serveIpnsRecord(name, request, negotiation);
+            }
           } else if (ipnsResolver == null) {
             response = Response(501, body: 'IPNS resolution disabled');
           } else {
             final cid = await ipnsResolver!(name);
-            if (format != null) {
+            if (negotiation.format != null) {
               response = await _serveTrustless(
-                CID.decode(cid),
+                _decodeCid(cid),
                 subPath,
-                format,
+                negotiation,
                 request,
                 ipnsPath: '/ipns/$name',
               );
@@ -275,70 +362,224 @@ class GatewayHandler {
     return response;
   }
 
-  /// Detects the requested trustless response format from the request.
+  /// Media type for raw block responses, per the trustless gateway spec.
+  static const String mediaTypeRaw = 'application/vnd.ipld.raw';
+
+  /// Media type for CAR stream responses, per the trustless gateway spec.
+  static const String mediaTypeCar = 'application/vnd.ipld.car';
+
+  /// Media type for signed IPNS record responses.
+  static const String mediaTypeIpnsRecord = 'application/vnd.ipfs.ipns-record';
+
+  /// Media type for DAG-JSON responses.
+  static const String mediaTypeDagJson = 'application/vnd.ipld.dag-json';
+
+  /// Media type for DAG-CBOR responses.
+  static const String mediaTypeDagCbor = 'application/vnd.ipld.dag-cbor';
+
+  /// Media types understood by `_parseAcceptHeader`.
+  static const Map<String, TrustlessFormat> _mediaTypeFormats = {
+    mediaTypeRaw: TrustlessFormat.raw,
+    mediaTypeCar: TrustlessFormat.car,
+    mediaTypeIpnsRecord: TrustlessFormat.ipnsRecord,
+    mediaTypeDagJson: TrustlessFormat.dagJson,
+    mediaTypeDagCbor: TrustlessFormat.dagCbor,
+    // Legacy names emitted by earlier versions of this gateway; accepted for
+    // inbound compatibility but never produced in responses.
+    'application/vnd.ipfs.raw-block': TrustlessFormat.raw,
+    'application/vnd.ipfs.car': TrustlessFormat.car,
+  };
+
+  /// `?format=` values that are valid path-gateway formats but not
+  /// implemented by this gateway; they produce 406 rather than 400.
+  static const _unsupportedPathGatewayFormats = {
+    'tar',
+    'json',
+    'cbor',
+    'fs',
+    'application/x-tar',
+    'application/json',
+    'application/cbor',
+  };
+
+  /// Detects the requested trustless response format and negotiates
+  /// content-type parameters for the request.
   ///
-  /// Query parameter `?format=` takes precedence over the `Accept` header.
-  /// Returns `null` when no trustless format is requested.
-  TrustlessFormat? _detectTrustlessFormat(Request request) {
+  /// `?format=` takes precedence over the `Accept` header, per the gateway
+  /// spec. When `format` is `null` no trustless format was requested and the
+  /// descriptive path gateway applies. When `error` is non-null the request
+  /// must be rejected with that response (400/406) instead of silently
+  /// falling back to a deserialized response.
+  _TrustlessNegotiation _negotiateTrustless(Request request) {
     final formatParam = request.url.queryParameters['format'];
-    if (formatParam != null) {
-      return _parseFormat(formatParam);
+    final acceptResult = _parseAcceptHeader(request);
+
+    if (formatParam != null && formatParam.isNotEmpty) {
+      final format = _parseFormat(formatParam);
+      if (format == null) {
+        final known = _unsupportedPathGatewayFormats.contains(
+          formatParam.toLowerCase(),
+        );
+        return _TrustlessNegotiation(
+          error: Response(
+            known ? 406 : 400,
+            body: known
+                ? 'Unsupported response format: $formatParam'
+                : 'Invalid format: $formatParam',
+            headers: const {'Content-Type': 'text/plain; charset=utf-8'},
+          ),
+        );
+      }
+      return _TrustlessNegotiation(
+        format: format,
+        formatFromQuery: true,
+        acceptFormat: acceptResult?.format,
+        carAcceptParams: acceptResult?.carParams ?? const {},
+      );
     }
 
-    final accept = request.headers['accept'];
-    if (accept != null) {
-      return _parseAcceptHeader(accept);
+    if (acceptResult != null) {
+      return _TrustlessNegotiation(
+        format: acceptResult.format,
+        carAcceptParams: acceptResult.carParams,
+      );
     }
-
-    return null;
+    return _TrustlessNegotiation();
   }
 
-  /// Parses a `?format=` query value into a trustless format.
+  /// Parses a `?format=` query value into a trustless format. Both the short
+  /// spec aliases and the full media types are accepted.
   TrustlessFormat? _parseFormat(String value) {
-    switch (value) {
+    switch (value.toLowerCase()) {
       case 'raw':
+      case mediaTypeRaw:
         return TrustlessFormat.raw;
       case 'car':
+      case mediaTypeCar:
         return TrustlessFormat.car;
       case 'ipns-record':
+      case mediaTypeIpnsRecord:
         return TrustlessFormat.ipnsRecord;
       case 'dag-json':
+      case mediaTypeDagJson:
         return TrustlessFormat.dagJson;
       case 'dag-cbor':
+      case mediaTypeDagCbor:
         return TrustlessFormat.dagCbor;
       default:
         return null;
     }
   }
 
-  /// Parses the `Accept` header and returns the first supported trustless
+  /// Parses the `Accept` header and returns the best supported trustless
   /// media type, or `null` if none is supported.
-  TrustlessFormat? _parseAcceptHeader(String accept) {
-    const mediaTypeMap = {
-      'application/vnd.ipfs.raw-block': TrustlessFormat.raw,
-      'application/vnd.ipfs.car': TrustlessFormat.car,
-      'application/vnd.ipfs.ipns-record': TrustlessFormat.ipnsRecord,
-      'application/vnd.ipld.dag-json': TrustlessFormat.dagJson,
-      'application/vnd.ipld.dag-cbor': TrustlessFormat.dagCbor,
-    };
+  ///
+  /// Entries are honored in descending `q` order (RFC 9110 §12.5.1). CAR
+  /// entries whose content-type parameters (`version`, `order`, `dups`) —
+  /// after `car-*` query parameter overrides — cannot be satisfied are
+  /// skipped in favor of lower-preference entries; if every acceptable CAR
+  /// variant is unsatisfiable, the first one is still returned so the CAR
+  /// handler can respond with a spec-compliant 406.
+  _AcceptResult? _parseAcceptHeader(Request request) {
+    final accept = request.headers['accept'];
+    if (accept == null) return null;
 
-    // Split by comma and ignore any q-values; preserve header order.
-    final entries = accept.split(',');
-    for (final entry in entries) {
-      final mediaType = entry.split(';').first.trim().toLowerCase();
-      final format = mediaTypeMap[mediaType];
-      if (format != null) {
-        return format;
+    final entries = <_AcceptEntry>[];
+    for (final rawEntry in accept.split(',')) {
+      final parts = rawEntry.split(';');
+      final type = parts.first.trim().toLowerCase();
+      if (type.isEmpty) continue;
+      var q = 1.0;
+      final params = <String, String>{};
+      for (final part in parts.skip(1)) {
+        final kv = part.split('=');
+        if (kv.length != 2) continue;
+        final name = kv[0].trim().toLowerCase();
+        final value = kv[1].trim().replaceAll('"', '');
+        if (name == 'q') {
+          q = double.tryParse(value) ?? 1.0;
+        } else {
+          params[name] = value;
+        }
       }
+      entries.add(_AcceptEntry(type, q, params));
+    }
+
+    // Sort by descending q, keeping header order for equal q values.
+    final order = List<int>.generate(entries.length, (i) => i)..sort((a, b) {
+      final cmp = entries[b].q.compareTo(entries[a].q);
+      return cmp != 0 ? cmp : a.compareTo(b);
+    });
+
+    _AcceptEntry? firstUnsatisfiableCar;
+    for (final i in order) {
+      final entry = entries[i];
+      if (entry.q <= 0) continue;
+      final format = _mediaTypeFormats[entry.mediaType];
+      if (format == null) continue;
+      if (format == TrustlessFormat.car) {
+        final merged = _mergedCarParams(entry.params, request);
+        if (_carParamsSatisfiable(merged)) {
+          return _AcceptResult(format, merged);
+        }
+        firstUnsatisfiableCar ??= entry;
+        continue;
+      }
+      return _AcceptResult(format, const {});
+    }
+
+    if (firstUnsatisfiableCar != null) {
+      return _AcceptResult(
+        TrustlessFormat.car,
+        _mergedCarParams(firstUnsatisfiableCar.params, request),
+      );
     }
     return null;
+  }
+
+  /// Merges CAR content-type parameters from an `Accept` entry with the
+  /// `car-version`/`car-order`/`car-dups` query parameters, which take
+  /// precedence per the spec.
+  Map<String, String> _mergedCarParams(
+    Map<String, String> acceptParams,
+    Request request,
+  ) {
+    final merged = Map<String, String>.of(acceptParams);
+    final qp = request.url.queryParameters;
+    for (final key in const ['version', 'order', 'dups']) {
+      final override = qp['car-$key'];
+      if (override != null) merged[key] = override;
+    }
+    return merged;
+  }
+
+  /// Whether the given CAR content-type parameters describe a variant this
+  /// gateway can produce (version 1, `dfs`/`unk` order, `y`/`n` dups).
+  bool _carParamsSatisfiable(Map<String, String> params) {
+    final version = params['version'];
+    if (version != null && version.isNotEmpty && version != '1') {
+      return false;
+    }
+    final order = params['order'];
+    if (order != null &&
+        order.isNotEmpty &&
+        order != 'dfs' &&
+        order != 'unk' &&
+        order != 'unknown') {
+      return false;
+    }
+    final dups = params['dups'];
+    if (dups != null && dups.isNotEmpty && dups != 'y' && dups != 'n') {
+      return false;
+    }
+    return true;
   }
 
   /// Dispatches a trustless format request to the appropriate handler.
   Future<Response> _serveTrustless(
     CID cid,
     String subPath,
-    TrustlessFormat format,
+    _TrustlessNegotiation negotiation,
     Request request, {
     String? ipnsPath,
   }) async {
@@ -347,18 +588,39 @@ class GatewayHandler {
       return denylisted;
     }
 
-    switch (format) {
+    switch (negotiation.format!) {
       case TrustlessFormat.raw:
-        return await _serveRawBlock(cid, request, ipnsPath: ipnsPath);
+        return await _serveRawBlock(
+          cid,
+          request,
+          ipnsPath: ipnsPath,
+          negotiation: negotiation,
+        );
       case TrustlessFormat.car:
-        return await _serveCar(cid, subPath, request, ipnsPath: ipnsPath);
+        return await _serveCar(
+          cid,
+          subPath,
+          request,
+          ipnsPath: ipnsPath,
+          negotiation: negotiation,
+        );
       case TrustlessFormat.dagJson:
-        return await _serveDagJson(cid, request, ipnsPath: ipnsPath);
+        return await _serveDagJson(
+          cid,
+          request,
+          ipnsPath: ipnsPath,
+          negotiation: negotiation,
+        );
       case TrustlessFormat.dagCbor:
-        return await _serveDagCbor(cid, request, ipnsPath: ipnsPath);
+        return await _serveDagCbor(
+          cid,
+          request,
+          ipnsPath: ipnsPath,
+          negotiation: negotiation,
+        );
       case TrustlessFormat.ipnsRecord:
-        // ipns-record requests are only handled at /ipns/<name> paths by the
-        // caller, so reaching here is an internal error for /ipfs/ paths.
+        // ipns-record requests are only valid under the IPNS namespace, and
+        // do not support sub-paths (per the path-gateway spec).
         return Response.badRequest(
           body: 'IPNS record format not supported for /ipfs/ paths',
         );
@@ -490,66 +752,340 @@ class GatewayHandler {
   // Trustless gateway response handlers
   // ---------------------------------------------------------------------------
 
+  /// Whether the request carries `Cache-Control: only-if-cached`, in which
+  /// case trustless responses must come from the local block store only and
+  /// a missing root block yields 412 Precondition Failed.
+  bool _requestsOnlyIfCached(Request request) {
+    final cc = request.headers['cache-control'];
+    if (cc == null) return false;
+    return cc
+        .toLowerCase()
+        .split(',')
+        .map((e) => e.trim())
+        .contains('only-if-cached');
+  }
+
+  /// Headers shared by every negotiated trustless response.
+  Map<String, String> _trustlessHeaders({
+    required String contentType,
+    required int contentLength,
+    required String path,
+    required String etag,
+    String? contentDisposition,
+    String? contentLocation,
+    String cacheControl = 'public, max-age=29030400, immutable',
+  }) {
+    return {
+      'Content-Type': contentType,
+      'Content-Length': contentLength.toString(),
+      'X-IPFS-Path': path,
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': cacheControl,
+      'Etag': etag,
+      'Vary': 'Accept',
+      'Content-Disposition': ?contentDisposition,
+      'Content-Location': ?contentLocation,
+    };
+  }
+
+  /// Short `?format=` name for a trustless format.
+  String _formatName(TrustlessFormat format) {
+    switch (format) {
+      case TrustlessFormat.raw:
+        return 'raw';
+      case TrustlessFormat.car:
+        return 'car';
+      case TrustlessFormat.ipnsRecord:
+        return 'ipns-record';
+      case TrustlessFormat.dagJson:
+        return 'dag-json';
+      case TrustlessFormat.dagCbor:
+        return 'dag-cbor';
+    }
+  }
+
+  /// Per the path-gateway spec, `Content-Location` should be returned when a
+  /// non-default format was negotiated — when `format` was absent from the
+  /// URL or disagrees with the `Accept` header — so caches can key the
+  /// response separately. We return it for every negotiated response.
+  String? _contentLocation(Request request, _TrustlessNegotiation neg) {
+    final format = neg.format;
+    if (format == null) return null;
+    final uri = request.requestedUri;
+    final params = Map<String, String>.of(uri.queryParameters);
+    params['format'] = _formatName(format);
+    return Uri(path: uri.path, queryParameters: params).toString();
+  }
+
+  /// Builds an RFC 6266 `Content-Disposition` value for a binary download.
+  ///
+  /// The spec mandates `attachment` for raw block and CAR responses so that
+  /// browsers never render the bytes. A `?filename=` query parameter may
+  /// override the default filename; non-ASCII names get both an ASCII-safe
+  /// `filename` and an RFC 8187 `filename*` parameter.
+  String _contentDisposition(Request request, String defaultFilename) {
+    final requested = request.url.queryParameters['filename'];
+    final filename = (requested != null && requested.isNotEmpty)
+        ? requested
+        : defaultFilename;
+    final ascii = filename
+        .replaceAll('\\', '_')
+        .replaceAll('"', '_')
+        .replaceAll(RegExp(r'[^\x20-\x7e]'), '_');
+    if (ascii == filename) {
+      return 'attachment; filename="$ascii"';
+    }
+    final encoded = Uri.encodeComponent(filename);
+    return "attachment; filename=\"$ascii\"; filename*=UTF-8''$encoded";
+  }
+
   /// Serves the raw block bytes for the requested CID.
   Future<Response> _serveRawBlock(
     CID cid,
     Request request, {
     String? ipnsPath,
+    required _TrustlessNegotiation negotiation,
   }) async {
-    final block = await _getBlockByCid(cid.encode());
+    final localOnly = _requestsOnlyIfCached(request);
+    final block = await _getBlock(cid, localOnly: localOnly);
     if (block == null) {
+      if (localOnly) {
+        return Response(
+          412,
+          body: 'Requested block is not available locally',
+          headers: const {'Content-Type': 'text/plain; charset=utf-8'},
+        );
+      }
       return Response.notFound('Block not found');
     }
 
-    final headers = {
-      'Content-Type': 'application/vnd.ipfs.raw-block',
-      'Content-Length': block.data.length.toString(),
-      'X-IPFS-Path': ipnsPath ?? '/ipfs/${cid.encode()}',
-      'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'public, max-age=29030400, immutable',
-    };
+    final cidStr = cid.encode();
+    final headers = _trustlessHeaders(
+      contentType: mediaTypeRaw,
+      contentLength: block.data.length,
+      path: ipnsPath ?? '/ipfs/$cidStr',
+      etag: '"$cidStr.raw"',
+      contentDisposition: _contentDisposition(request, '$cidStr.bin'),
+      contentLocation: _contentLocation(request, negotiation),
+    );
 
     return Response.ok(block.data, headers: headers);
   }
 
-  /// Serves a CAR v1 archive containing the requested CID and reachable DAG.
+  /// Serves a CAR v1 archive containing the requested CID and the DAG
+  /// selected by `dag-scope`/`entity-bytes`, honoring `car-order`,
+  /// `car-dups` and `car-version` negotiation.
   Future<Response> _serveCar(
     CID cid,
     String subPath,
     Request request, {
     String? ipnsPath,
+    required _TrustlessNegotiation negotiation,
   }) async {
-    // Resolve sub-path navigation first so we know which target node to archive.
-    // The CAR header root is always the originally requested CID.
-    final (targetCid, targetBlock) = await _resolveSubPath(cid, subPath);
-    if (targetBlock == null) {
+    const plainText = {'Content-Type': 'text/plain; charset=utf-8'};
+    final localOnly = _requestsOnlyIfCached(request);
+
+    // CAR content-type parameters: `car-*` query parameters take precedence
+    // over `Accept` entry parameters (per IPIP-0412 / the trustless spec).
+    final carParams = _mergedCarParams(negotiation.carAcceptParams, request);
+
+    final versionParam = carParams['version'];
+    if (versionParam != null &&
+        versionParam.isNotEmpty &&
+        versionParam != '1') {
+      return Response(
+        406,
+        body: 'Unsupported CAR version: $versionParam',
+        headers: plainText,
+      );
+    }
+    final orderParam = carParams['order'];
+    if (orderParam != null &&
+        orderParam.isNotEmpty &&
+        orderParam != 'dfs' &&
+        orderParam != 'unk' &&
+        orderParam != 'unknown') {
+      return Response(
+        406,
+        body: 'Unsupported CAR order: $orderParam',
+        headers: plainText,
+      );
+    }
+    final dupsParam = carParams['dups'];
+    final bool sendDuplicates;
+    if (dupsParam == null || dupsParam.isEmpty || dupsParam == 'n') {
+      sendDuplicates = false;
+    } else if (dupsParam == 'y') {
+      sendDuplicates = true;
+    } else {
+      return Response(
+        400,
+        body: 'Invalid CAR dups value: $dupsParam',
+        headers: plainText,
+      );
+    }
+
+    final qp = request.url.queryParameters;
+    var dagScope = qp['dag-scope'] ?? 'all';
+    if (dagScope != 'block' && dagScope != 'entity' && dagScope != 'all') {
+      return Response(
+        400,
+        body: 'Invalid dag-scope value: $dagScope',
+        headers: plainText,
+      );
+    }
+
+    // `entity-bytes` implies dag-scope=entity.
+    (int, int?)? entityBytes;
+    final entityBytesParam = qp['entity-bytes'];
+    if (entityBytesParam != null) {
+      final parsed = _parseEntityBytes(entityBytesParam);
+      if (parsed == null) {
+        return Response(
+          400,
+          body: 'Invalid entity-bytes value: $entityBytesParam',
+          headers: plainText,
+        );
+      }
+      entityBytes = parsed;
+      dagScope = 'entity';
+    }
+
+    // The root block must exist before we commit to a response: 404 (or 412
+    // for only-if-cached requests) rather than a partial CAR.
+    final rootBlock = await _getBlock(cid, localOnly: localOnly);
+    if (rootBlock == null) {
+      if (localOnly) {
+        return Response(
+          412,
+          body: 'Requested block is not available locally',
+          headers: plainText,
+        );
+      }
       return Response.notFound('Block not found');
     }
 
+    // Resolve the sub-path, keeping every traversed block so the CAR
+    // includes the blocks required to verify each path segment.
+    final pathBlocks = await _resolvePathBlocks(
+      cid,
+      rootBlock,
+      subPath,
+      localOnly: localOnly,
+    );
+    if (pathBlocks == null) {
+      return Response.notFound('Path not found');
+    }
+    final targetCid = pathBlocks.last.$1;
+    final targetBlock = pathBlocks.last.$2;
+    final baseDepth = pathBlocks.length - 1;
+
+    // Resolve entity-bytes against the terminating entity when it is a
+    // UnixFS file with a known size; the parameter is ignored for entities
+    // that are not byte-addressable (equivalent to dag-scope=entity).
+    (int, int)? entityRange;
+    if (entityBytes != null) {
+      final fileSize = _unixfsFileSize(targetBlock);
+      if (fileSize != null) {
+        final resolved = _resolveEntityRange(
+          fileSize,
+          entityBytes.$1,
+          entityBytes.$2,
+        );
+        if (resolved == null) {
+          return Response(
+            400,
+            body: 'entity-bytes range is entirely outside the entity',
+            headers: plainText,
+          );
+        }
+        entityRange = resolved;
+      }
+    }
+
+    // An identity root carries its data inline; the CAR still advertises the
+    // root in the header but the data section stays empty, since identity
+    // blocks MUST NOT appear in CAR responses.
+    if (cid.multihash.code == 0x00) {
+      final carBytes = _carBytesForIdentityRoot(cid);
+      final cidStr = cid.encode();
+      final headers = _trustlessHeaders(
+        contentType:
+            '$mediaTypeCar; version=1; order=dfs; dups=${sendDuplicates ? 'y' : 'n'}',
+        contentLength: carBytes.length,
+        path: ipnsPath ?? '/ipfs/$cidStr',
+        etag: '"$dagScope.$cidStr.car"',
+        contentDisposition: _contentDisposition(request, '$cidStr.car'),
+        contentLocation: _contentLocation(request, negotiation),
+      );
+      return Response.ok(carBytes, headers: headers);
+    }
+
     final writer = CarWriter(roots: [cid]);
-    final seen = <String>{};
+    final state = _CarTraversal(dedup: !sendDuplicates);
 
     try {
-      await _writeCarSubtree(targetCid, targetBlock, writer, seen, depth: 0);
-
-      // Ensure the originally requested CID is present in the data section.
-      if (cid.encode() != targetCid.encode() && !seen.contains(cid.encode())) {
-        final rootBlock = await _getBlockByCid(cid.encode());
-        if (rootBlock != null) {
-          await writer.write(cid, rootBlock.data);
-          seen.add(cid.encode());
+      // Path-verification blocks come first (DFS order: root → terminus).
+      for (var i = 0; i < baseDepth; i++) {
+        if (i > _defaultMaxCarDepth) {
+          throw CarException(
+            'CAR traversal exceeded maximum depth $_defaultMaxCarDepth',
+          );
         }
+        await _carWrite(pathBlocks[i].$1, pathBlocks[i].$2, writer, state);
+      }
+
+      switch (dagScope) {
+        case 'block':
+          await _carWrite(targetCid, targetBlock, writer, state);
+        case 'entity':
+          if (entityRange != null) {
+            await _writeCarEntityRange(
+              targetCid,
+              targetBlock,
+              writer,
+              state,
+              depth: baseDepth,
+              rangeFrom: entityRange.$1,
+              rangeTo: entityRange.$2,
+              baseOffset: 0,
+              localOnly: localOnly,
+            );
+          } else {
+            await _writeCarEntity(
+              targetCid,
+              targetBlock,
+              writer,
+              state,
+              depth: baseDepth,
+              localOnly: localOnly,
+            );
+          }
+        default: // 'all'
+          await _writeCarSubtree(
+            targetCid,
+            targetBlock,
+            writer,
+            state,
+            depth: baseDepth,
+            localOnly: localOnly,
+          );
       }
 
       final carBytes = await writer.close();
-      final headers = {
-        'Content-Type': 'application/vnd.ipfs.car',
-        'Content-Length': carBytes.length.toString(),
-        'Content-Disposition': 'attachment; filename="${cid.encode()}.car"',
-        'X-IPFS-Path': ipnsPath ?? '/ipfs/${cid.encode()}',
-        'X-Content-Type-Options': 'nosniff',
-        'Cache-Control': 'public, max-age=29030400, immutable',
-      };
+      final cidStr = cid.encode();
+      final scopeTag = entityRange != null
+          ? 'entity.${entityRange.$1}-${entityRange.$2}'
+          : dagScope;
+      final headers = _trustlessHeaders(
+        contentType:
+            '$mediaTypeCar; version=1; order=dfs; dups=${sendDuplicates ? 'y' : 'n'}',
+        contentLength: carBytes.length,
+        path: ipnsPath ?? '/ipfs/$cidStr',
+        etag: '"$scopeTag.$cidStr.car"',
+        contentDisposition: _contentDisposition(request, '$cidStr.car'),
+        contentLocation: _contentLocation(request, negotiation),
+      );
       return Response.ok(carBytes, headers: headers);
     } on CarException catch (e) {
       _logger.warning('CAR generation failed for ${cid.encode()}: $e');
@@ -560,31 +1096,104 @@ class GatewayHandler {
     }
   }
 
-  /// Recursively writes a node and its reachable DAG into a CAR writer.
+  /// Builds a CAR v1 whose header declares [cid] as the only root with an
+  /// empty data section — used for identity roots such as the `bafkqaaa`
+  /// probe CID, whose bytes are already inline in the CID itself.
+  ///
+  /// The header is the fixed canonical DAG-CBOR map `{roots: [<cid>],
+  /// version: 1}`. It is emitted byte-for-byte here because the DAG-CBOR
+  /// codec cannot re-decode the zero-length identity multihash that a CIDv1
+  /// like `bafkqaaa` carries.
+  Uint8List _carBytesForIdentityRoot(CID cid) {
+    // Tag 42 link value: 0x00 multibase prefix followed by the CID bytes.
+    final taggedCid = Uint8List.fromList([0x00, ...cid.toBytes()]);
+    final header = BytesBuilder()
+      ..addByte(0xa2) // map of 2 pairs ("roots" sorts before "version")
+      ..addByte(0x65) // text(5)
+      ..add('roots'.codeUnits)
+      ..addByte(0x81) // array(1)
+      ..addByte(0xd8) // tag…
+      ..addByte(0x2a) // …42 (CID link)
+      ..add(_cborByteStringHeader(taggedCid.length))
+      ..add(taggedCid)
+      ..addByte(0x67) // text(7)
+      ..add('version'.codeUnits)
+      ..addByte(0x01); // uint 1
+    final headerBytes = header.toBytes();
+    return Uint8List.fromList([
+      ...encodeVarint(headerBytes.length),
+      ...headerBytes,
+    ]);
+  }
+
+  /// CBOR major-type-2 (byte string) header for [length].
+  Uint8List _cborByteStringHeader(int length) {
+    if (length < 24) return Uint8List.fromList([0x40 + length]);
+    if (length < 256) return Uint8List.fromList([0x58, length]);
+    return Uint8List.fromList([0x59, length >> 8, length & 0xff]);
+  }
+
+  /// Writes a single section to the CAR, honoring dedup (`dups=n`), block
+  /// limits, and the spec requirement that identity CIDs (multihash code
+  /// `0x00`) never appear in CAR data sections.
+  ///
+  /// Returns `true` when a section was actually written.
+  Future<bool> _carWrite(
+    CID cid,
+    Block block,
+    CarWriter writer,
+    _CarTraversal state,
+  ) async {
+    if (cid.multihash.code == 0x00) {
+      return false;
+    }
+    if (state.dedup && !state.seen.add(cid.encode())) {
+      return false;
+    }
+    state.written++;
+    if (state.written > _defaultMaxCarBlocks) {
+      throw CarException(
+        'CAR traversal exceeded maximum block count $_defaultMaxCarBlocks',
+      );
+    }
+    await writer.write(cid, block.data);
+    return true;
+  }
+
+  /// Fetches a linked block for CAR traversal, throwing on missing blocks.
+  Future<Block> _carChildBlock(
+    CID cid, {
+    required bool localOnly,
+  }) async {
+    final childBlock = await _getBlock(cid, localOnly: localOnly);
+    if (childBlock == null) {
+      // _getBlock already attempts Bitswap retrieval when available.
+      throw CarException(
+        'Missing linked block ${cid.encode()} during CAR traversal',
+      );
+    }
+    return childBlock;
+  }
+
+  /// Recursively writes a node and its entire reachable DAG (`dag-scope=all`)
+  /// into a CAR writer, in depth-first order.
   Future<void> _writeCarSubtree(
     CID cid,
     Block block,
     CarWriter writer,
-    Set<String> seen, {
+    _CarTraversal state, {
     required int depth,
-    int maxDepth = _defaultMaxCarDepth,
-    int maxBlocks = _defaultMaxCarBlocks,
+    bool localOnly = false,
   }) async {
-    if (depth > maxDepth) {
-      throw CarException('CAR traversal exceeded maximum depth $maxDepth');
-    }
-    if (seen.length >= maxBlocks) {
+    if (depth > _defaultMaxCarDepth) {
       throw CarException(
-        'CAR traversal exceeded maximum block count $maxBlocks',
+        'CAR traversal exceeded maximum depth $_defaultMaxCarDepth',
       );
     }
-
-    final cidStr = cid.encode();
-    if (seen.contains(cidStr)) {
+    final wrote = await _carWrite(cid, block, writer, state);
+    if (state.dedup && !wrote) {
       return;
     }
-    seen.add(cidStr);
-    await writer.write(cid, block.data);
 
     // Only DAG-PB nodes have navigable links for the full DAG traversal.
     if (block.cid.codec != 'dag-pb') {
@@ -595,19 +1204,17 @@ class GatewayHandler {
       final pbNode = PBNode.fromBuffer(block.data);
       for (final link in pbNode.links) {
         final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
-        final childBlock = await _getBlockByCid(linkCid.encode());
-        if (childBlock == null) {
-          // _getBlockByCid already attempts Bitswap retrieval when available.
-          throw CarException(
-            'Missing linked block ${linkCid.encode()} during CAR traversal',
-          );
+        if (linkCid.multihash.code == 0x00) {
+          continue; // identity CID: data is inline in the link
         }
+        final childBlock = await _carChildBlock(linkCid, localOnly: localOnly);
         await _writeCarSubtree(
           linkCid,
           childBlock,
           writer,
-          seen,
+          state,
           depth: depth + 1,
+          localOnly: localOnly,
         );
       }
     } catch (e) {
@@ -617,6 +1224,268 @@ class GatewayHandler {
     }
   }
 
+  /// Writes the blocks that make up the entity rooted at [cid]
+  /// (`dag-scope=entity`): every chunk of a UnixFS file, every shard block
+  /// of a HAMT-sharded UnixFS directory, or just the block itself for any
+  /// other node.
+  Future<void> _writeCarEntity(
+    CID cid,
+    Block block,
+    CarWriter writer,
+    _CarTraversal state, {
+    required int depth,
+    bool localOnly = false,
+  }) async {
+    if (depth > _defaultMaxCarDepth) {
+      throw CarException(
+        'CAR traversal exceeded maximum depth $_defaultMaxCarDepth',
+      );
+    }
+    final wrote = await _carWrite(cid, block, writer, state);
+    if (state.dedup && !wrote) {
+      return;
+    }
+
+    final links = await _entityChildLinks(block);
+    for (final link in links) {
+      final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+      if (linkCid.multihash.code == 0x00) continue;
+      final childBlock = await _carChildBlock(linkCid, localOnly: localOnly);
+      await _writeCarEntity(
+        linkCid,
+        childBlock,
+        writer,
+        state,
+        depth: depth + 1,
+        localOnly: localOnly,
+      );
+    }
+  }
+
+  /// Writes only the blocks needed to verify the byte range
+  /// `[rangeFrom, rangeTo]` of the UnixFS file entity rooted at [cid]
+  /// (`entity-bytes` implies `dag-scope=entity`). If the node is not a
+  /// UnixFS file, falls back to entity semantics for its children.
+  Future<void> _writeCarEntityRange(
+    CID cid,
+    Block block,
+    CarWriter writer,
+    _CarTraversal state, {
+    required int depth,
+    required int rangeFrom,
+    required int rangeTo,
+    required int baseOffset,
+    bool localOnly = false,
+  }) async {
+    if (depth > _defaultMaxCarDepth) {
+      throw CarException(
+        'CAR traversal exceeded maximum depth $_defaultMaxCarDepth',
+      );
+    }
+    final wrote = await _carWrite(cid, block, writer, state);
+    if (state.dedup && !wrote) {
+      return;
+    }
+    // A zero-length resolved range is equivalent to dag-scope=block.
+    if (rangeFrom > rangeTo) {
+      return;
+    }
+    if (block.cid.codec != 'dag-pb') {
+      return;
+    }
+
+    PBNode pbNode;
+    Data? unixfsData;
+    try {
+      pbNode = PBNode.fromBuffer(block.data);
+      unixfsData = pbNode.hasData() ? Data.fromBuffer(pbNode.data) : null;
+    } catch (_) {
+      return;
+    }
+    if (unixfsData == null) {
+      return;
+    }
+
+    if (unixfsData.type != Data_DataType.File) {
+      // Not byte-addressable: entity-bytes degrades to dag-scope=entity.
+      final links = _entityLinksFrom(pbNode, unixfsData);
+      for (final link in links) {
+        final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+        if (linkCid.multihash.code == 0x00) continue;
+        final childBlock = await _carChildBlock(linkCid, localOnly: localOnly);
+        await _writeCarEntity(
+          linkCid,
+          childBlock,
+          writer,
+          state,
+          depth: depth + 1,
+          localOnly: localOnly,
+        );
+      }
+      return;
+    }
+
+    // UnixFS file node: its own inline `data` bytes occupy the start of the
+    // node range, then `blocksizes[i]` gives the file bytes under link i.
+    final blockSizes = unixfsData.blocksizes;
+    if (blockSizes.length != pbNode.links.length) {
+      // blocksizes missing/unreliable: include the whole file entity.
+      for (final link in pbNode.links) {
+        final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+        if (linkCid.multihash.code == 0x00) continue;
+        final childBlock = await _carChildBlock(linkCid, localOnly: localOnly);
+        await _writeCarEntity(
+          linkCid,
+          childBlock,
+          writer,
+          state,
+          depth: depth + 1,
+          localOnly: localOnly,
+        );
+      }
+      return;
+    }
+
+    var cursor = baseOffset + unixfsData.data.length;
+    for (var i = 0; i < pbNode.links.length; i++) {
+      final link = pbNode.links[i];
+      final childSize = blockSizes[i].toInt();
+      final childStart = cursor;
+      final childEnd = cursor + childSize - 1;
+      cursor += childSize;
+
+      final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+      if (linkCid.multihash.code == 0x00) continue;
+      if (childSize <= 0) continue;
+      if (childEnd < rangeFrom || childStart > rangeTo) continue;
+
+      final childBlock = await _carChildBlock(linkCid, localOnly: localOnly);
+      await _writeCarEntityRange(
+        linkCid,
+        childBlock,
+        writer,
+        state,
+        depth: depth + 1,
+        rangeFrom: rangeFrom,
+        rangeTo: rangeTo,
+        baseOffset: childStart,
+        localOnly: localOnly,
+      );
+    }
+  }
+
+  /// Returns the links that belong to the entity itself for
+  /// `dag-scope=entity`: all links of a UnixFS file (its chunks), sub-shard
+  /// links of a HAMT-sharded directory (needed to enumerate it), or no links
+  /// for any other node kind.
+  Future<List<PBLink>> _entityChildLinks(Block block) async {
+    if (block.cid.codec != 'dag-pb') {
+      return const [];
+    }
+    try {
+      final pbNode = PBNode.fromBuffer(block.data);
+      final unixfsData = pbNode.hasData()
+          ? Data.fromBuffer(pbNode.data)
+          : null;
+      if (unixfsData == null) {
+        return const [];
+      }
+      return _entityLinksFrom(pbNode, unixfsData);
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Entity-child selection on an already-parsed node.
+  List<PBLink> _entityLinksFrom(PBNode pbNode, Data unixfsData) {
+    switch (unixfsData.type) {
+      case Data_DataType.File:
+        // Every link of a UnixFS file node is part of the file entity.
+        return pbNode.links;
+      case Data_DataType.HAMTShard:
+        // Enumerating a HAMT-sharded directory requires its sub-shard
+        // blocks; entry links are not part of the directory entity.
+        final width = _hamtPrefixWidth(unixfsData.fanout.toInt());
+        return pbNode.links
+            .where((l) => l.name.length == width)
+            .toList(growable: false);
+      default:
+        return const [];
+    }
+  }
+
+  /// Width in hex characters of a HAMT sub-shard link name for the given
+  /// UnixFS fanout (256 → 2).
+  int _hamtPrefixWidth(int fanout) {
+    var f = fanout > 0 ? fanout : 256;
+    var bits = 0;
+    while (f > 1) {
+      f >>= 1;
+      bits++;
+    }
+    return bits ~/ 4;
+  }
+
+  /// Total file size of a UnixFS file block, or `null` when the block is not
+  /// a byte-addressable UnixFS file entity.
+  int? _unixfsFileSize(Block block) {
+    if (block.cid.codec != 'dag-pb') {
+      return null;
+    }
+    try {
+      final pbNode = PBNode.fromBuffer(block.data);
+      if (!pbNode.hasData()) return null;
+      final data = Data.fromBuffer(pbNode.data);
+      if (data.type != Data_DataType.File) return null;
+      if (data.hasFilesize()) {
+        return data.filesize.toInt();
+      }
+      // filesize omitted: it is the node's own data plus child block sizes.
+      var total = data.data.length;
+      for (final s in data.blocksizes) {
+        total += s.toInt();
+      }
+      return total;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Parses an `entity-bytes=from:to` value. `to` may be `*` (end of file,
+  /// returned as `null`); both sides may be negative (from end of file).
+  (int, int?)? _parseEntityBytes(String value) {
+    final sep = value.indexOf(':');
+    if (sep <= 0 || sep != value.lastIndexOf(':')) {
+      return null;
+    }
+    final from = int.tryParse(value.substring(0, sep));
+    final toPart = value.substring(sep + 1);
+    if (from == null) return null;
+    if (toPart == '*') return (from, null);
+    final to = int.tryParse(toPart);
+    if (to == null) return null;
+    return (from, to);
+  }
+
+  /// Resolves a parsed `entity-bytes` range against a known entity size.
+  ///
+  /// Returns `null` when the range starts entirely past the end of the
+  /// entity (the caller responds 400 since this is knowable upfront).
+  /// A range that resolves to zero bytes is returned as `(from > to)` and
+  /// degrades to `dag-scope=block` during traversal, per the spec.
+  (int, int)? _resolveEntityRange(int fileSize, int from, int? to) {
+    if (fileSize <= 0) {
+      // An empty entity has no byte range; any request is zero-length.
+      return (0, -1);
+    }
+    var start = from < 0 ? fileSize + from : from;
+    var end = to == null ? fileSize - 1 : (to < 0 ? fileSize + to : to);
+    if (start < 0) start = 0;
+    if (start >= fileSize) return null;
+    if (end >= fileSize) end = fileSize - 1;
+    return (start, end);
+  }
+
   /// Serves the signed IPNS record bytes for the requested name.
   ///
   /// The `application/vnd.ipfs.ipns-record` media type requires the wire
@@ -624,7 +1493,11 @@ class GatewayHandler {
   /// (the internal CBOR form or already-serialized `IpnsEntry` bytes) is
   /// normalized through [IPNSRecord.decode] and re-encoded with
   /// [IPNSRecord.toIpnsEntry].
-  Future<Response> _serveIpnsRecord(String name, Request request) async {
+  Future<Response> _serveIpnsRecord(
+    String name,
+    Request request,
+    _TrustlessNegotiation negotiation,
+  ) async {
     if (ipnsRecordResolver == null) {
       return Response(501, body: 'IPNS record resolution disabled');
     }
@@ -647,37 +1520,66 @@ class GatewayHandler {
     final maxAge = record.ttl.inSeconds > 0
         ? record.ttl.inSeconds
         : _defaultIpnsTtlSeconds;
-    final headers = {
-      'Content-Type': 'application/vnd.ipfs.ipns-record',
-      'Content-Length': entryBytes.length.toString(),
-      'X-IPFS-Path': '/ipns/$name',
-      'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'public, max-age=$maxAge',
-    };
+    // IPNS records are mutable — the Etag is a weak validator derived from
+    // the record bytes rather than the name.
+    final etag = 'W/"${sha256.convert(entryBytes).toString()}"';
+    final headers = _trustlessHeaders(
+      contentType: mediaTypeIpnsRecord,
+      contentLength: entryBytes.length,
+      path: '/ipns/$name',
+      etag: etag,
+      contentDisposition: _contentDisposition(request, '$name.ipns-record'),
+      contentLocation: _contentLocation(request, negotiation),
+      cacheControl: 'public, max-age=$maxAge',
+    );
     return Response.ok(entryBytes, headers: headers);
   }
+
+  /// IPLD codec registry used to decode stored blocks into the canonical
+  /// [IPLDNode] representation before re-encoding to the negotiated
+  /// response codec. Registered codecs own all encode/decode logic; the
+  /// gateway never hand-encodes IPLD data.
+  static final Map<String, IPLDCodec> _ipldCodecRegistry = {
+    for (final codec in <IPLDCodec>[
+      RawCodec(),
+      DagPbCodec(),
+      DagCborCodec(),
+      DagJsonCodec(),
+    ])
+      codec.name: codec,
+  };
 
   /// Serves the requested node as canonical DAG-JSON.
   Future<Response> _serveDagJson(
     CID cid,
     Request request, {
     String? ipnsPath,
+    required _TrustlessNegotiation negotiation,
   }) async {
-    final block = await _getBlockByCid(cid.encode());
+    final localOnly = _requestsOnlyIfCached(request);
+    final block = await _getBlock(cid, localOnly: localOnly);
     if (block == null) {
+      if (localOnly) {
+        return _notLocallyAvailable();
+      }
       return Response.notFound('Block not found');
     }
 
     try {
-      final node = await _decodeBlockAsIpldNode(block);
-      final encoded = await DagJsonCodec().encode(node);
-      final headers = {
-        'Content-Type': 'application/vnd.ipld.dag-json',
-        'Content-Length': encoded.length.toString(),
-        'X-IPFS-Path': ipnsPath ?? '/ipfs/${cid.encode()}',
-        'X-Content-Type-Options': 'nosniff',
-        'Cache-Control': 'public, max-age=29030400, immutable',
-      };
+      // When the block is already DAG-JSON the bytes are returned verbatim —
+      // verifiable against the CID — otherwise the codec registry transcodes.
+      final encoded = block.cid.codec == 'dag-json'
+          ? block.data
+          : await DagJsonCodec().encode(await _decodeBlockAsIpldNode(block));
+      final cidStr = cid.encode();
+      final headers = _trustlessHeaders(
+        contentType: mediaTypeDagJson,
+        contentLength: encoded.length,
+        path: ipnsPath ?? '/ipfs/$cidStr',
+        etag: '"$cidStr.dag.json"',
+        contentDisposition: _contentDisposition(request, '$cidStr.json'),
+        contentLocation: _contentLocation(request, negotiation),
+      );
       return Response.ok(encoded, headers: headers);
     } catch (e, stackTrace) {
       _logger.error(
@@ -694,22 +1596,30 @@ class GatewayHandler {
     CID cid,
     Request request, {
     String? ipnsPath,
+    required _TrustlessNegotiation negotiation,
   }) async {
-    final block = await _getBlockByCid(cid.encode());
+    final localOnly = _requestsOnlyIfCached(request);
+    final block = await _getBlock(cid, localOnly: localOnly);
     if (block == null) {
+      if (localOnly) {
+        return _notLocallyAvailable();
+      }
       return Response.notFound('Block not found');
     }
 
     try {
-      final node = await _decodeBlockAsIpldNode(block);
-      final encoded = await DagCborCodec().encode(node);
-      final headers = {
-        'Content-Type': 'application/vnd.ipld.dag-cbor',
-        'Content-Length': encoded.length.toString(),
-        'X-IPFS-Path': ipnsPath ?? '/ipfs/${cid.encode()}',
-        'X-Content-Type-Options': 'nosniff',
-        'Cache-Control': 'public, max-age=29030400, immutable',
-      };
+      final encoded = block.cid.codec == 'dag-cbor'
+          ? block.data
+          : await DagCborCodec().encode(await _decodeBlockAsIpldNode(block));
+      final cidStr = cid.encode();
+      final headers = _trustlessHeaders(
+        contentType: mediaTypeDagCbor,
+        contentLength: encoded.length,
+        path: ipnsPath ?? '/ipfs/$cidStr',
+        etag: '"$cidStr.dag.cbor"',
+        contentDisposition: _contentDisposition(request, '$cidStr.cbor'),
+        contentLocation: _contentLocation(request, negotiation),
+      );
       return Response.ok(encoded, headers: headers);
     } catch (e, stackTrace) {
       _logger.error(
@@ -721,48 +1631,53 @@ class GatewayHandler {
     }
   }
 
-  /// Decodes a block into the canonical IPLD node representation for the codec.
-  Future<IPLDNode> _decodeBlockAsIpldNode(Block block) async {
-    final codec = block.cid.codec;
-    switch (codec) {
-      case 'dag-pb':
-        return await DagPbCodec().decode(block.data);
-      case 'dag-cbor':
-        return await DagCborCodec().decode(block.data);
-      case 'raw':
-        return await RawCodec().decode(block.data);
-      default:
-        // For unknown codecs, try to interpret as raw bytes; this preserves
-        // deterministic responses while avoiding arbitrary failures.
-        return await RawCodec().decode(block.data);
-    }
+  /// 412 response for `Cache-Control: only-if-cached` requests whose root
+  /// block is not in the local block store.
+  Response _notLocallyAvailable() {
+    return Response(
+      412,
+      body: 'Requested block is not available locally',
+      headers: const {'Content-Type': 'text/plain; charset=utf-8'},
+    );
   }
 
-  /// Resolves a sub-path relative to the root CID and returns the target CID
-  /// and block. If the sub-path is empty or resolution fails, returns the root.
-  Future<(CID, Block?)> _resolveSubPath(CID rootCid, String subPath) async {
-    if (subPath.isEmpty) {
-      final block = await _getBlockByCid(rootCid.encode());
-      return (rootCid, block);
+  /// Decodes a block into the canonical IPLD node representation for the codec.
+  Future<IPLDNode> _decodeBlockAsIpldNode(Block block) async {
+    final codec = _ipldCodecRegistry[block.cid.codec];
+    if (codec == null) {
+      // For unknown codecs, try to interpret as raw bytes; this preserves
+      // deterministic responses while avoiding arbitrary failures.
+      return await _ipldCodecRegistry['raw']!.decode(block.data);
     }
+    return await codec.decode(block.data);
+  }
 
-    var currentCid = rootCid;
-    var currentBlock = await _getBlockByCid(rootCid.encode());
+  /// Resolves [subPath] from the root and returns the ordered `(cid, block)`
+  /// pairs of every block traversed, from the root to the resolved terminus
+  /// (inclusive). Returns `null` when a path segment does not resolve or a
+  /// required block is missing.
+  Future<List<(CID, Block)>?> _resolvePathBlocks(
+    CID rootCid,
+    Block rootBlock,
+    String subPath, {
+    bool localOnly = false,
+  }) async {
+    final blocks = <(CID, Block)>[(rootCid, rootBlock)];
     final parts = subPath.split('/').where((p) => p.isNotEmpty).toList();
 
     for (final part in parts) {
-      if (currentBlock == null) {
-        return (currentCid, null);
-      }
-      final next = await _findChildCid(currentBlock, part);
+      final next = await _findChildCid(blocks.last.$2, part);
       if (next == null) {
-        return (currentCid, null);
+        return null;
       }
-      currentCid = next;
-      currentBlock = await _getBlockByCid(currentCid.encode());
+      final nextBlock = await _getBlock(next, localOnly: localOnly);
+      if (nextBlock == null) {
+        return null;
+      }
+      blocks.add((next, nextBlock));
     }
 
-    return (currentCid, currentBlock);
+    return blocks;
   }
 
   /// Finds the child CID for the named link within a DAG-PB directory.
@@ -954,7 +1869,7 @@ class GatewayHandler {
   CID? _validateSubdomainCid(String cidStr) {
     if (cidStr.isEmpty) return null;
     try {
-      final cid = CID.decode(cidStr);
+      final cid = _decodeCid(cidStr);
       if (cid.version == 0) {
         // Convert CIDv0 to CIDv1 base32 for DNS-label compatibility.
         return CID.v1(
@@ -1107,12 +2022,15 @@ class GatewayHandler {
           if (denylisted != null) {
             response = denylisted;
           } else {
-            final format = _detectTrustlessFormat(request);
-            if (format != null) {
+            final negotiation = _negotiateTrustless(request);
+            final negError = negotiation.error;
+            if (negError != null) {
+              response = negError;
+            } else if (negotiation.format != null) {
               response = await _serveTrustless(
                 cid,
                 sub.subPath,
-                format,
+                negotiation,
                 request,
               );
             } else {
@@ -1141,12 +2059,21 @@ class GatewayHandler {
               dnsLinkDomain = sub.identifier;
             }
             ipnsTtl = _defaultIpnsTtlSeconds;
-            final format = _detectTrustlessFormat(request);
-            if (format != null) {
+            final negotiation = _negotiateTrustless(request);
+            final negError = negotiation.error;
+            if (negError != null) {
+              response = negError;
+            } else if (negotiation.format == TrustlessFormat.ipnsRecord) {
+              response = await _serveIpnsRecord(
+                sub.identifier,
+                request,
+                negotiation,
+              );
+            } else if (negotiation.format != null) {
               response = await _serveTrustless(
                 cid,
                 sub.subPath,
-                format,
+                negotiation,
                 request,
                 ipnsPath: ipnsPath,
               );
@@ -1278,11 +2205,81 @@ class GatewayHandler {
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 
+  /// Decodes a CID string, tolerating identity multihashes with an empty
+  /// digest (e.g. the `bafkqaaa` probe CID) which the standard multihash
+  /// decoder rejects. Throws [FormatException] for invalid input.
+  CID _decodeCid(String cidStr) {
+    try {
+      return CID.decode(cidStr);
+    } catch (e) {
+      final identity = _tryDecodeIdentityCid(cidStr);
+      if (identity != null) {
+        return identity;
+      }
+      throw FormatException('Invalid CID: $cidStr');
+    }
+  }
+
+  /// Manually decodes a CIDv1 whose multihash uses the identity function
+  /// (`0x00`) with a zero-length digest — the shape the multihash decoder
+  /// cannot handle. Returns `null` for anything else.
+  CID? _tryDecodeIdentityCid(String cidStr) {
+    try {
+      final bytes = MultibaseUtils.decode(cidStr);
+      // CIDv1 layout: 0x01 | <codec varint> | 0x00 (identity) | 0x00 (len 0)
+      if (bytes.length < 4 || bytes[0] != 0x01) return null;
+      var i = 1;
+      var codecCode = 0;
+      var shift = 0;
+      while (true) {
+        if (i >= bytes.length) return null;
+        final b = bytes[i++];
+        codecCode |= (b & 0x7f) << shift;
+        if (b & 0x80 == 0) break;
+        shift += 7;
+        if (shift > 28) return null;
+      }
+      if (i + 2 != bytes.length) return null;
+      if (bytes[i] != 0x00 || bytes[i + 1] != 0x00) return null;
+      final codec = Multicodec.supportsByCode(codecCode)
+          ? Multicodec.name(codecCode)
+          : 'raw';
+      return CID.v1(
+        codec,
+        MultihashInfo(
+          code: 0x00,
+          name: 'identity',
+          digest: Uint8List(0),
+          size: 0,
+        ),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Helper method to get a block by [CID].
+  ///
+  /// Identity CIDs (multihash code `0x00`) carry the block data inside the
+  /// digest, so they are synthesized without touching the store or network.
+  /// Otherwise delegates to [_getBlockByCid].
+  Future<Block?> _getBlock(CID cid, {bool localOnly = false}) async {
+    if (cid.multihash.code == 0x00) {
+      return Block(
+        cid: cid,
+        data: Uint8List.fromList(cid.multihash.digest),
+        format: cid.codec ?? 'raw',
+      );
+    }
+    return _getBlockByCid(cid.encode(), localOnly: localOnly);
+  }
+
   /// Helper method to get a block by CID string.
   ///
   /// First tries the local blockstore, then falls back to Bitswap if a
-  /// [bitswapHandler] is available and running.
-  Future<Block?> _getBlockByCid(String cidStr) async {
+  /// [bitswapHandler] is available and running. When [localOnly] is true
+  /// (a `Cache-Control: only-if-cached` request), Bitswap is skipped.
+  Future<Block?> _getBlockByCid(String cidStr, {bool localOnly = false}) async {
     try {
       final response = await blockStore.getBlock(cidStr);
       if (response.found) {
@@ -1290,6 +2287,10 @@ class GatewayHandler {
       }
     } catch (e, stackTrace) {
       _logger.error('Error getting block $cidStr', e, stackTrace);
+    }
+
+    if (localOnly) {
+      return null;
     }
 
     final bitswap = bitswapHandler;
