@@ -1209,7 +1209,10 @@ class RPCHandlers {
     final subscription = node.pubsubMessages
         .where((message) => message.topic == topic)
         .listen((message) {
-          if (controller.isClosed) return;
+          // Drop while the client is backpressured: pubsub is real-time
+          // and lossy by design — buffering messages for a stalled reader
+          // would grow memory without bound.
+          if (controller.isClosed || controller.isPaused) return;
           controller.add(
             utf8.encode('${jsonEncode(_encodePubsubMessage(message))}\n'),
           );
