@@ -1216,6 +1216,11 @@ class RPCHandlers {
 
     return Response.ok(
       controller.stream,
+      // Disable dart:io response buffering — otherwise each NDJSON line
+      // sits in the HttpResponse buffer until it fills (~8KB) or the
+      // stream closes, and a long-lived subscription never delivers a
+      // single message to the client.
+      context: {'shelf.io.buffer_output': false},
       headers: {
         'Content-Type': 'application/json',
         'X-Chunked-Output': '1',

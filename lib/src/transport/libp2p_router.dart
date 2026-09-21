@@ -947,12 +947,18 @@ class Libp2pRouter implements RouterInterface {
         'Incoming stream from $remoteIdStr for protocol $protocolId',
       );
 
+      final isRawMessage = _rawMessageProtocols.contains(protocolId);
+
       Future<void> respond(Uint8List response) async {
         try {
-          final lengthPrefix = _encodeLengthPrefix(response.length);
-          await stream.write(
-            Uint8List.fromList([...lengthPrefix, ...response]),
-          );
+          if (isRawMessage) {
+            await stream.write(response);
+          } else {
+            final lengthPrefix = _encodeLengthPrefix(response.length);
+            await stream.write(
+              Uint8List.fromList([...lengthPrefix, ...response]),
+            );
+          }
           if (_respondFirstProtocols.contains(protocolId)) {
             // Respond-first peers (e.g. go-libp2p identify) read delimited
             // messages until EOF; without FIN their read hangs to timeout.
@@ -995,10 +1001,16 @@ class Libp2pRouter implements RouterInterface {
             );
             break;
           }
-          final data = await _readLengthPrefixedMessage(
-            stream,
-            idleTimeout: isSessionStream ? null : inboundReadIdleTimeout,
-          );
+          final data = isRawMessage
+              ? await _readChunk(
+                  stream,
+                  inbound.InboundMessageBounds.maxMessageSize,
+                  idleTimeout: inboundReadIdleTimeout,
+                )
+              : await _readLengthPrefixedMessage(
+                  stream,
+                  idleTimeout: isSessionStream ? null : inboundReadIdleTimeout,
+                );
           if (data == null) {
             break;
           }
@@ -1151,6 +1163,16 @@ class Libp2pRouter implements RouterInterface {
   /// streams on these protocols get a synthetic empty packet dispatched
   /// immediately so the handler can respond.
   static const Set<String> _respondFirstProtocols = {'/ipfs/id/1.0.0'};
+
+  /// Protocols whose wire format is unframed — raw bytes with no varint
+  /// length prefix. libp2p ping (/ipfs/ping/1.0.0) is the canonical case:
+  /// the dialer writes a 32-byte payload and expects the same bytes echoed
+  /// back. Dispatching it through the length-prefixed reader would block
+  /// forever on a prefix that never arrives; js-libp2p's connection
+  /// monitor pings every connection on a ~10 s cadence and aborts the
+  /// connection when the echo times out, taking every multiplexed stream
+  /// (including gossipsub) with it.
+  static const Set<String> _rawMessageProtocols = {'/ipfs/ping/1.0.0'};
 
   Uint8List _encodeLengthPrefix(int length) {
     // Simple varint encoding for length prefix

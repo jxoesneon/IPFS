@@ -196,6 +196,64 @@ void main() {
       }
     }, timeout: Timeout(Duration(seconds: 60)));
 
+    test('ping protocol echoes an unframed 32-byte payload', () async {
+      await routerA.start();
+      final addrA = getLocalConnectAddress(routerA);
+
+      // Emulate PingHandler: echo the datagram back through the responder.
+      routerA.registerProtocolHandler('/ipfs/ping/1.0.0', (packet) {
+        packet.responder?.call(packet.datagram);
+      });
+
+      // A raw libp2p client emulates js-libp2p's connection monitor, which
+      // pings every peer ~every 10 s and aborts the connection when the
+      // echo times out. Ping payloads are written raw — no length prefix.
+      final keyPair = await crypto.generateEd25519KeyPair();
+      final host = await config.Libp2p.new_([
+        config.Libp2p.transport(
+          TCPTransport(
+            resourceManager: ResourceManagerImpl(limiter: FixedLimiter()),
+          ),
+        ),
+        config.Libp2p.listenAddrs([libp2p.MultiAddr('/ip4/0.0.0.0/tcp/0')]),
+        config.Libp2p.identity(keyPair),
+      ]);
+      await host.start();
+
+      try {
+        final maddr = libp2p.MultiAddr(addrA);
+        final peerId = libp2p.PeerId.fromString(addrA.split('/p2p/').last);
+        await host.peerStore.addrBook.addAddrs(
+          peerId,
+          [maddr],
+          const Duration(minutes: 5),
+        );
+        await host.connect(libp2p.AddrInfo(peerId, [maddr]));
+
+        final stream = await host.newStream(
+          peerId,
+          ['/ipfs/ping/1.0.0'],
+          libp2p.Context(),
+        );
+
+        final payload = Uint8List.fromList(
+          List<int>.generate(32, (i) => i * 7 + 13),
+        );
+        await stream.write(payload);
+        final echo = await stream
+            .read(64)
+            .timeout(const Duration(seconds: 5));
+
+        expect(
+          echo,
+          equals(payload),
+          reason: 'Ping responder must echo the raw payload verbatim',
+        );
+      } finally {
+        await host.close();
+      }
+    }, timeout: Timeout(Duration(seconds: 60)));
+
     test('session-stream protocols reuse one stream and survive idle', () async {
       // Compress the inbound idle bound so the test exercises the
       // session-protocol exemption in milliseconds instead of 30 s.
