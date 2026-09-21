@@ -1,9 +1,10 @@
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
+import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
+import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
-import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
-import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
-import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 
 void main() {
   group('IPLDSchema Coverage Tests', () {
