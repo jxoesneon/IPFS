@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.18.0] - 2026-09-21
 
 ### Fixed
 - **DAG-PB canonical field order**: `PBNode` encodes `data` on field 1 and `links` on field 2 per the merkledag spec (they were previously swapped). Blocks now hash to the same CIDs as Kubo for identical content, and Kubo-encoded nodes decode correctly instead of surfacing raw dag-pb bytes through `cat`.
