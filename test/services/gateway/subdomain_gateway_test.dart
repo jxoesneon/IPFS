@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -8,10 +9,14 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:multibase/multibase.dart';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
@@ -412,6 +417,366 @@ void main() {
         );
         final response = await handler.handleSubdomain(request);
         expect(response.statusCode, equals(200));
+      });
+    });
+
+    group('DNS label handling', () {
+      test('host with port is detected and served', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': '$cidV1Base32.ipfs.localhost:8080'},
+        );
+        expect(handler.isSubdomainRequest(request), isTrue);
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+      });
+
+      test('uppercase base32 CID label is case-insensitive', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': '${cidV1Base32.toUpperCase()}.ipfs.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+        expect(response.headers['x-ipfs-path'], equals('/ipfs/$cidV1Base32'));
+      });
+
+      test('trailing FQDN dot is tolerated', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': '$cidV1Base32.ipfs.localhost.'},
+        );
+        expect(handler.isSubdomainRequest(request), isTrue);
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+      });
+
+      test('multi-label ipfs identifier returns 400', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': 'foo.bar.ipfs.localhost'},
+        );
+        expect(handler.isSubdomainRequest(request), isTrue);
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(400));
+      });
+
+      test('CID label longer than 63 characters returns 400', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': '${'b' * 64}.ipfs.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(400));
+      });
+
+      test('percent-encoded identifier returns 400', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': 'docs%2eipfs.io.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(400));
+      });
+
+      test('ipns identifier with empty label returns 400', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': 'a..b.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(400));
+      });
+    });
+
+    group('inlined DNSLink', () {
+      test('inlined single-label DNSLink name resolves', () async {
+        String? resolvedDomain;
+        handler = GatewayHandler(
+          blockStore,
+          dnsLinkResolver: (domain) async {
+            resolvedDomain = domain;
+            if (domain == 'docs.ipfs.io') {
+              return DnsLinkResult('/ipfs/$cidV1Base32', ttlSeconds: 120);
+            }
+            return null;
+          },
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': 'docs-ipfs-io.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+        expect(resolvedDomain, equals('docs.ipfs.io'));
+        expect(response.headers['x-ipfs-dnslink'], equals('docs.ipfs.io'));
+        expect(response.headers['cache-control'], contains('max-age=120'));
+      });
+
+      test('double-dash escapes survive de-inlining', () async {
+        String? resolvedDomain;
+        handler = GatewayHandler(
+          blockStore,
+          dnsLinkResolver: (domain) async {
+            resolvedDomain = domain;
+            if (domain == 'en.wikipedia-on-ipfs.org') {
+              return DnsLinkResult('/ipfs/$cidV1Base32');
+            }
+            return null;
+          },
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': 'en-wikipedia--on--ipfs-org.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+        expect(resolvedDomain, equals('en.wikipedia-on-ipfs.org'));
+      });
+    });
+
+    group('content sub-paths', () {
+      test('URL path resolves below the content root', () async {
+        // Build a small UnixFS directory containing hello.txt.
+        final fileBytes = Uint8List.fromList(utf8.encode('hello ipfs'));
+        final fileNode = PBNode()
+          ..data =
+              (Data()
+                    ..type = Data_DataType.File
+                    ..data = fileBytes)
+                  .writeToBuffer();
+        final fileCid = CID.computeForDataSync(
+          fileNode.writeToBuffer(),
+          codec: 'dag-pb',
+        );
+        blockStore.add(Block(cid: fileCid, data: fileNode.writeToBuffer()));
+
+        final dirNode = PBNode()
+          ..data = (Data()..type = Data_DataType.Directory).writeToBuffer()
+          ..links.add(
+            PBLink()
+              ..name = 'hello.txt'
+              ..hash = fileCid.toBytes()
+              ..size = Int64(fileNode.writeToBuffer().length),
+          );
+        final dirCid = CID.computeForDataSync(
+          dirNode.writeToBuffer(),
+          codec: 'dag-pb',
+        );
+        blockStore.add(Block(cid: dirCid, data: dirNode.writeToBuffer()));
+
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/hello.txt'),
+          headers: {'host': '${dirCid.encode()}.ipfs.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+        expect(await response.readAsString(), equals('hello ipfs'));
+      });
+
+      test('HEAD returns headers without a body', () async {
+        final request = Request(
+          'HEAD',
+          Uri.parse('http://localhost/'),
+          headers: {'host': '$cidV1Base32.ipfs.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+        expect(await response.readAsString(), isEmpty);
+      });
+    });
+
+    group('path to subdomain migration', () {
+      test('ipfs path on configured domain redirects to subdomain', () async {
+        handler = GatewayHandler(
+          blockStore,
+          gatewayDomain: 'ipfs.example.com',
+          enableSubdomainGateway: true,
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/$cidV0'),
+          headers: {'host': 'ipfs.example.com'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        // CIDv0 must be rewritten to CIDv1 base32 in the Location host.
+        expect(
+          response.headers['location'],
+          equals('http://$cidV1Base32.ipfs.ipfs.example.com/'),
+        );
+      });
+
+      test('redirect preserves path and query', () async {
+        handler = GatewayHandler(blockStore, enableSubdomainGateway: true);
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/$cidV1Base32/dir/file.txt?x=1'),
+          headers: {'host': 'localhost:8080'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('http://$cidV1Base32.ipfs.localhost:8080/dir/file.txt?x=1'),
+        );
+      });
+
+      test('ipns DNSLink path redirects to inlined subdomain', () async {
+        handler = GatewayHandler(blockStore, enableSubdomainGateway: true);
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipns/en.wikipedia-on-ipfs.org'),
+          headers: {'host': 'localhost'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('http://en-wikipedia--on--ipfs-org.ipns.localhost/'),
+        );
+      });
+
+      test('base58btc peer id redirects to base36 subdomain', () async {
+        handler = GatewayHandler(blockStore, enableSubdomainGateway: true);
+        final base36 = PeerId.fromBase58(cidV0).toBase36();
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipns/$cidV0'),
+          headers: {'host': 'localhost'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('http://$base36.ipns.localhost/'),
+        );
+      });
+
+      test('X-Forwarded-Proto selects the redirect scheme', () async {
+        handler = GatewayHandler(
+          blockStore,
+          gatewayDomain: 'dweb.link',
+          enableSubdomainGateway: true,
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/$cidV1Base32'),
+          headers: {'host': 'dweb.link', 'x-forwarded-proto': 'https'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('https://$cidV1Base32.ipfs.dweb.link/'),
+        );
+      });
+
+      test('X-Forwarded-Host selects the redirect domain', () async {
+        handler = GatewayHandler(
+          blockStore,
+          gatewayDomain: 'dweb.link',
+          enableSubdomainGateway: true,
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/$cidV1Base32'),
+          headers: {
+            'host': 'dweb.link',
+            'x-forwarded-proto': 'https',
+            'x-forwarded-host': 'example.com',
+          },
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('https://$cidV1Base32.ipfs.example.com/'),
+        );
+      });
+
+      test('no redirect when subdomain gateway is disabled', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/$cidV1Base32'),
+          headers: {'host': 'localhost'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(200));
+      });
+
+      test('no redirect for unknown hosts', () async {
+        handler = GatewayHandler(blockStore, enableSubdomainGateway: true);
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/$cidV1Base32'),
+          headers: {'host': 'example.org'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(200));
+      });
+
+      test('invalid CID path does not redirect', () async {
+        handler = GatewayHandler(blockStore, enableSubdomainGateway: true);
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/not-a-cid'),
+          headers: {'host': 'localhost'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(400));
+      });
+    });
+
+    group('URI router', () {
+      test('ipfs uri redirects to the equivalent content path', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/?uri=ipfs%3A%2F%2F$cidV1Base32'),
+          headers: {'host': 'localhost:8080'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('http://localhost:8080/ipfs/$cidV1Base32'),
+        );
+      });
+
+      test('ipns uri preserves the nested path', () async {
+        final request = Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/ipns/?uri=ipns%3A%2F%2Fdocs.ipfs.io%2Fsome%2Ffile',
+          ),
+          headers: {'host': 'localhost'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('http://localhost/ipns/docs.ipfs.io/some/file'),
+        );
+      });
+
+      test('non-ipfs uri scheme returns 400', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/?uri=https%3A%2F%2Fexample.com'),
+          headers: {'host': 'localhost'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(400));
       });
     });
 

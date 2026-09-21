@@ -39,6 +39,7 @@ class GatewayServer implements ILifecycle {
     ], // SEC-006: Restrict CORS
     this.ipnsResolver,
     this.ipnsRecordResolver,
+    this.dnsLinkResolver,
     this.maxRequestsPerIp = 100,
     this.rateLimitWindowSeconds = 60,
     this.metricsCollector,
@@ -59,6 +60,7 @@ class GatewayServer implements ILifecycle {
       enableSubdomainGateway: gatewayConfig.enableSubdomainGateway,
       subdomainDNSLinkResolver: gatewayConfig.subdomainDNSLinkResolver,
       subdomainTLSRedirect: gatewayConfig.subdomainTLSRedirect,
+      dnsLinkResolver: dnsLinkResolver,
     );
     if (node != null) {
       _healthCheckService = HealthCheckService(node!);
@@ -92,6 +94,9 @@ class GatewayServer implements ILifecycle {
 
   /// Optional resolver for signed IPNS record bytes.
   final IpnsRecordResolver? ipnsRecordResolver;
+
+  /// Optional resolver for DNSLink domains on `*.ipns.*` subdomains.
+  final DnsLinkResolver? dnsLinkResolver;
 
   /// Maximum requests per IP per time window (SEC-007)
   final int maxRequestsPerIp;
