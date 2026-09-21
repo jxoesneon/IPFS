@@ -977,8 +977,24 @@ class RPCHandlers {
   }
 
   /// POST /api/v0/dht/provide - Announce provider
+  ///
+  /// On-demand provide with explicit once/queued semantics and detailed
+  /// success/failure feedback (see `REPROVIDE_SPEC.md` §4.6).
+  ///
+  /// Query parameters:
+  /// - `arg` (required): CID to announce.
+  /// - `recursive` (bool, default false): also announce every block of the
+  ///   DAG reachable from `arg` in the local blockstore.
+  /// - `queue` (bool, default false): enqueue the provide job instead of
+  ///   running it inline; returns `202 Accepted` with a queue position.
+  /// - `once` (bool, default true): perform a single-shot announcement and
+  ///   wait for the result. `once=false` is equivalent to `queue=true`.
+  /// - `timeout` (duration string, e.g. `30s`, `500ms`; default `30s`):
+  ///   aborts remaining peer attempts and returns partial results.
+  /// - `record` (bool, default true): record metrics for the operation.
   Future<Response> handleDhtProvide(Request request) async {
-    final cid = request.url.queryParameters['arg'];
+    final params = request.url.queryParameters;
+    final cid = params['arg'];
     if (cid == null) {
       return _errorResponse('Missing argument: cid');
     }
@@ -988,13 +1004,108 @@ class RPCHandlers {
       return blocked;
     }
 
+    final recursive = _boolParam(params, 'recursive');
+    final once = _boolParam(params, 'once', defaultValue: true);
+    final queued = _boolParam(params, 'queue') || !once;
+    final recordMetrics = _boolParam(params, 'record', defaultValue: true);
+    final timeout =
+        _parseDurationParam(params['timeout']) ?? const Duration(seconds: 30);
+
+    CID cidObj;
+    try {
+      cidObj = CID.decode(cid);
+    } catch (_) {
+      return _errorResponse('Invalid CID: $cid', code: 400);
+    }
+
+    final dhtHandler = node.dhtHandler;
+    if (dhtHandler != null) {
+      if (queued) {
+        final position = dhtHandler.enqueueProvide(
+          cidObj,
+          recursive: recursive,
+          timeout: timeout,
+          blockStore: node.blockStore,
+          recordMetrics: recordMetrics,
+        );
+        if (position == null) {
+          return Response(503, body: 'Provide queue full');
+        }
+        return Response(
+          202,
+          body: json.encode({
+            'CID': cid,
+            'Queued': true,
+            'QueuePosition': position,
+          }),
+          headers: {'Content-Type': 'application/json'},
+        );
+      }
+
+      try {
+        final result = await dhtHandler.provideDetailed(
+          cidObj,
+          recursive: recursive,
+          timeout: timeout,
+          blockStore: node.blockStore,
+          recordMetrics: recordMetrics,
+        );
+        return _jsonResponse({
+          'ID': node.peerId,
+          'CID': cid,
+          'Success': result.success,
+          'Attempts': result.attempts,
+          'Successes': result.successes,
+          'Failures': result.failures,
+          'Errors': result.errors,
+          'Queued': false,
+        });
+      } catch (e, st) {
+        _logger.error('DHT provide failed for cid: $cid', e, st);
+        return _errorResponse('DHT provide failed');
+      }
+    }
+
+    // Fallback when no concrete DHT handler is exposed (e.g. delegate or
+    // client-only surfaces): single-shot announce through the DHT client.
     try {
       await node.dhtClient.addProvider(cid, node.peerId);
-      return _jsonResponse({'Success': true});
+      return _jsonResponse({
+        'ID': node.peerId,
+        'CID': cid,
+        'Success': true,
+        'Attempts': 1,
+        'Successes': 1,
+        'Failures': 0,
+        'Errors': const <String>[],
+        'Queued': false,
+      });
     } catch (e, st) {
       _logger.error('DHT provide failed for cid: $cid', e, st);
       return _errorResponse('DHT provide failed');
     }
+  }
+
+  /// Parses a Kubo-style duration string (`30s`, `500ms`, `5m`, `1h`) or a
+  /// bare integer (seconds). Returns `null` when unparseable.
+  static Duration? _parseDurationParam(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final bare = int.tryParse(value);
+    if (bare != null) return Duration(seconds: bare);
+    final match = RegExp(r'^(\d+)(ms|s|m|h)$').firstMatch(value);
+    if (match == null) return null;
+    final amount = int.parse(match.group(1)!);
+    switch (match.group(2)) {
+      case 'ms':
+        return Duration(milliseconds: amount);
+      case 's':
+        return Duration(seconds: amount);
+      case 'm':
+        return Duration(minutes: amount);
+      case 'h':
+        return Duration(hours: amount);
+    }
+    return null;
   }
 
   /// POST /api/v0/name/publish - Publish IPNS record

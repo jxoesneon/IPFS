@@ -1,23 +1,28 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:mirrors' as mirrors;
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart' show CarReader;
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
+import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
@@ -28,6 +33,7 @@ import 'package:mockito/mockito.dart';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
 
+import '../../fakes/fake_router.dart';
 import 'rpc_handlers_test.mocks.dart';
 
 core.CID coreCid(CID cid) => cid;
@@ -129,7 +135,186 @@ void main() {
       );
       final response = await handlers.handleDhtProvide(request);
       expect(response.statusCode, equals(200));
+      final body = json.decode(await response.readAsString());
+      // Detailed response shape (REPROVIDE_SPEC §4.6.1).
+      expect(body['ID'], equals('QmPeer'));
+      expect(body['CID'], equals(cid));
+      expect(body['Success'], isTrue);
+      expect(body['Queued'], isFalse);
+      expect(body['Errors'], isA<List<dynamic>>());
       verify(mockDHTClient.addProvider(cid, 'QmPeer')).called(1);
+    });
+
+    test('handleDhtProvide rejects invalid CID', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dht/provide?arg=not-a-cid'),
+      );
+      final response = await handlers.handleDhtProvide(request);
+      expect(response.statusCode, equals(400));
+    });
+
+    group('handleDhtProvide with a concrete DHTHandler', () {
+      late DHTHandler realHandler;
+
+      setUp(() async {
+        final router = FakeRouter();
+        final nodeConfig = IPFSConfig(
+          dht: const DHTConfig(requestTimeout: Duration(milliseconds: 100)),
+        );
+        final networkHandler = NetworkHandler(nodeConfig, router: router);
+        final storage = MemoryDatastore();
+        await storage.init();
+        realHandler = DHTHandler(
+          nodeConfig,
+          router,
+          networkHandler,
+          storage: storage,
+        );
+        await realHandler.dhtClient.initialize();
+        when(mockNode.dhtHandler).thenReturn(realHandler);
+      });
+
+      tearDown(() async {
+        await realHandler.stop();
+      });
+
+      test('returns detailed success/failure counts', () async {
+        final peer = PeerId(
+          value: Uint8List.fromList(List.generate(32, (i) => i + 1)),
+        );
+        await realHandler.dhtClient.kademliaRoutingTable.addPeer(peer, peer);
+
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/dht/provide?arg=$cid'),
+        );
+        final response = await handlers.handleDhtProvide(request);
+        expect(response.statusCode, equals(200));
+
+        final body = json.decode(await response.readAsString());
+        expect(body['ID'], equals('QmPeer'));
+        expect(body['CID'], equals(cid));
+        expect(body['Success'], isTrue);
+        expect(body['Attempts'], greaterThan(0));
+        expect(body['Successes'], equals(body['Attempts']));
+        expect(body['Failures'], equals(0));
+        expect(body['Queued'], isFalse);
+      });
+
+      test('queue=true returns 202 Accepted with a queue position', () async {
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        final request = Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/dht/provide?arg=$cid&queue=true',
+          ),
+        );
+        final response = await handlers.handleDhtProvide(request);
+        expect(response.statusCode, equals(202));
+
+        final body = json.decode(await response.readAsString());
+        expect(body['CID'], equals(cid));
+        expect(body['Queued'], isTrue);
+        expect(body['QueuePosition'], equals(1));
+      });
+
+      test('once=false behaves like queue=true', () async {
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        final request = Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/dht/provide?arg=$cid&once=false',
+          ),
+        );
+        final response = await handlers.handleDhtProvide(request);
+        expect(response.statusCode, equals(202));
+
+        final body = json.decode(await response.readAsString());
+        expect(body['Queued'], isTrue);
+      });
+
+      test('timeout aborts remaining peer attempts', () async {
+        final peer = PeerId(
+          value: Uint8List.fromList(List.generate(32, (i) => i + 2)),
+        );
+        await realHandler.dhtClient.kademliaRoutingTable.addPeer(peer, peer);
+
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        final request = Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/dht/provide?arg=$cid&timeout=0s',
+          ),
+        );
+        final response = await handlers.handleDhtProvide(request);
+        expect(response.statusCode, equals(200));
+
+        final body = json.decode(await response.readAsString());
+        expect(body['Attempts'], equals(0));
+        expect(
+          (body['Errors'] as List).join(' '),
+          contains('timeout'),
+        );
+      });
+
+      test('recursive provides all local DAG blocks', () async {
+        final peer = PeerId(
+          value: Uint8List.fromList(List.generate(32, (i) => i + 3)),
+        );
+        await realHandler.dhtClient.kademliaRoutingTable.addPeer(peer, peer);
+
+        // Build a small dag-pb DAG in a real blockstore.
+        final tempDir = await Directory.systemTemp.createTemp(
+          'dht_provide_rpc_test_',
+        );
+        final realBlockStore = BlockStore(path: tempDir.path);
+        await realBlockStore.start();
+        addTearDown(() async {
+          await realBlockStore.stop();
+          await tempDir.delete(recursive: true);
+        });
+        when(mockNode.blockStore).thenReturn(realBlockStore);
+
+        final childBlock = await Block.fromData(
+          Uint8List.fromList([9, 8, 7]),
+        );
+        await realBlockStore.putBlock(childBlock);
+        final pbNode = dag_pb.PBNode(
+          links: [
+            dag_pb.PBLink(
+              name: 'child',
+              hash: childBlock.cid.toBytes(),
+              size: Int64(childBlock.data.length),
+            ),
+          ],
+        );
+        final rootData = pbNode.writeToBuffer();
+        final rootCid = await CID.fromContent(rootData, codec: 'dag-pb');
+        await realBlockStore.putBlock(
+          Block(cid: rootCid, data: rootData, format: 'dag-pb'),
+        );
+
+        final cid = rootCid.encode();
+        final request = Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/dht/provide?arg=$cid&recursive=true',
+          ),
+        );
+        final response = await handlers.handleDhtProvide(request);
+        expect(response.statusCode, equals(200));
+
+        final body = json.decode(await response.readAsString());
+        expect(body['Success'], isTrue);
+        // Both the root and the linked child were announced.
+        expect(body['Attempts'], equals(2));
+        expect(
+          realHandler.getLocalProvidersForCid(childBlock.cid.toString()),
+          isNotEmpty,
+        );
+      });
     });
 
     test('handleAdd success', () async {
@@ -666,7 +851,7 @@ void main() {
     });
 
     test('handleDhtProvide error', () async {
-      final cid = 'QmHash';
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
       when(
         mockDHTClient.addProvider(any, any),
       ).thenThrow(Exception('DHT error'));

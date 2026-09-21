@@ -280,21 +280,35 @@ class Reprovider implements ILifecycle {
 
     try {
       final cids = await _collectCids(_strategy);
-      final deduped = _deduplicate(cids);
+      var selected = _deduplicate(cids);
+
+      // Skip content blocked by the operator denylist — reproviding blocked
+      // CIDs would re-announce content the node is configured to refuse.
+      final skipped = _countBlocked(selected);
+      if (skipped > 0) {
+        selected = selected.where((cid) => !_isBlocked(cid)).toList();
+        _logger.info('Skipped $skipped denylisted CIDs during reprovide');
+      }
+
       _logger.debug(
-        'Reproviding ${deduped.length} CIDs using strategy $_strategy',
+        'Reproviding ${selected.length} CIDs using strategy $_strategy',
       );
 
+      var ordered = selected;
       if (_config.reproviderSweepOptimization) {
-        groupedCids = _groupByClosestPeers(deduped);
+        // XOR-ordered sweep: announce CIDs ordered by Kademlia distance from
+        // the local peer so nearby keys are provided in one pass and DHT
+        // messages cover proximity-grouped keys.
+        ordered = _sortByXorDistance(selected);
+        groupedCids = _groupByClosestPeers(ordered);
       }
 
       // Batch provides to avoid swamping the DHT client with single-CID calls.
-      for (var i = 0; i < deduped.length; i += _config.reproviderBatchSize) {
-        final batch = deduped.sublist(
+      for (var i = 0; i < ordered.length; i += _config.reproviderBatchSize) {
+        final batch = ordered.sublist(
           i,
-          i + _config.reproviderBatchSize > deduped.length
-              ? deduped.length
+          i + _config.reproviderBatchSize > ordered.length
+              ? ordered.length
               : i + _config.reproviderBatchSize,
         );
 
@@ -348,13 +362,13 @@ class Reprovider implements ILifecycle {
     switch (strategy) {
       case 'pinned':
       case 'unique':
-        return _recursivePinCids();
+        return _pinnedCids();
       case 'roots':
         return _rootPinCids();
       case 'all':
         return _allBlockCids();
       case 'pinned+mfs':
-        return _recursivePinCids()..addAll(_mfsRootCids());
+        return _pinnedCids()..addAll(_mfsRootCids());
       case 'entities':
         return {..._rootPinCids(), ..._mfsRootCids()}.toList();
       default:
@@ -362,10 +376,18 @@ class Reprovider implements ILifecycle {
     }
   }
 
-  List<CID> _recursivePinCids() {
+  /// All recursively and directly pinned CIDs, matching Kubo's `pinned`
+  /// reprovide strategy.
+  List<CID> _pinnedCids() {
     return _pinManager
-        .getRecursivePins()
-        .map(_parseCid)
+        .getPinnedBlocks()
+        .map((proto) {
+          try {
+            return proto.toCID();
+          } catch (_) {
+            return null;
+          }
+        })
         .whereType<CID>()
         .toList();
   }
@@ -407,36 +429,68 @@ class Reprovider implements ILifecycle {
     return cids.toSet().toList();
   }
 
+  /// Whether [cid] is blocked by the operator denylist. Only the concrete
+  /// [DHTHandler] exposes denylist state; alternate handlers are treated as
+  /// unfiltered.
+  bool _isBlocked(CID cid) {
+    final handler = _dhtHandler;
+    return handler is DHTHandler && handler.isCidBlocked(cid);
+  }
+
+  int _countBlocked(List<CID> cids) => cids.where(_isBlocked).length;
+
+  /// Orders [cids] by XOR distance between each CID's DHT routing key
+  /// (`SHA256(multihash)`) and the local peer ID.
+  ///
+  /// This ordering does not change which CIDs are announced or which peers
+  /// receive them; it improves routing locality so a provide sweep covers
+  /// nearby keys in one pass. When the handler is not the concrete
+  /// [DHTHandler] (no routing table access), the input order is preserved.
+  List<CID> _sortByXorDistance(List<CID> cids) {
+    final handler = _dhtHandler;
+    if (handler is! DHTHandler) {
+      return cids;
+    }
+    try {
+      final localPeerId = handler.dhtClient.peerId;
+      final keyed = [
+        for (final cid in cids)
+          (cid, _xorDistance(_routingKey(cid), localPeerId)),
+      ];
+      keyed.sort((a, b) => a.$2.compareTo(b.$2));
+      return [for (final entry in keyed) entry.$1];
+    } catch (e) {
+      _logger.debug('XOR ordering unavailable (DHT not initialized): $e');
+      return cids;
+    }
+  }
+
   Map<PeerId, List<CID>> _groupByClosestPeers(List<CID> cids) {
-    if (_dhtHandler is! DHTHandler) {
+    final handler = _dhtHandler;
+    if (handler is! DHTHandler) {
       // Sweep optimization requires the concrete DHT client; fall back to
       // an empty grouping when an alternate handler is provided.
       return {};
     }
-    final routingTable = _dhtHandler.dhtClient.kademliaRoutingTable;
-    final localPeerId = _dhtHandler.dhtClient.peerId;
     final k = _config.bucketSize;
+    try {
+      final routingTable = handler.dhtClient.kademliaRoutingTable;
 
-    // Sort by XOR distance from the local peer to improve routing locality.
-    // Routing keys are SHA-256 derivations — hoist them out of the
-    // comparator so each CID is hashed once instead of O(n·log n) times.
-    final keyed = [
-      for (final cid in cids)
-        (cid, _xorDistance(_routingKey(cid), localPeerId)),
-    ];
-    keyed.sort((a, b) => a.$2.compareTo(b.$2));
-    final sorted = [for (final entry in keyed) entry.$1];
-
-    final grouped = <PeerId, List<CID>>{};
-    for (final cid in sorted) {
-      final target = _routingKey(cid);
-      final closest = routingTable.findClosestPeers(target, k);
-      for (final peer in closest) {
-        grouped.putIfAbsent(peer, () => []).add(cid);
+      // [cids] arrives XOR-sorted (see [_sortByXorDistance]); iterate in
+      // that order so the returned map groups nearby keys together.
+      final grouped = <PeerId, List<CID>>{};
+      for (final cid in cids) {
+        final target = _routingKey(cid);
+        final closest = routingTable.findClosestPeers(target, k);
+        for (final peer in closest) {
+          grouped.putIfAbsent(peer, () => []).add(cid);
+        }
       }
+      return grouped;
+    } catch (e) {
+      _logger.debug('Routing table unavailable for sweep grouping: $e');
+      return {};
     }
-
-    return grouped;
   }
 
   PeerId _routingKey(CID cid) {
