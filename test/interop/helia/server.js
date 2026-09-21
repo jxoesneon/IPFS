@@ -7,6 +7,7 @@ import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 import { preSharedKey } from "@libp2p/pnet";
 import { strings } from "@helia/strings";
 import { car } from "@helia/car";
+import { CarReader } from "@ipld/car";
 import { CID } from "multiformats/cid";
 import { multiaddr } from "@multiformats/multiaddr";
 
@@ -64,6 +65,23 @@ function toMultibaseBase64url(bytes) {
   return "u" + Buffer.from(bytes).toString("base64url");
 }
 
+// Kubo-style arg decoding: pubsub topic args arrive as multibase base64url
+// ("u" prefix). Decode them, but only if the value round-trips exactly — a
+// literal topic that merely starts with "u" must not be mangled.
+function decodeTopicArg(arg) {
+  if (typeof arg === "string" && arg.length > 1 && arg.startsWith("u")) {
+    try {
+      const decoded = Buffer.from(arg.slice(1), "base64url");
+      if (toMultibaseBase64url(decoded) === arg) {
+        return decoded.toString("utf8");
+      }
+    } catch {
+      // Not valid multibase base64url; treat as a literal topic name.
+    }
+  }
+  return arg;
+}
+
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
@@ -115,7 +133,7 @@ app.post(
   "/api/v0/pubsub/pub",
   express.raw({ type: "*/*", limit: "1mb" }),
   async (req, res) => {
-    const topic = getSingleStringArg(req.query.arg);
+    const topic = decodeTopicArg(getSingleStringArg(req.query.arg));
     if (!topic) {
       return res.status(400).json({ Error: "Missing or invalid arg query parameter" });
     }
@@ -135,7 +153,7 @@ app.post(
 // POST /api/v0/pubsub/sub?arg=<topic> — subscribe and stream NDJSON
 // messages in the Kubo wire shape until the client disconnects.
 app.post("/api/v0/pubsub/sub", async (req, res) => {
-  const topic = getSingleStringArg(req.query.arg);
+  const topic = decodeTopicArg(getSingleStringArg(req.query.arg));
   if (!topic) {
     return res.status(400).json({ Error: "Missing or invalid arg query parameter" });
   }
@@ -192,7 +210,7 @@ app.post("/api/v0/pubsub/ls", async (req, res) => {
 
 // POST /api/v0/pubsub/peers?arg=<topic> — peers subscribed to the topic.
 app.post("/api/v0/pubsub/peers", async (req, res) => {
-  const topic = getSingleStringArg(req.query.arg);
+  const topic = decodeTopicArg(getSingleStringArg(req.query.arg));
   try {
     const helia = await getHelia();
     const peers = topic
@@ -278,7 +296,8 @@ app.post(
     try {
       const helia = await getHelia();
       const c = car(helia);
-      await c.import(req.body);
+      const reader = await CarReader.fromBytes(new Uint8Array(req.body));
+      await c.import(reader);
       res.json({ Status: "success" });
     } catch (err) {
       res.status(500).json({ Error: err.message });
