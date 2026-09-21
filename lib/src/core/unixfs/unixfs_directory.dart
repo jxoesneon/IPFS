@@ -1,4 +1,5 @@
 // src/core/unixfs/unixfs_directory.dart
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -63,15 +64,22 @@ class UnixFSDirectoryBuilder {
 
   /// Builds a directory from the provided [entries].
   ///
-  /// Entries are sorted by name for deterministic CID generation. The caller
-  /// is responsible for providing accurate [UnixFSDirectoryEntry.tsize] values;
-  /// use [computeTsize] to compute them from a block store.
+  /// Entries are sorted by UTF-8 byte order of their names for deterministic,
+  /// Kubo-compatible CID generation. The caller is responsible for providing
+  /// accurate [UnixFSDirectoryEntry.tsize] values; use [computeTsize] to
+  /// compute them from a block store.
+  ///
+  /// Throws [ArgumentError] when an entry name is empty, contains `/`, is
+  /// `.` or `..`, or when two entries share the same name — all of which
+  /// produce directory nodes that violate the UnixFS spec.
   Future<UnixFSNode> build(
     IBlockStore store,
     List<UnixFSDirectoryEntry> entries,
   ) async {
+    validateDirectoryEntryNames(entries);
+
     final sorted = List<UnixFSDirectoryEntry>.from(entries)
-      ..sort((a, b) => a.name.compareTo(b.name));
+      ..sort((a, b) => compareEntryNamesUtf8(a.name, b.name));
 
     final links = <dag_pb.PBLink>[];
     for (final entry in sorted) {
@@ -114,6 +122,48 @@ class UnixFSDirectoryBuilder {
       cidVersion: cidVersion,
       hashType: hashType,
     ).build(store, entries);
+  }
+}
+
+/// Compares two directory entry names by UTF-8 byte order.
+///
+/// Directory links are sorted lexicographically on the wire (Kubo sorts by
+/// raw name bytes). Comparing the UTF-8 encodings rather than UTF-16 code
+/// units keeps ordering identical for names containing code points above
+/// U+FFFF, whose UTF-16 surrogate order differs from byte order.
+int compareEntryNamesUtf8(String a, String b) {
+  final aBytes = utf8.encode(a);
+  final bBytes = utf8.encode(b);
+  final n = aBytes.length < bBytes.length ? aBytes.length : bBytes.length;
+  for (var i = 0; i < n; i++) {
+    if (aBytes[i] != bBytes[i]) return aBytes[i] - bBytes[i];
+  }
+  return aBytes.length - bBytes.length;
+}
+
+/// Validates entry names for a UnixFS directory.
+///
+/// Rejects empty names, names containing `/`, the relative components `.`
+/// and `..` (unresolvable through path resolution), and duplicate names,
+/// which the UnixFS spec forbids outright.
+void validateDirectoryEntryNames(List<UnixFSDirectoryEntry> entries) {
+  final seen = <String>{};
+  for (final entry in entries) {
+    final name = entry.name;
+    if (name.isEmpty) {
+      throw ArgumentError('Directory entry name must not be empty');
+    }
+    if (name.contains('/')) {
+      throw ArgumentError('Directory entry name must not contain "/": $name');
+    }
+    if (name == '.' || name == '..') {
+      throw ArgumentError(
+        'Directory entry name must not be a relative component: $name',
+      );
+    }
+    if (!seen.add(name)) {
+      throw ArgumentError('Duplicate directory entry name: $name');
+    }
   }
 }
 
@@ -237,9 +287,9 @@ Future<UnixFSNode> addChildToDirectory(
   String hashType = 'sha2-256',
   int shardThreshold = 0,
 }) async {
-  if (name.contains('/')) {
-    throw ArgumentError('Directory entry name must not contain "/": $name');
-  }
+  validateDirectoryEntryNames([
+    UnixFSDirectoryEntry(name: name, cid: childCid, tsize: 0),
+  ]);
   final dirNode = await unixfsGetNode(store, dirCid);
   if (dirNode == null) {
     throw PathResolutionError('Directory block not found: $dirCid');

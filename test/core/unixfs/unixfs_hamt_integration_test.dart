@@ -1,17 +1,14 @@
 // test/core/unixfs/unixfs_hamt_integration_test.dart
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/dart_ipfs.dart' hide CID, Block, IBlock, IBlockStore;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
-import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_resolver.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
 import 'package:fixnum/fixnum.dart';
