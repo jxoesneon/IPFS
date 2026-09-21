@@ -119,6 +119,20 @@ class _TrustlessNegotiation {
   final Response? error;
 }
 
+/// The outcome of resolving an `ipns` subdomain identifier.
+class _SubdomainIpnsResolution {
+  _SubdomainIpnsResolution(this.cid, {this.dnsLinkDomain, this.ttlSeconds});
+
+  /// The resolved content root CID string.
+  final String cid;
+
+  /// The DNS name that was resolved via DNSLink, if any.
+  final String? dnsLinkDomain;
+
+  /// The DNSLink TTL in seconds, when known.
+  final int? ttlSeconds;
+}
+
 /// A single parsed `Accept` header entry.
 class _AcceptEntry {
   _AcceptEntry(this.mediaType, this.q, this.params);
@@ -275,11 +289,36 @@ class GatewayHandler {
     final path = request.url.path;
     Response response;
 
+    // URI router (subdomain-gateway spec §4.4): `?uri=ipfs://…` overrides
+    // regular path routing and is answered with a redirect to the equivalent
+    // content path, so browsers can register `/ipfs/?uri=%s` as a protocol
+    // handler.
+    final uriParam = request.url.queryParameters['uri'];
+    if (uriParam != null && uriParam.isNotEmpty) {
+      response = _handleUriRouter(request, uriParam);
+      _recordGatewayRequest(request.method, path, response.statusCode);
+      return response;
+    }
+
     // Parse IPFS path
     if (path.startsWith('ipfs/')) {
       final parts = path.substring(5).split('/');
       final cidStr = parts[0];
       final subPath = parts.length > 1 ? parts.sublist(1).join('/') : '';
+
+      // Subdomain-gateway migration: when the subdomain gateway is enabled
+      // and the Host does not carry the content root, valid content paths
+      // are redirected to the equivalent subdomain URL.
+      final migration = _subdomainMigrationRedirect(
+        request,
+        'ipfs',
+        cidStr,
+        subPath,
+      );
+      if (migration != null) {
+        _recordGatewayRequest(request.method, path, migration.statusCode);
+        return migration;
+      }
 
       try {
         final denylisted = _checkDenylist('/ipfs/$cidStr');
@@ -292,7 +331,12 @@ class GatewayHandler {
           if (negError != null) {
             response = negError;
           } else if (negotiation.format != null) {
-            response = await _serveTrustless(cid, subPath, negotiation, request);
+            response = await _serveTrustless(
+              cid,
+              subPath,
+              negotiation,
+              request,
+            );
           } else {
             response = await _serveContent(cidStr, subPath, request);
           }
@@ -312,6 +356,17 @@ class GatewayHandler {
       final parts = path.substring(5).split('/');
       final name = parts[0];
       final subPath = parts.length > 1 ? parts.sublist(1).join('/') : '';
+
+      final migration = _subdomainMigrationRedirect(
+        request,
+        'ipns',
+        name,
+        subPath,
+      );
+      if (migration != null) {
+        _recordGatewayRequest(request.method, path, migration.statusCode);
+        return migration;
+      }
 
       try {
         final denylisted = _checkDenylist('/ipns/$name');
@@ -506,10 +561,11 @@ class GatewayHandler {
     }
 
     // Sort by descending q, keeping header order for equal q values.
-    final order = List<int>.generate(entries.length, (i) => i)..sort((a, b) {
-      final cmp = entries[b].q.compareTo(entries[a].q);
-      return cmp != 0 ? cmp : a.compareTo(b);
-    });
+    final order = List<int>.generate(entries.length, (i) => i)
+      ..sort((a, b) {
+        final cmp = entries[b].q.compareTo(entries[a].q);
+        return cmp != 0 ? cmp : a.compareTo(b);
+      });
 
     _AcceptEntry? firstUnsatisfiableCar;
     for (final i in order) {
@@ -688,13 +744,22 @@ class GatewayHandler {
 
   /// Returns a 301 redirect appending a trailing slash when [request] does
   /// not already end with one, or `null` when no redirect is needed.
+  ///
+  /// The `Host` header is preferred over the request URI authority so that
+  /// redirects issued on subdomain gateway requests keep the
+  /// `{id}.{ipfs|ipns}.{gateway}` origin instead of collapsing to the
+  /// listening address.
   Response? _directorySlashRedirect(Request request) {
     final uri = request.requestedUri;
     if (uri.path.endsWith('/')) {
       return null;
     }
+    final host = request.headers['host'];
+    final authority = (host != null && host.isNotEmpty) ? host : uri.authority;
+    final scheme = uri.scheme.isEmpty ? 'http' : uri.scheme;
     return Response.movedPermanently(
-      uri.replace(path: '${uri.path}/').toString(),
+      '$scheme://$authority${uri.path}/'
+      '${uri.hasQuery ? '?${uri.query}' : ''}',
     );
   }
 
@@ -1161,10 +1226,7 @@ class GatewayHandler {
   }
 
   /// Fetches a linked block for CAR traversal, throwing on missing blocks.
-  Future<Block> _carChildBlock(
-    CID cid, {
-    required bool localOnly,
-  }) async {
+  Future<Block> _carChildBlock(CID cid, {required bool localOnly}) async {
     final childBlock = await _getBlock(cid, localOnly: localOnly);
     if (childBlock == null) {
       // _getBlock already attempts Bitswap retrieval when available.
@@ -1384,9 +1446,7 @@ class GatewayHandler {
     }
     try {
       final pbNode = PBNode.fromBuffer(block.data);
-      final unixfsData = pbNode.hasData()
-          ? Data.fromBuffer(pbNode.data)
-          : null;
+      final unixfsData = pbNode.hasData() ? Data.fromBuffer(pbNode.data) : null;
       if (unixfsData == null) {
         return const [];
       }
@@ -1816,17 +1876,57 @@ class GatewayHandler {
     return _parseSubdomainHost(host) != null;
   }
 
+  /// Splits a `Host` header value into its hostname and port suffix.
+  ///
+  /// Returns `(hostname, ':port')`; the port part is empty when absent or
+  /// unparseable. Bracketed IPv6 literals are handled per RFC 3986.
+  (String, String) _splitHostPort(String host) {
+    final h = host.trim();
+    if (h.startsWith('[')) {
+      final end = h.indexOf(']');
+      if (end == -1) return (h, '');
+      final rest = h.substring(end + 1);
+      return (h.substring(0, end + 1), rest.startsWith(':') ? rest : '');
+    }
+    final idx = h.lastIndexOf(':');
+    if (idx > 0 && idx < h.length - 1) {
+      final port = h.substring(idx + 1);
+      if (int.tryParse(port) != null) {
+        return (h.substring(0, idx), h.substring(idx));
+      }
+    }
+    return (h, '');
+  }
+
+  /// Whether [hostName] refers to a loopback gateway host where subdomain
+  /// requests are always supported.
+  bool _isLocalhostName(String hostName) {
+    final lower = hostName.toLowerCase();
+    return lower == 'localhost' ||
+        lower == '127.0.0.1' ||
+        lower == '::1' ||
+        lower == '[::1]';
+  }
+
   /// Parses a subdomain-style gateway host into a [SubdomainRequest].
   ///
   /// Returns `null` when the host does not match a configured subdomain pattern,
   /// allowing callers to fall back to the path gateway.
   SubdomainRequest? _parseSubdomainHost(String host) {
-    final hostLower = host.toLowerCase();
+    // Strip an optional port and a single trailing FQDN dot before matching;
+    // DNS labels are matched case-insensitively.
+    var hostname = _splitHostPort(host).$1;
+    if (hostname.endsWith('.')) {
+      hostname = hostname.substring(0, hostname.length - 1);
+    }
+    final hostLower = hostname.toLowerCase();
 
     // Localhost subdomain requests are always supported.
-    if (hostLower.endsWith('.ipfs.localhost') ||
-        hostLower.endsWith('.ipns.localhost')) {
-      return _parseSubdomainHostWithDomain(host, 'localhost');
+    for (final localDomain in const ['localhost', '127.0.0.1']) {
+      if (hostLower.endsWith('.ipfs.$localDomain') ||
+          hostLower.endsWith('.ipns.$localDomain')) {
+        return _parseSubdomainHostWithDomain(hostname, localDomain);
+      }
     }
 
     // Production subdomain requests require a configured gateway domain.
@@ -1837,7 +1937,7 @@ class GatewayHandler {
 
     if (!hostLower.endsWith('.$domain')) return null;
 
-    return _parseSubdomainHostWithDomain(host, domain);
+    return _parseSubdomainHostWithDomain(hostname, domain);
   }
 
   SubdomainRequest? _parseSubdomainHostWithDomain(String host, String domain) {
@@ -1853,9 +1953,11 @@ class GatewayHandler {
     final identifierParts = hostParts.sublist(0, namespaceIndex);
     if (identifierParts.isEmpty) return null;
 
-    // For `ipfs` subdomains, the identifier must be a single DNS label.
-    if (namespace == 'ipfs' && identifierParts.length != 1) return null;
-
+    // Multi-label `ipfs` identifiers are still parsed so [handleSubdomain]
+    // can reject them with a spec-compliant 400 instead of silently falling
+    // back to the path gateway. DNSLink `ipns` names legitimately span
+    // multiple labels (`docs.ipfs.io.ipns.<gw>`) in addition to the inlined
+    // single-label form.
     final identifier = identifierParts.join('.');
     if (identifier.isEmpty) return null;
 
@@ -1891,29 +1993,30 @@ class GatewayHandler {
 
   /// Resolves an `ipns` subdomain identifier to a CID string.
   ///
-  /// The identifier may be a PeerId/IPNS key, or a DNSLink-compatible domain.
-  /// DNSLink values pointing to `/ipns/<name>` are recursively resolved via
-  /// [ipnsResolver]. Throws [Exception] on failure.
-  Future<String> _resolveSubdomainIpns(
-    String name, {
-    String? dnsLinkDomain,
-  }) async {
-    // 1. Try IPNS resolver for PeerId/IPNS key names.
-    if (ipnsResolver != null && _looksLikeIpnsName(name)) {
+  /// The identifier may be a PeerId/IPNS key, a DNSLink-compatible domain in
+  /// multi-label form (`docs.ipfs.io`), or an inlined single-label DNSLink
+  /// name (`docs-ipfs-io`). DNSLink values pointing to `/ipns/<name>` are
+  /// recursively resolved via [ipnsResolver]. Throws [Exception] on failure.
+  Future<_SubdomainIpnsResolution> _resolveSubdomainIpns(String name) async {
+    // 1. Try the IPNS resolver for PeerId / libp2p-key names.
+    final ipnsName = _canonicalIpnsName(name);
+    if (ipnsResolver != null && ipnsName != null) {
       try {
-        return await ipnsResolver!(name);
+        return _SubdomainIpnsResolution(await ipnsResolver!(ipnsName));
       } catch (e) {
         _logger.warning('IPNS resolver failed for $name: $e');
-        // Continue to DNSLink fallback for DNS-like names.
-        if (!_looksLikeDnsName(name)) rethrow;
+        // Continue to the DNSLink fallback only when the identifier could
+        // still be a DNS name.
+        if (_dnsLinkNameCandidates(name).isEmpty) rethrow;
       }
     }
 
     // 2. Try DNSLink resolution for DNS-like names.
-    if (subdomainDNSLinkResolver && _looksLikeDnsName(name)) {
-      final resolver = dnsLinkResolver ?? _defaultDnsLinkResolver;
-      final result = await resolver(name);
-      if (result != null) {
+    if (subdomainDNSLinkResolver) {
+      for (final dnsName in _dnsLinkNameCandidates(name)) {
+        final resolver = dnsLinkResolver ?? _defaultDnsLinkResolver;
+        final result = await resolver(dnsName);
+        if (result == null) continue;
         final path = result.path;
         if (path.startsWith('/ipfs/')) {
           final cidStr = path.substring(6);
@@ -1922,13 +2025,21 @@ class GatewayHandler {
           if (cid == null) {
             throw Exception('DNSLink resolved to invalid CID: $cidStr');
           }
-          return cid.encode();
+          return _SubdomainIpnsResolution(
+            cid.encode(),
+            dnsLinkDomain: dnsName,
+            ttlSeconds: result.ttlSeconds,
+          );
         } else if (path.startsWith('/ipns/')) {
           final innerName = path.substring(6);
           if (ipnsResolver == null) {
             throw Exception('IPNS resolver unavailable for DNSLink /ipns path');
           }
-          return await ipnsResolver!(innerName);
+          return _SubdomainIpnsResolution(
+            await ipnsResolver!(innerName),
+            dnsLinkDomain: dnsName,
+            ttlSeconds: result.ttlSeconds,
+          );
         }
       }
     }
@@ -1936,18 +2047,92 @@ class GatewayHandler {
     throw Exception('Invalid IPNS name in subdomain');
   }
 
+  /// Returns the canonical IPNS name for [name] when it is a PeerId or
+  /// libp2p-key identifier, or `null` when it should be treated as a DNSLink
+  /// name instead.
+  String? _canonicalIpnsName(String name) {
+    if (_looksLikeIpnsName(name)) {
+      // Base36/base32 names are case-insensitive DNS labels and are
+      // normalized to lowercase; base58btc names are case-sensitive and are
+      // kept as-is.
+      final lower = name.toLowerCase();
+      if (lower.startsWith('k') || lower.startsWith('b')) {
+        return lower;
+      }
+      return name;
+    }
+    // A single-label identifier may be the inlined form of a name that only
+    // becomes a valid IPNS name after de-inlining (e.g. a `….k` peer-id
+    // suffix stored as `…-k`).
+    if (!name.contains('.')) {
+      final deInlined = _deInlineDnsLinkName(name);
+      if (deInlined != name && _looksLikeIpnsName(deInlined)) {
+        return deInlined.toLowerCase();
+      }
+    }
+    return null;
+  }
+
+  /// Returns the DNS names that [name] may refer to: the multi-label form,
+  /// or the de-inlined interpretation of a single-label identifier per the
+  /// subdomain gateway spec.
+  List<String> _dnsLinkNameCandidates(String name) {
+    if (_looksLikeDnsName(name)) {
+      return [name];
+    }
+    if (!name.contains('.')) {
+      final deInlined = _deInlineDnsLinkName(name);
+      if (deInlined != name && _looksLikeDnsName(deInlined)) {
+        return [deInlined];
+      }
+    }
+    return const [];
+  }
+
+  /// Inlines a DNSLink name into a single DNS label per the subdomain
+  /// gateway spec: every `-` becomes `--` and every `.` becomes `-`.
+  String _inlineDnsLinkName(String domain) {
+    return domain.replaceAll('-', '--').replaceAll('.', '-');
+  }
+
+  /// Reverses [_inlineDnsLinkName]: every standalone `-` becomes `.` and
+  /// every `--` becomes `-`.
+  String _deInlineDnsLinkName(String label) {
+    const sentinel = '\u0000';
+    return label
+        .replaceAll('--', sentinel)
+        .replaceAll('-', '.')
+        .replaceAll(sentinel, '-');
+  }
+
   bool _looksLikeIpnsName(String name) {
     // IPNS peer IDs are base36 (k...) or base58btc strings. Base36 multibase
-    // peer IDs may be represented in subdomain form with a trailing '.k' suffix.
+    // peer IDs may be represented in subdomain form with a trailing '.k'
+    // suffix.
     if (name.isEmpty) return false;
     final dotCount = '.'.allMatches(name).length;
     if (dotCount > 1) return false;
-    if (name.startsWith('k')) {
-      if (dotCount == 0) return true;
-      if (name.endsWith('.k')) return true;
+    final lower = name.toLowerCase();
+    if (lower.startsWith('k')) {
+      if (dotCount == 0) {
+        try {
+          PeerId.fromBase36(lower);
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+      return lower.endsWith('.k');
     }
     if (dotCount == 0) {
-      return _isBase58btcPeerId(name);
+      if (_isBase58btcPeerId(name)) return true;
+      // A single-label CID (e.g. a base32 libp2p-key) is a valid IPNS name.
+      try {
+        _decodeCid(lower.startsWith('b') ? lower : name);
+        return true;
+      } catch (_) {
+        return false;
+      }
     }
     return false;
   }
@@ -1959,6 +2144,20 @@ class GatewayHandler {
     } catch (e) {
       return false;
     }
+  }
+
+  /// Whether every label of a subdomain identifier is a syntactically valid
+  /// DNS label: non-empty, at most 63 characters, and limited to
+  /// `[a-zA-Z0-9-]`. Used to reject malformed `ipns` identifiers with a 400
+  /// before any resolution is attempted.
+  bool _isValidSubdomainIdentifier(String identifier) {
+    if (identifier.isEmpty || identifier.length > 253) return false;
+    final labelRegex = RegExp(r'^[a-zA-Z0-9-]+$');
+    for (final label in identifier.split('.')) {
+      if (label.isEmpty || label.length > 63) return false;
+      if (!labelRegex.hasMatch(label)) return false;
+    }
+    return true;
   }
 
   bool _looksLikeDnsName(String name) {
@@ -1977,6 +2176,166 @@ class GatewayHandler {
     final cid = await utils_dnslink.DNSLinkResolver.resolve(domain);
     if (cid != null && cid.isNotEmpty) {
       return DnsLinkResult('/ipfs/$cid', ttlSeconds: 60);
+    }
+    return null;
+  }
+
+  /// The effective request scheme, honoring `X-Forwarded-Proto` when the
+  /// gateway sits behind a TLS-terminating reverse proxy.
+  String _forwardedScheme(Request request) {
+    final forwarded = request.headers['x-forwarded-proto']
+        ?.split(',')
+        .first
+        .trim()
+        .toLowerCase();
+    if (forwarded == 'https') return 'https';
+    if (forwarded == 'http') return 'http';
+    final scheme = request.requestedUri.scheme;
+    return scheme.isEmpty ? 'http' : scheme;
+  }
+
+  /// URI router for `ipfs://` and `ipns://` addresses (subdomain gateway
+  /// spec §4.4). Responds with a redirect to the equivalent path-gateway
+  /// URL on this host, from which regular path/subdomain logic applies.
+  Response _handleUriRouter(Request request, String uriValue) {
+    final uri = Uri.tryParse(uriValue);
+    if (uri == null || (uri.scheme != 'ipfs' && uri.scheme != 'ipns')) {
+      return Response(
+        400,
+        body: 'Invalid uri query parameter',
+        headers: const {'Content-Type': 'text/plain; charset=utf-8'},
+      );
+    }
+
+    // `ipfs://<root>/<path>` places the root in the authority component;
+    // `ipfs:<root>/<path>` keeps it in the first path segment.
+    final String root;
+    final String rest;
+    if (uri.host.isNotEmpty) {
+      root = uri.host;
+      rest = uri.path;
+    } else {
+      final segments = uri.pathSegments;
+      if (segments.isEmpty || segments.first.isEmpty) {
+        return Response(
+          400,
+          body: 'Invalid uri query parameter',
+          headers: const {'Content-Type': 'text/plain; charset=utf-8'},
+        );
+      }
+      root = segments.first;
+      rest = segments.length > 1 ? '/${segments.sublist(1).join('/')}' : '';
+    }
+    if (root.isEmpty) {
+      return Response(
+        400,
+        body: 'Invalid uri query parameter',
+        headers: const {'Content-Type': 'text/plain; charset=utf-8'},
+      );
+    }
+
+    final scheme = _forwardedScheme(request);
+    final host = request.headers['host'] ?? request.url.authority;
+    final query = uri.hasQuery ? '?${uri.query}' : '';
+    return Response.movedPermanently(
+      '$scheme://$host/${uri.scheme}/$root$rest$query',
+    );
+  }
+
+  /// Attempts the spec-mandated migration of a path-gateway request to the
+  /// equivalent subdomain URL (subdomain gateway spec §3.1.1.1/§4.1).
+  ///
+  /// Returns a `301 Moved Permanently` response when the subdomain gateway
+  /// is enabled and the request targets a known gateway host (`localhost`
+  /// or the configured [gatewayDomain]) without carrying the content root
+  /// in the `Host` header. Returns `null` when the redirect does not apply
+  /// and the request should be served by the regular path gateway.
+  Response? _subdomainMigrationRedirect(
+    Request request,
+    String namespace,
+    String rootIdentifier,
+    String subPath,
+  ) {
+    if (!enableSubdomainGateway) return null;
+
+    final hostHeader = request.headers['host'] ?? request.url.authority;
+    if (hostHeader.isEmpty) return null;
+
+    // Requests already addressed to a subdomain host are handled by
+    // [handleSubdomain]; there is nothing to migrate.
+    if (_parseSubdomainHost(hostHeader) != null) return null;
+
+    final requestSplit = _splitHostPort(hostHeader);
+    final requestHostName = requestSplit.$1.toLowerCase();
+    final configured = gatewayDomain?.toLowerCase();
+
+    // Only migrate requests that arrived on a known gateway host; unknown
+    // hosts keep plain path-gateway semantics.
+    final isLocal = _isLocalhostName(requestHostName);
+    final isConfigured =
+        configured != null &&
+        configured.isNotEmpty &&
+        requestHostName == configured;
+    if (!isLocal && !isConfigured) return null;
+
+    // X-Forwarded-Host selects a different public domain for the subdomain
+    // gateway (spec §2.1.3).
+    var baseDomain = requestHostName;
+    var portPart = requestSplit.$2;
+    final forwardedHost = request.headers['x-forwarded-host']
+        ?.split(',')
+        .first
+        .trim();
+    if (forwardedHost != null && forwardedHost.isNotEmpty) {
+      final fwdSplit = _splitHostPort(forwardedHost);
+      baseDomain = fwdSplit.$1.toLowerCase();
+      portPart = fwdSplit.$2;
+    }
+
+    // The content root identifier must be convertible to a single
+    // case-insensitive DNS label: CIDv0 becomes CIDv1 base32, DNSLink names
+    // are inlined, and base58btc peer IDs become base36.
+    final String? identifier;
+    if (namespace == 'ipfs') {
+      final cid = _validateSubdomainCid(rootIdentifier);
+      if (cid == null) return null; // let the path handler report the 400
+      identifier = cid.encode();
+    } else {
+      identifier = _subdomainCompatibleIpnsName(rootIdentifier);
+    }
+    if (identifier == null || identifier.isEmpty || identifier.length > 63) {
+      return null;
+    }
+
+    final scheme = _forwardedScheme(request);
+    final pathPart = subPath.isEmpty ? '/' : '/$subPath';
+    final queryPart = request.url.hasQuery ? '?${request.url.query}' : '';
+    return Response.movedPermanently(
+      '$scheme://$identifier.$namespace.$baseDomain$portPart'
+      '$pathPart$queryPart',
+    );
+  }
+
+  /// Converts an `/ipns/<name>` path identifier into the single DNS label
+  /// used on a subdomain gateway, or `null` when it cannot be represented.
+  String? _subdomainCompatibleIpnsName(String name) {
+    if (name.isEmpty || name.contains('%')) return null;
+    if (_looksLikeDnsName(name)) {
+      // DNSLink names with multiple labels must be inlined into a single
+      // label (spec §2.1.1).
+      return _inlineDnsLinkName(name);
+    }
+    if (_looksLikeIpnsName(name)) {
+      if (_isBase58btcPeerId(name)) {
+        // Case-sensitive base58btc cannot survive a DNS label; use the
+        // case-insensitive base36 multibase form instead.
+        try {
+          return PeerId.fromBase58(name).toBase36();
+        } catch (_) {
+          return null;
+        }
+      }
+      return name.toLowerCase();
     }
     return null;
   }
@@ -2005,6 +2364,16 @@ class GatewayHandler {
       return redirect;
     }
 
+    // Reject percent-encoded identifiers up front: a DNS label cannot
+    // contain `%`, so this is always a malformed subdomain host.
+    if (sub.identifier.contains('%')) {
+      return _invalidSubdomainResponse('Invalid subdomain identifier');
+    }
+
+    // On a subdomain gateway the URL path addresses content below the root
+    // carried in the Host header.
+    final subPath = request.url.path;
+
     Response response;
     String? ipnsPath;
     int? ipnsTtl;
@@ -2012,29 +2381,35 @@ class GatewayHandler {
 
     try {
       if (sub.namespace == 'ipfs') {
-        final cid = _validateSubdomainCid(sub.identifier);
-        if (cid == null) {
+        // The ipfs identifier must be a single DNS label (≤63 chars) holding
+        // a case-insensitive CIDv1. CIDv0 is converted to CIDv1 base32.
+        if (sub.identifier.contains('.') || sub.identifier.length > 63) {
           response = _invalidCidResponse();
         } else {
-          final cidStr = cid.encode();
-          ipnsPath = '/ipfs/${sub.identifier}';
-          final denylisted = _checkDenylist('/ipfs/$cidStr');
-          if (denylisted != null) {
-            response = denylisted;
+          final cid = _validateSubdomainCid(sub.identifier);
+          if (cid == null) {
+            response = _invalidCidResponse();
           } else {
-            final negotiation = _negotiateTrustless(request);
-            final negError = negotiation.error;
-            if (negError != null) {
-              response = negError;
-            } else if (negotiation.format != null) {
-              response = await _serveTrustless(
-                cid,
-                sub.subPath,
-                negotiation,
-                request,
-              );
+            final cidStr = cid.encode();
+            ipnsPath = '/ipfs/$cidStr';
+            final denylisted = _checkDenylist('/ipfs/$cidStr');
+            if (denylisted != null) {
+              response = denylisted;
             } else {
-              response = await _serveContent(cidStr, sub.subPath, request);
+              final negotiation = _negotiateTrustless(request);
+              final negError = negotiation.error;
+              if (negError != null) {
+                response = negError;
+              } else if (negotiation.format != null) {
+                response = await _serveTrustless(
+                  cid,
+                  subPath,
+                  negotiation,
+                  request,
+                );
+              } else {
+                response = await _serveContent(cidStr, subPath, request);
+              }
             }
           }
         }
@@ -2044,21 +2419,19 @@ class GatewayHandler {
         final denylisted = _checkDenylist(ipnsPath);
         if (denylisted != null) {
           response = denylisted;
-        } else {
-          final cidStr = await _resolveSubdomainIpns(
-            sub.identifier,
-            dnsLinkDomain: _looksLikeDnsName(sub.identifier)
-                ? sub.identifier
-                : null,
+        } else if (!_isValidSubdomainIdentifier(sub.identifier)) {
+          response = _invalidSubdomainResponse(
+            'Invalid IPNS name in subdomain',
           );
+        } else {
+          final resolution = await _resolveSubdomainIpns(sub.identifier);
+          final cidStr = resolution.cid;
           final cid = _validateSubdomainCid(cidStr);
           if (cid == null) {
             response = _badGatewayResponse('Invalid IPNS resolution result');
           } else {
-            if (_looksLikeDnsName(sub.identifier)) {
-              dnsLinkDomain = sub.identifier;
-            }
-            ipnsTtl = _defaultIpnsTtlSeconds;
+            dnsLinkDomain = resolution.dnsLinkDomain;
+            ipnsTtl = resolution.ttlSeconds ?? _defaultIpnsTtlSeconds;
             final negotiation = _negotiateTrustless(request);
             final negError = negotiation.error;
             if (negError != null) {
@@ -2072,13 +2445,13 @@ class GatewayHandler {
             } else if (negotiation.format != null) {
               response = await _serveTrustless(
                 cid,
-                sub.subPath,
+                subPath,
                 negotiation,
                 request,
                 ipnsPath: ipnsPath,
               );
             } else {
-              response = await _serveContent(cidStr, sub.subPath, request);
+              response = await _serveContent(cidStr, subPath, request);
             }
           }
         }
@@ -2102,6 +2475,12 @@ class GatewayHandler {
       ipnsTtl: ipnsTtl,
       dnsLinkDomain: dnsLinkDomain,
     );
+
+    // HEAD is GET-equivalent minus the payload (spec §1.2); the subdomain
+    // middleware intercepts all methods, so strip the body here.
+    if (request.method == 'HEAD') {
+      response = Response(response.statusCode, headers: response.headers);
+    }
 
     _recordGatewayRequest(
       request.method,
