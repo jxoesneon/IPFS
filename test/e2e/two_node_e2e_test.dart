@@ -219,6 +219,47 @@ void main() {
         expect(await nodeB!.connectedPeers, isEmpty);
       });
 
+      test('reconnect restores pubsub delivery after a dropped peer', () async {
+        final aAddr = await startBoth();
+        await nodeB!.connectToPeer(aAddr);
+
+        await nodeA!.subscribe('reconnect-topic');
+        await nodeB!.subscribe('reconnect-topic');
+
+        final received = <String>[];
+        final sub = nodeA!.pubsubMessages.listen(
+          (m) => received.add('${m.topic}:${m.content}'),
+        );
+
+        // Drop the connection, then dial again — the gossipsub session
+        // stream must be re-established and subscription state re-announced.
+        await nodeB!.disconnectFromPeer(nodeA!.peerID);
+        await waitFor<bool>(
+          () async => (await nodeB!.connectedPeers).isEmpty ? true : null,
+          description: 'B to drop A',
+        );
+
+        await nodeB!.connectToPeer(aAddr);
+        await waitFor<bool>(
+          () async =>
+              (await nodeA!.pubsubPeers(
+                'reconnect-topic',
+              )).contains(nodeB!.peerID)
+              ? true
+              : null,
+          timeout: const Duration(seconds: 60),
+          description: 'A to re-learn B subscribed after reconnect',
+        );
+
+        await nodeB!.publish('reconnect-topic', 'back online');
+        await waitFor<bool>(
+          () async => received.isNotEmpty ? true : null,
+          description: 'A to receive the post-reconnect message',
+        );
+        expect(received, contains('reconnect-topic:back online'));
+        await sub.cancel();
+      });
+
       test('requestBlock pulls a specific block from a peer', () async {
         final aAddr = await startBoth();
         await nodeB!.connectToPeer(aAddr);

@@ -31,6 +31,16 @@ class DartIpfsClient with PubsubRpc {
     return jsonDecode(response) as Map<String, dynamic>;
   }
 
+  /// `POST /api/v0/swarm/peers` — the peers dart_ipfs is connected to.
+  Future<List<Map<String, dynamic>>> swarmPeers() async {
+    final response = await _rpc('swarm/peers');
+    final json = jsonDecode(response) as Map<String, dynamic>;
+    return [
+      for (final p in json['Peers'] as List? ?? const [])
+        (p as Map).cast<String, dynamic>(),
+    ];
+  }
+
   Future<Uint8List> dagExport(String cid) async {
     final query = {'arg': cid};
     final uri = Uri.http('$host:$port', '/api/v0/dag/export', query);
@@ -225,10 +235,13 @@ class DartIpfsClient with PubsubRpc {
   Future<String> _rpc(String command, {String? arg}) async {
     final query = arg != null ? {'arg': arg} : null;
     final uri = Uri.http('$host:$port', '/api/v0/$command', query);
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 10);
     try {
       final request = await client.postUrl(uri);
-      final response = await request.close().timeout(const Duration(seconds: 60));
+      final response = await request.close().timeout(
+        const Duration(seconds: 60),
+      );
       final body = await response.transform(utf8.decoder).join();
       if (response.statusCode != 200) {
         throw HttpException(

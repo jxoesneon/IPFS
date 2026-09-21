@@ -39,6 +39,62 @@ class KuboClient with PubsubRpc {
     return jsonDecode(response) as Map<String, dynamic>;
   }
 
+  /// `POST /api/v0/swarm/peers` — the peers Kubo is currently connected to.
+  Future<List<Map<String, dynamic>>> swarmPeers() async {
+    final response = await _rpc('swarm/peers');
+    final json = jsonDecode(response) as Map<String, dynamic>;
+    return [
+      for (final p in json['Peers'] as List? ?? const [])
+        (p as Map).cast<String, dynamic>(),
+    ];
+  }
+
+  /// `POST /api/v0/id?arg=<peerId>` — Kubo's cached/queried identify record
+  /// for a remote peer, including its advertised `Protocols` list.
+  Future<Map<String, dynamic>> idOf(String peerId) async {
+    final response = await _rpc('id', arg: peerId);
+    return jsonDecode(response) as Map<String, dynamic>;
+  }
+
+  /// `POST /api/v0/ping?arg=<peerId>` — streams `{Success, Time, Text}`
+  /// objects. Returns the RTT in nanoseconds of the first successful
+  /// response; throws when no success arrives within [timeout].
+  Future<int> pingPeer(String peerId, {int count = 1}) async {
+    final uri = Uri.http('$host:$port', '/api/v0/ping', {
+      'arg': peerId,
+      'count': '$count',
+    });
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 10);
+    try {
+      final request = await client.postUrl(uri);
+      final response = await request.close();
+      if (response.statusCode != 200) {
+        final body = await response.transform(utf8.decoder).join();
+        throw HttpException(
+          'Kubo RPC ping returned ${response.statusCode}: $body',
+        );
+      }
+      String? failureText;
+      await for (final line
+          in response
+              .transform(utf8.decoder)
+              .transform(const LineSplitter())
+              .timeout(const Duration(seconds: 30))) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty) continue;
+        final json = jsonDecode(trimmed) as Map<String, dynamic>;
+        if (json['Success'] == true) return (json['Time'] as num).toInt();
+        failureText ??= json['Text'] as String?;
+      }
+      throw HttpException(
+        'Kubo ping to $peerId produced no success${failureText != null ? ': $failureText' : ''}',
+      );
+    } finally {
+      client.close();
+    }
+  }
+
   Future<Uint8List> dagExport(String cid) async {
     final query = {'arg': cid};
     final uri = Uri.http('$host:$port', '/api/v0/dag/export', query);
@@ -339,10 +395,13 @@ class KuboClient with PubsubRpc {
   Future<String> _rpc(String command, {String? arg}) async {
     final query = arg != null ? {'arg': arg} : null;
     final uri = Uri.http('$host:$port', '/api/v0/$command', query);
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 10);
     try {
       final request = await client.postUrl(uri);
-      final response = await request.close().timeout(const Duration(seconds: 60));
+      final response = await request.close().timeout(
+        const Duration(seconds: 60),
+      );
       final body = await response.transform(utf8.decoder).join();
       if (response.statusCode != 200) {
         throw HttpException(

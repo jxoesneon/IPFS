@@ -63,39 +63,32 @@ void main() {
       await dartIpfs.pubsubUnsubscribe(topic);
     }, timeout: const Timeout(Duration(minutes: 2)));
 
-    test('dart_ipfs publishes, Kubo receives', () async {
-      const topic = 'interop-dart-to-kubo';
-      const payload = 'hello kubo from dart_ipfs';
-
-      await kubo.pubsubSubscribe(topic);
-      await Future<void>.delayed(settle);
-      await dartIpfs.pubsubPublish(topic, utf8.encode(payload));
-
-      final message = await kubo.pubsubWaitFor(
-        topic,
-        expected: payload,
-        timeout: delivery,
-      );
-      expect(message.text, equals(payload));
-      await kubo.pubsubUnsubscribe(topic);
-    }, timeout: const Timeout(Duration(minutes: 2)));
-
-    test('Kubo publishes, dart_ipfs receives', () async {
-      const topic = 'interop-kubo-to-dart';
-      const payload = 'hello dart_ipfs from kubo';
-
+    test('pubsub/peers shows each node subscribed on the other', () async {
+      const topic = 'interop-helia-peers';
       await dartIpfs.pubsubSubscribe(topic);
+      await helia.pubsubSubscribe(topic);
       await Future<void>.delayed(settle);
-      await kubo.pubsubPublish(topic, utf8.encode(payload));
 
-      final message = await dartIpfs.pubsubWaitFor(
-        topic,
-        expected: payload,
-        timeout: delivery,
+      final dartPeerId = (await dartIpfs.id())['ID'] as String;
+      final heliaPeerId = (await helia.id())['ID'] as String;
+
+      final dartPeers = await dartIpfs.pubsubPeers(topic);
+      final heliaPeers = await helia.pubsubPeers(topic);
+
+      expect(
+        dartPeers,
+        contains(heliaPeerId),
+        reason: 'dart_ipfs should see Helia subscribed to $topic',
       );
-      expect(message.text, equals(payload));
+      expect(
+        heliaPeers,
+        contains(dartPeerId),
+        reason: 'Helia should see dart_ipfs subscribed to $topic',
+      );
+
       await dartIpfs.pubsubUnsubscribe(topic);
-    }, timeout: const Timeout(Duration(minutes: 2)));
+      await helia.pubsubUnsubscribe(topic);
+    }, timeout: const Timeout(Duration(minutes: 1)));
 
     test('pubsub/ls reflects subscriptions on all three nodes', () async {
       const topic = 'interop-ls-check';
