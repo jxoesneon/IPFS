@@ -10,6 +10,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/proto/dag_marshal.dart';
@@ -304,8 +305,10 @@ class RPCHandlers {
     List<(String, String)> entries,
     int cidVersion,
   ) async {
+    final sorted = List<(String, String)>.from(entries)
+      ..sort((a, b) => compareEntryNamesUtf8(a.$1, b.$1));
     final links = <dag_pb.PBLink>[];
-    for (final (name, cid) in entries) {
+    for (final (name, cid) in sorted) {
       links.add(
         dag_pb.PBLink(
           name: name,
