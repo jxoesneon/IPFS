@@ -1070,8 +1070,10 @@ class _SchemaValidator {
         _unionBytePrefix(node, cfg);
       case 'advanced':
         break;
+      // coverage:ignore-start
       default:
         throw IPLDSchemaError('Unknown union representation: $strategy');
+      // coverage:ignore-end
     }
   }
 
