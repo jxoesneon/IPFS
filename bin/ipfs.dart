@@ -145,6 +145,7 @@ class DaemonCommand extends IpfsCommand {
       print('  $addr');
     }
 
+    final ipnsHandler = node.ipns;
     final gateway = GatewayServer(
       blockStore: node.blockStore,
       node: node,
@@ -152,6 +153,12 @@ class DaemonCommand extends IpfsCommand {
       port: gatewayEndpoint.port,
       corsOrigins: ['*'],
       gatewayConfig: mergedConfig.gateway,
+      ipnsResolver: ipnsHandler != null
+          ? (String name) => ipnsHandler.resolve(name)
+          : null,
+      ipnsRecordResolver: ipnsHandler != null
+          ? (String name) => ipnsHandler.getRecordBytes(name)
+          : null,
     );
     await gateway.start();
     print('Gateway running at: ${gateway.url}');
