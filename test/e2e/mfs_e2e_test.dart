@@ -1,4 +1,6 @@
 @TestOn('vm')
+library;
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -37,6 +39,7 @@ void main() {
       await node!.mfs.write(
         '/hello.txt',
         Stream.value(utf8.encode('hello mfs')),
+        create: true,
       );
 
       expect(await readAll('/hello.txt'), equals(utf8.encode('hello mfs')));
@@ -44,7 +47,11 @@ void main() {
 
     test('mkdir creates directories listable via ls', () async {
       await node!.mfs.mkdir('/docs', parents: true);
-      await node!.mfs.write('/docs/a.txt', Stream.value(utf8.encode('aaa')));
+      await node!.mfs.write(
+        '/docs/a.txt',
+        Stream.value(utf8.encode('aaa')),
+        create: true,
+      );
 
       final entries = await node!.mfs.ls('/docs');
       expect(entries.map((e) => e.name), contains('a.txt'));
@@ -52,13 +59,21 @@ void main() {
 
     test('nested mkdir with parents creates the full path', () async {
       await node!.mfs.mkdir('/a/b/c', parents: true);
-      await node!.mfs.write('/a/b/c/deep.txt', Stream.value(utf8.encode('d')));
+      await node!.mfs.write(
+        '/a/b/c/deep.txt',
+        Stream.value(utf8.encode('d')),
+        create: true,
+      );
 
       expect(await readAll('/a/b/c/deep.txt'), equals(utf8.encode('d')));
     });
 
     test('stat reports file metadata', () async {
-      await node!.mfs.write('/s.txt', Stream.value(utf8.encode('stat me')));
+      await node!.mfs.write(
+        '/s.txt',
+        Stream.value(utf8.encode('stat me')),
+        create: true,
+      );
 
       final stat = await node!.mfs.stat('/s.txt');
       expect(stat.size, greaterThan(0));
@@ -67,14 +82,22 @@ void main() {
     });
 
     test('cp duplicates a file', () async {
-      await node!.mfs.write('/orig.txt', Stream.value(utf8.encode('copy me')));
+      await node!.mfs.write(
+        '/orig.txt',
+        Stream.value(utf8.encode('copy me')),
+        create: true,
+      );
       await node!.mfs.cp('/orig.txt', '/copy.txt');
 
       expect(await readAll('/copy.txt'), equals(utf8.encode('copy me')));
     });
 
     test('mv relocates a file', () async {
-      await node!.mfs.write('/from.txt', Stream.value(utf8.encode('moved')));
+      await node!.mfs.write(
+        '/from.txt',
+        Stream.value(utf8.encode('moved')),
+        create: true,
+      );
       await node!.mfs.mv('/from.txt', '/to.txt');
 
       expect(await readAll('/to.txt'), equals(utf8.encode('moved')));
@@ -82,14 +105,22 @@ void main() {
     });
 
     test('rm removes a file', () async {
-      await node!.mfs.write('/tmp.txt', Stream.value(utf8.encode('x')));
+      await node!.mfs.write(
+        '/tmp.txt',
+        Stream.value(utf8.encode('x')),
+        create: true,
+      );
       await node!.mfs.rm('/tmp.txt');
 
       await expectLater(readAll('/tmp.txt'), throwsA(anything));
     });
 
     test('flush returns the root CID', () async {
-      await node!.mfs.write('/f.txt', Stream.value(utf8.encode('f')));
+      await node!.mfs.write(
+        '/f.txt',
+        Stream.value(utf8.encode('f')),
+        create: true,
+      );
       final root = await node!.mfs.flush(path: '/');
 
       expect(root.encode(), isNotEmpty);
@@ -103,6 +134,7 @@ void main() {
         await node!.mfs.write(
           '/keep/file.txt',
           Stream.value(utf8.encode('stays')),
+          create: true,
         );
         await node!.mfs.sync();
         await node!.stop();
@@ -124,6 +156,45 @@ void main() {
         await node!.start();
       },
     );
+
+    test('flush returns the flushed path CID and is deterministic', () async {
+      await node!.mfs.mkdir('/fl', parents: true);
+      final stat = await node!.mfs.stat('/fl');
+      final flushed = await node!.mfs.flush(path: '/fl');
+      expect(flushed.encode(), equals(stat.hash));
+      final r1 = await node!.mfs.flush();
+      final r2 = await node!.mfs.flush();
+      expect(r1.encode(), equals(r2.encode()));
+    });
+
+    test('touch then stat reports mtime', () async {
+      await node!.mfs.write(
+        '/meta.txt',
+        Stream.value(utf8.encode('m')),
+        create: true,
+      );
+      await node!.mfs.touch('/meta.txt', mtimeSecs: 1700000000);
+      final stat = await node!.mfs.stat('/meta.txt');
+      expect(stat.mtime, equals(1700000000));
+    });
+
+    test('cp from an /ipfs path clones content into MFS', () async {
+      await node!.mfs.write(
+        '/src.txt',
+        Stream.value(utf8.encode('via ipfs')),
+        create: true,
+      );
+      final stat = await node!.mfs.stat('/src.txt');
+      await node!.mfs.cp('/ipfs/${stat.hash}', '/dst.txt');
+      expect(await readAll('/dst.txt'), equals(utf8.encode('via ipfs')));
+    });
+
+    test('write without create fails on a missing path', () async {
+      await expectLater(
+        node!.mfs.write('/nope.txt', Stream.value(utf8.encode('x'))),
+        throwsA(anything),
+      );
+    });
 
     test('reading a missing path throws', () async {
       await expectLater(readAll('/nope.txt'), throwsA(anything));
