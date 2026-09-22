@@ -983,6 +983,222 @@ void main() {
       expect(response.statusCode, equals(400));
     });
 
+    test('filesHandler serves verbs at relative paths', () async {
+      // The standalone router used for Router.mount('/api/v0/files/', ...).
+      final handler = handlers.filesHandler;
+      final response = await handler(
+        Request('POST', Uri.parse('http://localhost/ls?arg=/')),
+      );
+      expect(response.statusCode, equals(200));
+      final body = json.decode(await response.readAsString());
+      expect(body['Entries'], hasLength(1));
+    });
+
+    test('filesHandler routes every registered verb', () async {
+      final handler = handlers.filesHandler;
+      for (final verb in [
+        'ls',
+        'stat',
+        'read',
+        'write',
+        'mkdir',
+        'cp',
+        'mv',
+        'rm',
+        'flush',
+        'chcid',
+        'touch',
+        'mtime',
+        'chmod',
+      ]) {
+        final response = await handler(
+          Request('POST', Uri.parse('http://localhost/$verb')),
+        );
+        expect(
+          response.statusCode,
+          isNot(equals(404)),
+          reason: 'relative files/$verb must be registered',
+        );
+      }
+    });
+
+    test('handleFilesRead rejects a relative path', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/read?arg=relative'),
+      );
+      final response = await handlers.handleFilesRead(request);
+      expect(response.statusCode, equals(400));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('leading slash'));
+    });
+
+    test('handleFilesRead accepts ipfs:// URIs', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/read?arg=ipfs://QmCid'),
+      );
+      final response = await handlers.handleFilesRead(request);
+      expect(response.statusCode, equals(200));
+    });
+
+    test('handleFilesMkdir invalid mtime-nsecs', () async {
+      final request = Request(
+        'POST',
+        Uri.parse(
+          'http://localhost/api/v0/files/mkdir?arg=/d&mtime-nsecs=1000000000',
+        ),
+      );
+      final response = await handlers.handleFilesMkdir(request);
+      expect(response.statusCode, equals(400));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('mtime-nsecs'));
+    });
+
+    test('handleFilesMkdir invalid mode', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/mkdir?arg=/d&mode=zzz'),
+      );
+      final response = await handlers.handleFilesMkdir(request);
+      expect(response.statusCode, equals(400));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('Invalid mode'));
+    });
+
+    test('handleFilesCp rejects a relative destination', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/cp?arg=/src&arg=reldst'),
+      );
+      final response = await handlers.handleFilesCp(request);
+      expect(response.statusCode, equals(400));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('leading slash'));
+    });
+
+    test('handleFilesCp accepts an ipfs:// source URI', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/cp?arg=ipfs://QmSrc&arg=/dst'),
+      );
+      final response = await handlers.handleFilesCp(request);
+      expect(response.statusCode, equals(200));
+      // The URI form is rewritten to the canonical /ipfs/<cid> path.
+      expect(fakeMfs.lastCpSrc, equals('/ipfs/QmSrc'));
+    });
+
+    test('handleFilesMv rejects a relative destination', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/mv?arg=/src&arg=reldst'),
+      );
+      final response = await handlers.handleFilesMv(request);
+      expect(response.statusCode, equals(400));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('leading slash'));
+    });
+
+    test('handleFilesFlush rejects a relative path', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/flush?arg=relative'),
+      );
+      final response = await handlers.handleFilesFlush(request);
+      expect(response.statusCode, equals(400));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('leading slash'));
+    });
+
+    test('handleFilesTouch error path', () async {
+      fakeMfs.shouldThrow = true;
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/touch?arg=/file'),
+      );
+      final response = await handlers.handleFilesTouch(request);
+      expect(response.statusCode, equals(500));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('files/touch failed'));
+    });
+
+    test('handleFilesChmod rejects a relative path', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/chmod?arg=0755&arg=relfile'),
+      );
+      final response = await handlers.handleFilesChmod(request);
+      expect(response.statusCode, equals(400));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('leading slash'));
+    });
+
+    test('handleFilesChmod error path', () async {
+      fakeMfs.shouldThrow = true;
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/chmod?arg=0755&arg=/file'),
+      );
+      final response = await handlers.handleFilesChmod(request);
+      expect(response.statusCode, equals(500));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('files/chmod failed'));
+    });
+
+    test('handleFilesChmod parses hex mode notation', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/chmod?arg=0x1ed&arg=/file'),
+      );
+      final response = await handlers.handleFilesChmod(request);
+      expect(response.statusCode, equals(200));
+      expect(fakeMfs.lastChmodMode, equals(0x1ED));
+    });
+
+    test('handleFilesChmod parses 0o-prefixed octal mode notation', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/chmod?arg=0o755&arg=/file'),
+      );
+      final response = await handlers.handleFilesChmod(request);
+      expect(response.statusCode, equals(200));
+      expect(fakeMfs.lastChmodMode, equals(0x1ED));
+    });
+
+    test('handleFilesChmod treats bare octal digits as octal', () async {
+      // POSIX convention: '755' means 0755.
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/chmod?arg=755&arg=/file'),
+      );
+      final response = await handlers.handleFilesChmod(request);
+      expect(response.statusCode, equals(200));
+      expect(fakeMfs.lastChmodMode, equals(0x1ED));
+    });
+
+    test(
+      'handleFilesChmod falls back to decimal for non-octal digits',
+      () async {
+        // '999' contains digits that cannot be octal, so it parses as decimal.
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/files/chmod?arg=999&arg=/file'),
+        );
+        final response = await handlers.handleFilesChmod(request);
+        expect(response.statusCode, equals(200));
+        expect(fakeMfs.lastChmodMode, equals(999));
+      },
+    );
+
+    test('handleFilesChmod rejects an empty mode', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/chmod?arg=&arg=/file'),
+      );
+      final response = await handlers.handleFilesChmod(request);
+      expect(response.statusCode, equals(400));
+    });
+
     test('registerOn registers all files verbs', () async {
       final router = Router();
       handlers.registerOn(router);

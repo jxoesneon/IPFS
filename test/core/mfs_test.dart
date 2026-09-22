@@ -2,11 +2,26 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/mfs/mfs_manager.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
 import 'package:dart_ipfs/src/storage/hive_datastore.dart';
+import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
+
+/// Minimal denylist stub: only [isBlockedPath] is consulted by [MFSManager].
+class _FakeDenylistService extends Fake implements DenylistService {
+  _FakeDenylistService(this.blockedPaths);
+
+  final Set<String> blockedPaths;
+
+  @override
+  bool isBlockedPath(String path) => blockedPaths.contains(path);
+}
 
 void main() {
   group('MFSManager', () {
@@ -813,6 +828,263 @@ void main() {
           equals(Uint8List.fromList([0, 0, 0, 120])),
         );
       });
+    });
+
+    group('edge cases and defensive branches', () {
+      Future<Uint8List> readAll(String path) async {
+        final stream = await mfs.read(path);
+        final builder = BytesBuilder();
+        await for (final chunk in stream) {
+          builder.add(chunk);
+        }
+        return builder.toBytes();
+      }
+
+      test('mkdir on root without parents throws', () async {
+        await expectLater(mfs.mkdir('/'), throwsA(anything));
+        // With parents (or recursive) it is a no-op, matching Kubo.
+        await mfs.mkdir('/', parents: true);
+      });
+
+      test('mkdir with mode/mtime stores unixfs 1.5 metadata', () async {
+        await mfs.mkdir(
+          '/metadir',
+          mode: 0x1ED,
+          mtimeSecs: 1700000000,
+          mtimeNsecs: 55,
+        );
+        final stat = await mfs.stat('/metadir');
+        expect(stat.mode, equals(0x1ED));
+        expect(stat.mtime, equals(1700000000));
+        expect(stat.mtimeNsecs, equals(55));
+      });
+
+      test('mkdir with only mtime-nsecs stores the nsec fraction', () async {
+        await mfs.mkdir('/nsecdir', mtimeNsecs: 42);
+        final stat = await mfs.stat('/nsecdir');
+        expect(stat.mtimeNsecs, equals(42));
+      });
+
+      test(
+        'cp to a destination that resolves to the MFS root throws',
+        () async {
+          await mfs.write(
+            '/cpf.txt',
+            Stream.value(utf8.encode('c')),
+            create: true,
+          );
+          // '' and '/..' both normalize to '/', which cannot be overwritten.
+          await expectLater(mfs.cp('/cpf.txt', ''), throwsA(anything));
+          await expectLater(mfs.cp('/cpf.txt', '/..'), throwsA(anything));
+        },
+      );
+
+      test('mv of the MFS root throws', () async {
+        await expectLater(mfs.mv('/', '/elsewhere'), throwsA(anything));
+      });
+
+      test('mv into a trailing-slash directory moves under basename', () async {
+        await mfs.write(
+          '/ts.txt',
+          Stream.value(utf8.encode('t')),
+          create: true,
+        );
+        await mfs.mkdir('/tsdir');
+        await mfs.mv('/ts.txt', '/tsdir/');
+        expect(await readAll('/tsdir/ts.txt'), equals(utf8.encode('t')));
+        await expectLater(readAll('/ts.txt'), throwsA(anything));
+      });
+
+      test('mv on a denylisted source throws StateError', () async {
+        final denylisted = MFSManager(
+          blockStore,
+          datastore,
+          denylistService: _FakeDenylistService({'/blocked.txt'}),
+        );
+        await denylisted.init();
+        await denylisted.write(
+          '/blocked.txt',
+          Stream.value(utf8.encode('b')),
+          create: true,
+        );
+        await expectLater(
+          denylisted.mv('/blocked.txt', '/dst.txt'),
+          throwsA(isA<StateError>()),
+        );
+        await expectLater(
+          denylisted.cp('/blocked.txt', '/dst.txt'),
+          throwsA(isA<StateError>()),
+        );
+      });
+
+      test('cp on a missing source throws', () async {
+        await expectLater(mfs.cp('/ghost', '/dst'), throwsA(anything));
+      });
+
+      test('chmod rejects out-of-range modes', () async {
+        await mfs.write(
+          '/cm.txt',
+          Stream.value(utf8.encode('c')),
+          create: true,
+        );
+        await expectLater(
+          mfs.chmod('/cm.txt', -1),
+          throwsA(isA<ArgumentError>()),
+        );
+        await expectLater(
+          mfs.chmod('/cm.txt', 0x100000000),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('chmod on the root updates the root node metadata', () async {
+        await mfs.chmod('/', 0x1ED);
+        final stat = await mfs.stat('/');
+        expect(stat.mode, equals(0x1ED));
+      });
+
+      test('an invalid /ipfs path throws MFSPathError', () async {
+        await expectLater(
+          mfs.stat('/ipfs/not-a-cid'),
+          throwsA(isA<MFSPathError>()),
+        );
+        await expectLater(
+          mfs.ls('/ipfs/not-a-cid'),
+          throwsA(isA<MFSPathError>()),
+        );
+      });
+
+      test('/ipfs/<cid>/sub paths walk named dag links', () async {
+        await mfs.mkdir('/walk');
+        await mfs.write(
+          '/walk/f.txt',
+          Stream.value(utf8.encode('w')),
+          create: true,
+        );
+        final root = mfs.rootCid.encode();
+        final stat = await mfs.stat('/ipfs/$root/walk/f.txt');
+        expect(stat.type, equals('file'));
+        expect(stat.size, equals(1));
+        // A link that does not exist resolves to null -> path not found.
+        await expectLater(
+          mfs.stat('/ipfs/$root/walk/missing'),
+          throwsA(anything),
+        );
+      });
+
+      test(
+        '/ipfs/<cid>/sub with a missing block resolves to not found',
+        () async {
+          final ghost = await CID.fromContent(
+            Uint8List.fromList([1, 2, 3]),
+            codec: 'dag-pb',
+          );
+          await expectLater(
+            mfs.stat('/ipfs/${ghost.encode()}/x'),
+            throwsA(anything),
+          );
+        },
+      );
+
+      test(
+        '/ipfs/<cid>/sub on an unparseable node resolves to not found',
+        () async {
+          // Bytes that fail PBNode decoding (truncated length-delimited field).
+          final garbage = Uint8List.fromList([0x0a, 0xff, 0xff]);
+          final garbageCid = await CID.fromContent(garbage, codec: 'raw');
+          await blockStore.putBlock(
+            Block(cid: garbageCid, data: garbage, format: 'raw'),
+          );
+          await expectLater(
+            mfs.stat('/ipfs/${garbageCid.encode()}/x'),
+            throwsA(anything),
+          );
+        },
+      );
+
+      test('stat on a raw block reports file size and locality', () async {
+        final payload = Uint8List.fromList(utf8.encode('raw payload'));
+        final rawCid = await CID.fromContent(payload, codec: 'raw');
+        await blockStore.putBlock(
+          Block(cid: rawCid, data: payload, format: 'raw'),
+        );
+        final stat = await mfs.stat(
+          '/ipfs/${rawCid.encode()}',
+          withLocal: true,
+        );
+        expect(stat.type, equals('file'));
+        expect(stat.size, equals(payload.length));
+        expect(stat.cumulativeSize, equals(payload.length));
+        expect(stat.blocks, equals(0));
+        expect(stat.local, isTrue);
+        expect(stat.sizeLocal, equals(payload.length));
+      });
+
+      test('metadata on a raw block linked into mfs fails', () async {
+        // An empty payload still parses as an (empty) PBNode, which lets
+        // `cp` link the raw leaf into the MFS tree while keeping the
+        // `raw` codec on the stored CID.
+        final payload = Uint8List(0);
+        final rawCid = await CID.fromContent(payload, codec: 'raw');
+        await blockStore.putBlock(
+          Block(cid: rawCid, data: payload, format: 'raw'),
+        );
+        await mfs.cp('/ipfs/${rawCid.encode()}', '/leaf.bin');
+        await expectLater(mfs.chmod('/leaf.bin', 0x1A4), throwsA(anything));
+        await expectLater(mfs.touch('/leaf.bin'), throwsA(anything));
+      });
+
+      test('metadata on a path whose block is missing fails', () async {
+        await mfs.write(
+          '/gone.txt',
+          Stream.value(utf8.encode('g')),
+          create: true,
+        );
+        final stat = await mfs.stat('/gone.txt');
+        await blockStore.removeBlock(stat.hash);
+        await expectLater(mfs.chmod('/gone.txt', 0x1A4), throwsA(anything));
+      });
+
+      test('metadata on a node without unixfs data defaults to file', () async {
+        // A bare dag-pb node carrying no UnixFS Data payload at all.
+        final bareData = Uint8List.fromList(PBNode().writeToBuffer());
+        final bareCid = await CID.fromContent(bareData, codec: 'dag-pb');
+        await blockStore.putBlock(
+          Block(cid: bareCid, data: bareData, format: 'dag-pb'),
+        );
+        await mfs.cp('/ipfs/${bareCid.encode()}', '/bare');
+        await mfs.chmod('/bare', 0x1A4);
+        final stat = await mfs.stat('/bare');
+        expect(stat.mode, equals(0x1A4));
+      });
+
+      test('stat with-local on a directory walks child links', () async {
+        await mfs.mkdir('/localdir');
+        await mfs.write(
+          '/localdir/f.txt',
+          Stream.value(utf8.encode('f')),
+          create: true,
+        );
+        final stat = await mfs.stat('/localdir', withLocal: true);
+        expect(stat.local, isTrue);
+        expect(stat.sizeLocal, greaterThan(0));
+      });
+
+      test(
+        'stat with-local reports false when a child block is missing',
+        () async {
+          await mfs.mkdir('/partdir');
+          await mfs.write(
+            '/partdir/f.txt',
+            Stream.value(utf8.encode('f')),
+            create: true,
+          );
+          final childStat = await mfs.stat('/partdir/f.txt');
+          await blockStore.removeBlock(childStat.hash);
+          final stat = await mfs.stat('/partdir', withLocal: true);
+          expect(stat.local, isFalse);
+        },
+      );
     });
   });
 }

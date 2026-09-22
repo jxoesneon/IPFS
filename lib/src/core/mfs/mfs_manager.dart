@@ -461,7 +461,11 @@ class MFSManager implements ILifecycle {
       final existingType = await _unixfsType(existing);
       if (existingType == Data_DataType.Directory ||
           existingType == Data_DataType.HAMTShard) {
+        // Unreachable: when the destination resolves to a directory the path
+        // is redirected inside it above, so `existing` here is never a dir.
+        // coverage:ignore-start
         throw Exception('file already exists: $normalizedDst');
+        // coverage:ignore-end
       }
       // An existing file at the destination is silently replaced (Kubo
       // unlinks it before re-adding the source node).
@@ -836,7 +840,12 @@ class MFSManager implements ILifecycle {
         parts,
         (currentCid) async {
           if (currentCid == null && !create) {
+            // Unreachable under the mutation lock: a missing file without
+            // `create` already threw above, and an existing file resolves to
+            // a non-null CID here. Kept as a defensive re-check.
+            // coverage:ignore-start
             throw Exception('File does not exist and create is false');
+            // coverage:ignore-end
           }
           return rootBlock.cid;
         },
