@@ -1,3 +1,4 @@
+// coverage:ignore-file abstract declarations only no executable code
 import '../../core/types/peer_id.dart';
 
 /// Interface for calculating distance between peers in the DHT.

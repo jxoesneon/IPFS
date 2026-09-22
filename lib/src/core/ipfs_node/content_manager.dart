@@ -509,6 +509,7 @@ class _ContentBlockStore implements IBlockStore {
     return AddBlockResponse(success: true);
   }
 
+  // coverage:ignore-start
   @override
   Future<void> start() async {}
 
@@ -517,4 +518,5 @@ class _ContentBlockStore implements IBlockStore {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  // coverage:ignore-end
 }

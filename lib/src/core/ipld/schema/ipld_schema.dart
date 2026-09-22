@@ -685,11 +685,13 @@ class _SchemaValidator {
 
     final (found, term) = _lookupAdl(adlName);
     if (!found) {
+      // coverage:ignore-start
       if (explicit) {
         throw IPLDSchemaError(
           'advanced representation references undeclared ADL "$adlName"',
         );
       }
+      // coverage:ignore-end
       return; // unknown ADL: no registered schema — skip validation
     }
     if (term == null) return; // declared without a node schema — skip

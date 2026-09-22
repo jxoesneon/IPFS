@@ -165,6 +165,35 @@ void main() {
       expect(response.statusCode, equals(200));
     });
 
+    test('handleCat normalizes ipfs/ prefixed paths without leading slash',
+        () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(
+        mockNode.get(cid, path: 'a.txt'),
+      ).thenAnswer((_) async => Uint8List.fromList([8]));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/cat?arg=ipfs/$cid/a.txt'),
+      );
+      final response = await handlers.handleCat(request);
+      expect(response.statusCode, equals(200));
+    });
+
+    test('handleCat normalizes bare leading-slash paths', () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(
+        mockNode.get(cid, path: 'a.txt'),
+      ).thenAnswer((_) async => Uint8List.fromList([8]));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/cat?arg=/$cid/a.txt'),
+      );
+      final response = await handlers.handleCat(request);
+      expect(response.statusCode, equals(200));
+    });
+
     test('handleCat returns 404 when the path does not resolve', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
       when(mockNode.get(cid, path: 'missing')).thenAnswer((_) async => null);

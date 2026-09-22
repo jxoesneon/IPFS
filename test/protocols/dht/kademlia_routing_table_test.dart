@@ -314,6 +314,21 @@ void main() {
       expect(table.distance(p1, p2), isNonNegative);
     });
 
+    test('comparator orders distinct peers in a recreated bucket', () async {
+      // KademliaTree pre-creates all 256 buckets with its own comparator;
+      // dropping them forces _getOrCreateBucket to rebuild buckets backed by
+      // the table's _xorDistanceComparator.
+      table.buckets.clear();
+
+      // Same first-differing-bit position -> same bucket, distinct peers.
+      final p1 = createPeerId(0x00, 0x10);
+      final p2 = createPeerId(0x00, 0x11);
+      await table.addPeer(p1, p1);
+      await table.addPeer(p2, p2);
+
+      expect(table.peerCount, 2);
+    });
+
     test('IP count cleanup on removal', () async {
       final ip = '1.1.1.1';
       final p1 = createPeerId(0x80, 1);

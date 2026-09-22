@@ -126,6 +126,28 @@ void main() {
       expect(result.errors.single.message, contains('link resolution failed'));
     });
 
+    test('inline expectedType term validates the resolved target', () async {
+      final schema = IPLDSchema('t', <String, dynamic>{
+        'Root': {
+          'kind': 'link',
+          'expectedType': {'kind': 'string'},
+        },
+      });
+      final key = _storeKey(linkNode(1).linkValue);
+      final ok = await schema.checkAsync(
+        'Root',
+        linkNode(1),
+        linkResolver: storeResolver({key: strNode('v')}),
+      );
+      expect(ok.isValid, isTrue);
+      final bad = await schema.checkAsync(
+        'Root',
+        linkNode(1),
+        linkResolver: storeResolver({key: intNode(3)}),
+      );
+      expect(bad.isValid, isFalse);
+    });
+
     test('validate enforces expectedType with a per-call resolver', () async {
       final schema = IPLDSchema('t', docSchema);
       expect(
@@ -405,6 +427,34 @@ void main() {
       });
       expect(schema.check('U', strNode('x')).isValid, isTrue);
       expect(schema.check('U', intNode(1)).isValid, isFalse);
+    });
+
+    test('map-form advanced representation names the ADL', () {
+      final schema = IPLDSchema('t', <String, dynamic>{
+        'T': {
+          'kind': 'map',
+          'representation': {
+            'advanced': {'name': 'Hamt'},
+          },
+        },
+        'advanced': {'Hamt': 'String'},
+      });
+      expect(schema.check('T', strNode('x')).isValid, isTrue);
+      expect(schema.check('T', intNode(1)).isValid, isFalse);
+    });
+
+    test('map-form advanced representation without a name falls back', () {
+      final schema = IPLDSchema('t', <String, dynamic>{
+        'T': {
+          'kind': 'map',
+          'representation': {
+            'advanced': {'other': 'ignored'},
+          },
+        },
+        'advanced': {'T': 'String'},
+      });
+      expect(schema.check('T', strNode('x')).isValid, isTrue);
+      expect(schema.check('T', intNode(1)).isValid, isFalse);
     });
 
     test('adlTypes registry supplies ADL terms', () {

@@ -115,6 +115,13 @@ class MockIPFSNode implements IPFSNode {
   }
 
   @override
+  Future<Uint8List?> get(String cid, {String path = ''}) async {
+    final block = await _blockStore.getBlock(cid);
+    if (block.found) return Uint8List.fromList(block.block.data);
+    return null;
+  }
+
+  @override
   Future<List<Link>> ls(String cid) async {
     // Mock ls to return empty list or dummy
     if (cid == 'QmDir') {
