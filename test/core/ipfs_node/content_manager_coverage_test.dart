@@ -29,8 +29,15 @@ import '../../fakes/fake_router.dart';
 class _FakeDatastoreHandler implements DatastoreHandler {
   final Map<String, Block> storedBlocks = {};
 
+  /// When set, [getBlock] throws this error instead of returning null.
+  Object? getBlockError;
+
   @override
-  Future<Block?> getBlock(String cid) async => null;
+  Future<Block?> getBlock(String cid) async {
+    final error = getBlockError;
+    if (error != null) throw error;
+    return null;
+  }
 
   @override
   Future<void> putBlock(Block block) async {
@@ -121,6 +128,24 @@ void main() {
       );
       expect(metrics.securityEvents, contains('denylist_blocked'));
     });
+
+    test(
+      'get returns null when the datastore read raises StateError',
+      () async {
+        final manager = ContentManager(
+          datastoreHandler: datastore,
+          newContentController: contentController,
+          denylistService: denylist,
+        );
+        datastore.getBlockError = StateError('corrupt index');
+        final cid = (await CID.fromContent(
+          Uint8List.fromList([4, 5, 6]),
+          codec: 'raw',
+        )).encode();
+
+        expect(await manager.get(cid), isNull);
+      },
+    );
   });
 
   group('ContentManager ls', () {

@@ -76,6 +76,20 @@ String _legacyDoubleHashEntry(String preimage) {
 void main() {
   Logger.root.level = Level.OFF;
 
+  group('DenylistBlockedException', () {
+    test('toString includes the CID when present', () {
+      const cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      expect(
+        const DenylistBlockedException(cid).toString(),
+        'DenylistBlockedException: content blocked by operator policy ($cid)',
+      );
+      expect(
+        const DenylistBlockedException().toString(),
+        'DenylistBlockedException: content blocked by operator policy',
+      );
+    });
+  });
+
   group('DenylistService', () {
     late _MockMetricsCollector metrics;
     late CID blockedCid;

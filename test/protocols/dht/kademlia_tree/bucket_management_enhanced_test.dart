@@ -74,6 +74,27 @@ void main() {
       tree.splitBucket(0);
     });
 
+    test('splitBucket tie-breaks pad-equal XOR distances by raw bytes', () {
+      // [0x05] and [0x00, 0x05] are equal under left-zero-padding, so the
+      // XOR-distance comparator ties and the raw-byte tie-breaker orders
+      // them inside the new bucket's tree.
+      final p1 = PeerId(value: Uint8List.fromList([0x05]));
+      final p2 = PeerId(value: Uint8List.fromList([0x00, 0x05]));
+      tree.buckets[0].insert(
+        p1,
+        KademliaTreeNode(p1, 2, localPeerId, lastSeen: 0),
+      );
+      tree.buckets[0].insert(
+        p2,
+        KademliaTreeNode(p2, 2, localPeerId, lastSeen: 0),
+      );
+      tree.splitBucket(0);
+      // The emptied source bucket is removed, so the moved peers land in
+      // buckets[0] after the shift.
+      final moved = tree.buckets.expand((b) => b.entries).length;
+      expect(moved, equals(2));
+    });
+
     test('mergeBuckets with wrong order or non-adjacent', () {
       final initialLen = tree.buckets.length;
       tree.mergeBuckets(1, 0);

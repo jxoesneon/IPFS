@@ -1766,6 +1766,50 @@ void main() {
       expect(fileEntries, 1);
     });
 
+    test('handleGet fails when a HAMT leaf target block is missing', () async {
+      // The shard structure is stored but the leaf's data block is not —
+      // traversal must fail rather than emit a partial archive.
+      final tempDir = await Directory.systemTemp.createTemp('rpc_get_hamt_');
+      final realBlockStore = BlockStore(path: tempDir.path);
+      await realBlockStore.start();
+      addTearDown(() async {
+        await realBlockStore.stop();
+        await tempDir.delete(recursive: true);
+      });
+      when(mockNode.blockStore).thenReturn(realBlockStore);
+      when(mockNode.bitswap).thenReturn(null);
+
+      final leaf = await Block.fromData(
+        Uint8List.fromList(utf8.encode('missing')),
+        format: 'raw',
+      );
+      await realBlockStore.putBlock(leaf);
+      final shard =
+          await UnixFSHAMTBuilder(
+            fanout: 256,
+            shardThreshold: 0,
+            maxBucketSize: 1,
+          ).build(realBlockStore, [
+            UnixFSDirectoryEntry(
+              name: 'inside.txt',
+              cid: leaf.cid,
+              tsize: leaf.data.length,
+            ),
+          ]);
+      await realBlockStore.putBlock(
+        Block(cid: shard.cid, data: shard.data, format: 'dag-pb'),
+      );
+      await realBlockStore.removeBlock(leaf.cid.encode());
+
+      final response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/get?arg=${shard.cid.encode()}'),
+        ),
+      );
+      expect(response.statusCode, equals(500));
+    });
+
     test('handleGet sanitizes tar-slip entry names', () async {
       // A hostile link name must not escape the archive root or carry
       // absolute paths/NULs into the ustar header.
@@ -2090,6 +2134,39 @@ void main() {
       );
     });
 
+    test('_RpcBlockStore forwards puts and rejects unknown members', () async {
+      // The resolver only exercises getBlock; cover the write-forwarding
+      // and the noSuchMethod fallback directly via mirrors.
+      final mirror = mirrors.reflect(handlers);
+      final lib = mirror.type.owner! as mirrors.LibraryMirror;
+      final storeClass =
+          lib.declarations.entries
+                  .firstWhere(
+                    (e) =>
+                        mirrors.MirrorSystem.getName(e.key) == '_RpcBlockStore',
+                  )
+                  .value
+              as mirrors.ClassMirror;
+      final store = storeClass.newInstance(const Symbol(''), [
+        handlers,
+      ]).reflectee;
+
+      final block = await Block.fromData(
+        Uint8List.fromList([7]),
+        format: 'raw',
+      );
+      final putResp = await store.putBlock(block);
+      expect(putResp.success, isTrue);
+      verify(mockBlockStore.putBlock(block)).called(1);
+
+      expect(
+        () => mirrors.reflect(store).invoke(const Symbol('hasBlock'), const [
+          'x',
+        ]),
+        throwsA(isA<NoSuchMethodError>()),
+      );
+    });
+
     test('handleGet writes directory entries with mode 0755', () async {
       // Kubo emits 0755 for directories and 0644 for files; the ustar mode
       // field is the octal string at header offset 100.
@@ -2340,6 +2417,32 @@ void main() {
           expect(response.statusCode, equals(200), reason: 'prefix $prefix');
         }
       });
+
+      test(
+        'handleLs returns 451 when sub-path resolution hits a blocked child',
+        () async {
+          // The root CID is allowed; the resolver's block fetch for the
+          // denylisted child throws DenylistBlockedException mid-resolve.
+          final file = await Block.fromData(
+            Uint8List.fromList(utf8.encode('leaf')),
+            format: 'raw',
+          );
+          storeBlock(file);
+          final dir = await storeDir({'sub': file});
+          denylist.blockCidString(file.cid.encode());
+
+          final response = await handlers.handleLs(
+            Request(
+              'POST',
+              Uri.parse(
+                'http://localhost/api/v0/ls?arg=${dir.cid.encode()}/sub',
+              ),
+            ),
+          );
+          expect(response.statusCode, equals(451));
+          verifyNever(mockNode.ls(any));
+        },
+      );
 
       test('handleLs maps mid-traversal denylist blocks to 451', () async {
         // The root CID is not itself blocked; node.ls throws when HAMT
