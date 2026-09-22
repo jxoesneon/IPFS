@@ -1,10 +1,10 @@
-import 'package:test/test.dart';
 import 'package:dart_ipfs/src/core/config/gateway_config.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('GatewayConfig', () {
     test('default constructor', () {
-      final config = GatewayConfig();
+      const config = GatewayConfig();
       expect(config.enabled, isFalse);
       expect(config.port, equals(8080));
       expect(config.address, equals('0.0.0.0'));
@@ -32,7 +32,7 @@ void main() {
     });
 
     test('toJson', () {
-      final config = GatewayConfig(
+      const config = GatewayConfig(
         enabled: true,
         port: 9090,
         address: '127.0.0.1',
@@ -50,7 +50,7 @@ void main() {
     });
 
     test('corsOrigins defaults to localhost', () {
-      final config = GatewayConfig();
+      const config = GatewayConfig();
       expect(
         config.corsOrigins,
         equals(['http://localhost', 'http://127.0.0.1']),
@@ -58,12 +58,35 @@ void main() {
     });
 
     test('corsOrigins round-trips through json', () {
-      final config = GatewayConfig(corsOrigins: ['*', 'http://example.com']);
+      const config = GatewayConfig(corsOrigins: ['*', 'http://example.com']);
       final json = config.toJson();
       expect(json['corsOrigins'], equals(['*', 'http://example.com']));
 
       final parsed = GatewayConfig.fromJson(json);
       expect(parsed.corsOrigins, equals(['*', 'http://example.com']));
+    });
+
+    test('trustForwardedHeaders defaults to false and round-trips', () {
+      const config = GatewayConfig();
+      expect(config.trustForwardedHeaders, isFalse);
+      expect(config.toJson()['trustForwardedHeaders'], isFalse);
+
+      final parsed = GatewayConfig.fromJson({'trustForwardedHeaders': true});
+      expect(parsed.trustForwardedHeaders, isTrue);
+      expect(parsed.toJson()['trustForwardedHeaders'], isTrue);
+    });
+
+    test('maxFileResponseBytes defaults to 512 MiB and round-trips', () {
+      const config = GatewayConfig();
+      expect(config.maxFileResponseBytes, equals(512 * 1024 * 1024));
+      expect(
+        config.toJson()['maxFileResponseBytes'],
+        equals(512 * 1024 * 1024),
+      );
+
+      final parsed = GatewayConfig.fromJson({'maxFileResponseBytes': 4096});
+      expect(parsed.maxFileResponseBytes, equals(4096));
+      expect(parsed.toJson()['maxFileResponseBytes'], equals(4096));
     });
   });
 }

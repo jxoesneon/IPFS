@@ -12,6 +12,7 @@ import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
@@ -199,6 +200,8 @@ class GatewayHandler {
     this.subdomainDNSLinkResolver = true,
     this.subdomainTLSRedirect = false,
     this.dnsLinkResolver,
+    this.trustForwardedHeaders = false,
+    this.maxFileResponseBytes = unixfsReadDefaultMaxBytes,
   });
 
   /// The block store for retrieving content.
@@ -238,7 +241,28 @@ class GatewayHandler {
   /// Optional resolver for DNSLink domains.
   final DnsLinkResolver? dnsLinkResolver;
 
+  /// Whether `X-Forwarded-Host` / `X-Forwarded-Proto` headers are trusted.
+  ///
+  /// Defaults to `false`: these headers are trivially spoofable by direct
+  /// clients, so honoring them unconditionally lets an attacker force open
+  /// redirects to arbitrary hosts. Enable only when the gateway sits behind
+  /// a trusted reverse proxy that strips and rewrites forwarded headers.
+  final bool trustForwardedHeaders;
+
+  /// Maximum number of bytes a single file response will buffer and serve.
+  ///
+  /// Bounds the memory a chunked UnixFS file can consume while being
+  /// reassembled; responses that would exceed the budget are answered with
+  /// HTTP 413.
+  final int maxFileResponseBytes;
+
   final _logger = Logger('GatewayHandler');
+
+  /// Maximum number of `index.html` indirections followed while serving a
+  /// directory. A directory whose `index.html` link resolves to another
+  /// directory containing its own `index.html` would otherwise recurse
+  /// indefinitely.
+  static const int _maxIndexHtmlDepth = 8;
 
   /// Default limits for CAR traversal to prevent unbounded resource use.
   static const int _defaultMaxCarDepth = 32;
@@ -741,11 +765,16 @@ class GatewayHandler {
   }
 
   /// Serves content for a given CID and optional sub-path
+  ///
+  /// [indexDepth] counts the `index.html` indirections followed so far; a
+  /// directory whose `index.html` is itself a directory containing another
+  /// `index.html` would otherwise recurse forever.
   Future<Response> _serveContent(
     String cidStr,
     String subPath,
-    Request request,
-  ) async {
+    Request request, {
+    int indexDepth = 0,
+  }) async {
     final block = await _getBlockByCid(cidStr);
     if (block == null) {
       return Response.notFound('Block not found');
@@ -771,19 +800,56 @@ class GatewayHandler {
             }
 
             // Kubo parity: a directory containing index.html serves that
-            // file transparently instead of the listing.
+            // file transparently instead of the listing. The indirection is
+            // capped so an index.html pointing at another directory with
+            // its own index.html cannot recurse indefinitely.
             final indexLink = findLinkByName(pbNode.links, 'index.html');
             if (indexLink != null) {
+              if (indexDepth >= _maxIndexHtmlDepth) {
+                return Response.internalServerError(
+                  body: 'index.html resolution depth exceeded',
+                );
+              }
               final indexCid = CID.fromBytes(
                 Uint8List.fromList(indexLink.hash),
               );
-              return await _serveContent(indexCid.encode(), '', request);
+              return await _serveContent(
+                indexCid.encode(),
+                '',
+                request,
+                indexDepth: indexDepth + 1,
+              );
             }
             return _renderDirectory(cidStr, pbNode, request);
           } else {
             // Navigate to sub-path
-            return await _navigateDirectory(cidStr, pbNode, subPath, request);
+            return await _navigateDirectory(
+              cidStr,
+              pbNode,
+              subPath,
+              request,
+              indexDepth: indexDepth,
+            );
           }
+        }
+
+        // Handle HAMT-sharded directories: the flat link scan used for
+        // plain directories cannot resolve names inside a shard, so path
+        // segments are resolved through the murmur3-bucketed links.
+        if (unixfsData.type == Data_DataType.HAMTShard) {
+          if (subPath.isEmpty) {
+            final redirect = _directorySlashRedirect(request);
+            if (redirect != null) {
+              return redirect;
+            }
+          }
+          return await _serveHamtShard(
+            block,
+            cidStr,
+            subPath,
+            request,
+            indexDepth: indexDepth,
+          );
         }
 
         // Handle files
@@ -795,6 +861,15 @@ class GatewayHandler {
       // A denylisted child block was reached during navigation or file
       // reassembly — never fall back to serving the raw block.
       rethrow;
+    } on StateError catch (e) {
+      // The block IS UnixFS but traversal failed mid-DAG: a linked block is
+      // missing or a traversal budget was exceeded. Serving the raw PBNode
+      // bytes under a 200 would masquerade as content, so report the
+      // failure instead (Kubo answers 500/504 for missing blocks).
+      _logger.warning('UnixFS traversal failed for $cidStr: $e');
+      return Response.internalServerError(
+        body: 'Failed to resolve content: ${e.message}',
+      );
     } catch (e) {
       // Not UnixFS, serve as raw block
     }
@@ -825,15 +900,34 @@ class GatewayHandler {
   }
 
   /// Serves a UnixFS file, reassembling chunked content from linked blocks.
+  ///
+  /// The reassembled payload is bounded by [maxFileResponseBytes]; files that
+  /// would exceed the budget are answered with HTTP 413 rather than being
+  /// buffered into memory in full.
   Future<Response> _serveFile(
     Block block,
     String cidStr,
     Request request,
   ) async {
-    final data = await unixfsReadFile(
-      block,
-      (cid) => _getBlockByCid(cid.encode()),
-    );
+    final Uint8List data;
+    try {
+      data = await unixfsReadFile(
+        block,
+        (cid) => _getBlockByCid(cid.encode()),
+        maxBytes: maxFileResponseBytes,
+      );
+    } on StateError catch (e) {
+      if (e.message.startsWith(unixfsReadByteBudgetExceededPrefix)) {
+        return Response(
+          413,
+          body: 'File exceeds maximum response size',
+          headers: const {'Content-Type': 'text/plain; charset=utf-8'},
+        );
+      }
+      // Missing linked blocks and depth/node budget failures propagate to
+      // _serveContent's StateError handler, which answers 500.
+      rethrow;
+    }
     final contentType = _detectContentType(data);
 
     final headers = {
@@ -1879,8 +1973,9 @@ class GatewayHandler {
     String rootCid,
     PBNode directory,
     String subPath,
-    Request request,
-  ) async {
+    Request request, {
+    int indexDepth = 0,
+  }) async {
     final pathParts = subPath.split('/');
     final targetName = pathParts[0];
     final remainingPath = pathParts.length > 1
@@ -1892,11 +1987,158 @@ class GatewayHandler {
       final linkName = link.name;
       if (linkName == targetName) {
         final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
-        return await _serveContent(linkCid.encode(), remainingPath, request);
+        return await _serveContent(
+          linkCid.encode(),
+          remainingPath,
+          request,
+          indexDepth: indexDepth,
+        );
       }
     }
 
     return Response.notFound('Path not found: $subPath');
+  }
+
+  /// Resolves [subPath] within a HAMT-sharded directory whose root shard is
+  /// [rootBlock], then serves the resolved node.
+  ///
+  /// HAMT leaf links carry a fixed-width hex hash prefix before the entry
+  /// name, and a bucket may hold a child shard instead of an entry, so each
+  /// segment is resolved via [resolveHAMTSegment] — descending into
+  /// sub-shards until a leaf link is found — mirroring the algorithm used
+  /// by `UnixFSPathResolver`. With an empty [subPath] the shard is
+  /// treated like a plain directory: `index.html` is served when present
+  /// (subject to the same [_maxIndexHtmlDepth] cap) and otherwise a listing
+  /// of the leaf entries is rendered.
+  Future<Response> _serveHamtShard(
+    Block rootBlock,
+    String cidStr,
+    String subPath,
+    Request request, {
+    int indexDepth = 0,
+  }) async {
+    var node = UnixFSNode.fromBlock(rootBlock);
+    var level = 0;
+    final parts = subPath.split('/').where((p) => p.isNotEmpty).toList();
+
+    while (true) {
+      if (parts.isEmpty) {
+        // The path ends at the shard itself — serve index.html when the
+        // shard contains one, else render a directory listing.
+        final indexLink = await _hamtLookup(node, 'index.html', level);
+        if (indexLink != null) {
+          if (indexDepth >= _maxIndexHtmlDepth) {
+            return Response.internalServerError(
+              body: 'index.html resolution depth exceeded',
+            );
+          }
+          final indexCid = CID.fromBytes(Uint8List.fromList(indexLink.hash));
+          return await _serveContent(
+            indexCid.encode(),
+            '',
+            request,
+            indexDepth: indexDepth + 1,
+          );
+        }
+        final listing = await _hamtLeafLinks(node);
+        return _renderDirectory(cidStr, PBNode(links: listing), request);
+      }
+
+      final segment = parts.first;
+      final link = resolveHAMTSegment(node, segment, level);
+      if (link == null) {
+        return Response.notFound('Path not found: $subPath');
+      }
+      final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+      if (link.name.length == hamtPrefixWidth(node.fanout)) {
+        // The bucket holds a child shard, not the entry itself: descend and
+        // resolve the same segment at the next level.
+        node = await _hamtSubShard(linkCid);
+        level++;
+        continue;
+      }
+      // Leaf link — the segment is consumed; the child may itself be a
+      // file, directory, or nested shard, so the remainder of the path is
+      // resolved by _serveContent.
+      final remaining = parts.sublist(1).join('/');
+      return await _serveContent(
+        linkCid.encode(),
+        remaining,
+        request,
+        indexDepth: indexDepth,
+      );
+    }
+  }
+
+  /// Follows [name] through the HAMT shard tree rooted at [node], starting
+  /// at bucket [level]. Returns the leaf link for [name], or `null` when it
+  /// is not present in the shard.
+  Future<PBLink?> _hamtLookup(UnixFSNode node, String name, int level) async {
+    var current = node;
+    var currentLevel = level;
+    while (true) {
+      final link = resolveHAMTSegment(current, name, currentLevel);
+      if (link == null) return null;
+      if (link.name.length != hamtPrefixWidth(current.fanout)) {
+        return link;
+      }
+      current = await _hamtSubShard(
+        CID.fromBytes(Uint8List.fromList(link.hash)),
+      );
+      currentLevel++;
+    }
+  }
+
+  /// Fetches the block addressed by [cid] and returns it as a HAMT shard
+  /// node. Throws [StateError] when the block is missing or is not a shard.
+  Future<UnixFSNode> _hamtSubShard(CID cid) async {
+    final child = await _getBlock(cid);
+    if (child == null) {
+      throw StateError('Missing HAMT sub-shard block ${cid.encode()}');
+    }
+    final node = UnixFSNode.fromBlock(child);
+    if (!node.isHAMTShard) {
+      throw StateError('HAMT sub-shard link is not a shard: ${cid.encode()}');
+    }
+    return node;
+  }
+
+  /// Collects the leaf links of the HAMT shard tree rooted at [node] with
+  /// their hash-prefix stripped, for rendering a directory listing.
+  /// Sub-shard links (names of exactly the prefix width) are traversed
+  /// rather than listed.
+  Future<List<PBLink>> _hamtLeafLinks(UnixFSNode node) async {
+    final links = <PBLink>[];
+    final pending = <UnixFSNode>[node];
+    var visited = 0;
+    while (pending.isNotEmpty) {
+      if (++visited > _defaultMaxCarBlocks) {
+        throw StateError('HAMT listing exceeded maximum node count');
+      }
+      final shard = pending.removeLast();
+      final width = hamtPrefixWidth(shard.fanout);
+      for (final link in shard.pbNode.links) {
+        if (link.name.length == width) {
+          pending.add(
+            await _hamtSubShard(CID.fromBytes(Uint8List.fromList(link.hash))),
+          );
+        } else if (link.name.length > width) {
+          links.add(
+            PBLink(
+              hash: link.hash,
+              name: link.name.substring(width),
+              size: link.size,
+            ),
+          );
+        } else {
+          throw StateError(
+            'Invalid HAMT link name shorter than the $width-char prefix: '
+            '${link.name}',
+          );
+        }
+      }
+    }
+    return links;
   }
 
   /// Serves a byte range from data
@@ -2246,15 +2488,18 @@ class GatewayHandler {
   }
 
   /// The effective request scheme, honoring `X-Forwarded-Proto` when the
-  /// gateway sits behind a TLS-terminating reverse proxy.
+  /// gateway sits behind a trusted TLS-terminating reverse proxy
+  /// ([trustForwardedHeaders]).
   String _forwardedScheme(Request request) {
-    final forwarded = request.headers['x-forwarded-proto']
-        ?.split(',')
-        .first
-        .trim()
-        .toLowerCase();
-    if (forwarded == 'https') return 'https';
-    if (forwarded == 'http') return 'http';
+    if (trustForwardedHeaders) {
+      final forwarded = request.headers['x-forwarded-proto']
+          ?.split(',')
+          .first
+          .trim()
+          .toLowerCase();
+      if (forwarded == 'https') return 'https';
+      if (forwarded == 'http') return 'http';
+    }
     final scheme = request.requestedUri.scheme;
     return scheme.isEmpty ? 'http' : scheme;
   }
@@ -2348,17 +2593,21 @@ class GatewayHandler {
     if (!isLocal && !isConfigured) return null;
 
     // X-Forwarded-Host selects a different public domain for the subdomain
-    // gateway (spec §2.1.3).
+    // gateway (spec §2.1.3). The header is trivially spoofable by direct
+    // clients, so it is only honored behind a trusted reverse proxy
+    // ([trustForwardedHeaders]).
     var baseDomain = requestHostName;
     var portPart = requestSplit.$2;
-    final forwardedHost = request.headers['x-forwarded-host']
-        ?.split(',')
-        .first
-        .trim();
-    if (forwardedHost != null && forwardedHost.isNotEmpty) {
-      final fwdSplit = _splitHostPort(forwardedHost);
-      baseDomain = fwdSplit.$1.toLowerCase();
-      portPart = fwdSplit.$2;
+    if (trustForwardedHeaders) {
+      final forwardedHost = request.headers['x-forwarded-host']
+          ?.split(',')
+          .first
+          .trim();
+      if (forwardedHost != null && forwardedHost.isNotEmpty) {
+        final fwdSplit = _splitHostPort(forwardedHost);
+        baseDomain = fwdSplit.$1.toLowerCase();
+        portPart = fwdSplit.$2;
+      }
     }
 
     // The content root identifier must be convertible to a single
@@ -2583,7 +2832,12 @@ class GatewayHandler {
 
     // Determine whether the request was made over HTTP. shelf's [Request.url]
     // strips the origin, so the original scheme is read from requestedUri.
-    final forwardedProto = request.headers['x-forwarded-proto'];
+    // X-Forwarded-Proto is only trusted behind a reverse proxy that rewrites
+    // it ([trustForwardedHeaders]); otherwise it is spoofable and would let
+    // a client suppress the HTTPS redirect.
+    final forwardedProto = trustForwardedHeaders
+        ? request.headers['x-forwarded-proto']
+        : null;
     final scheme = request.requestedUri.scheme;
     if ((forwardedProto != null && forwardedProto != 'http') ||
         (forwardedProto == null && scheme != 'http')) {

@@ -61,6 +61,8 @@ class GatewayServer implements ILifecycle {
       subdomainDNSLinkResolver: gatewayConfig.subdomainDNSLinkResolver,
       subdomainTLSRedirect: gatewayConfig.subdomainTLSRedirect,
       dnsLinkResolver: dnsLinkResolver,
+      trustForwardedHeaders: gatewayConfig.trustForwardedHeaders,
+      maxFileResponseBytes: gatewayConfig.maxFileResponseBytes,
     );
     if (node != null) {
       _healthCheckService = HealthCheckService(node!);
@@ -219,13 +221,18 @@ class GatewayServer implements ILifecycle {
       throw StateError('Server is already running');
     }
 
-    // Build middleware pipeline with rate limiting (SEC-007)
+    // Build middleware pipeline with rate limiting (SEC-007).
+    //
+    // Ordering matters: rate limiting is outermost so subdomain-gateway
+    // requests cannot bypass it, then CORS/metrics/logging wrap every
+    // response, and the subdomain dispatcher is innermost — it either
+    // answers the request itself or falls through to the path router.
     final handler = const Pipeline()
-        .addMiddleware(_subdomainMiddleware())
-        .addMiddleware(_corsMiddleware())
         .addMiddleware(_rateLimitMiddleware())
+        .addMiddleware(_corsMiddleware())
         .addMiddleware(_metricsMiddleware())
         .addMiddleware(_loggingMiddleware())
+        .addMiddleware(_subdomainMiddleware())
         .addHandler(_router.call);
 
     try {

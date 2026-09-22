@@ -372,6 +372,175 @@ void main() {
       expect(await response.readAsString(), contains('Invalid IPNS record'));
     });
 
+    test(
+      'handlePath returns 500 when a linked file block is missing',
+      () async {
+        // A UnixFS file whose linked chunk cannot be fetched must not fall
+        // through to the raw-block path — a 200 would serve PBNode bytes.
+        final missingCid = (await Block.fromData(
+          Uint8List.fromList([9, 9, 9]),
+        )).cid;
+        when(
+          mockBlockStore.getBlock(missingCid.encode()),
+        ).thenAnswer((_) async => GetBlockResponse()..found = false);
+
+        final fileNode = dag_pb.PBNode(
+          data: unixfs_pb.Data(
+            type: unixfs_pb.Data_DataType.File,
+            filesize: Int64(3),
+            blocksizes: [Int64(3)],
+          ).writeToBuffer(),
+          links: [dag_pb.PBLink(hash: missingCid.toBytes(), size: Int64(3))],
+        );
+        final fileBlock = await Block.fromData(
+          fileNode.writeToBuffer(),
+          format: 'dag-pb',
+        );
+        when(mockBlockStore.getBlock(fileBlock.cid.encode())).thenAnswer(
+          (_) async => GetBlockResponse()
+            ..found = true
+            ..block = fileBlock.toProto(),
+        );
+
+        final response = await handler.handlePath(
+          Request(
+            'GET',
+            Uri.parse('http://localhost/ipfs/${fileBlock.cid.encode()}'),
+          ),
+        );
+        expect(response.statusCode, equals(500));
+        expect(
+          await response.readAsString(),
+          contains('Failed to resolve content'),
+        );
+      },
+    );
+
+    test(
+      'handlePath returns 413 when a file exceeds maxFileResponseBytes',
+      () async {
+        handler = GatewayHandler(mockBlockStore, maxFileResponseBytes: 4);
+
+        final chunk = await Block.fromData(
+          Uint8List.fromList('chunk!'.codeUnits),
+        );
+        when(mockBlockStore.getBlock(chunk.cid.encode())).thenAnswer(
+          (_) async => GetBlockResponse()
+            ..found = true
+            ..block = chunk.toProto(),
+        );
+
+        final fileNode = dag_pb.PBNode(
+          data: unixfs_pb.Data(
+            type: unixfs_pb.Data_DataType.File,
+            filesize: Int64(6),
+            blocksizes: [Int64(6)],
+          ).writeToBuffer(),
+          links: [dag_pb.PBLink(hash: chunk.cid.toBytes(), size: Int64(6))],
+        );
+        final fileBlock = await Block.fromData(
+          fileNode.writeToBuffer(),
+          format: 'dag-pb',
+        );
+        when(mockBlockStore.getBlock(fileBlock.cid.encode())).thenAnswer(
+          (_) async => GetBlockResponse()
+            ..found = true
+            ..block = fileBlock.toProto(),
+        );
+
+        final response = await handler.handlePath(
+          Request(
+            'GET',
+            Uri.parse('http://localhost/ipfs/${fileBlock.cid.encode()}'),
+          ),
+        );
+        expect(response.statusCode, equals(413));
+        expect(
+          await response.readAsString(),
+          contains('maximum response size'),
+        );
+      },
+    );
+
+    test('handlePath serves a directory index.html transparently', () async {
+      final indexFile = await Block.fromData(
+        Uint8List.fromList('<html>index</html>'.codeUnits),
+      );
+      when(mockBlockStore.getBlock(indexFile.cid.encode())).thenAnswer(
+        (_) async => GetBlockResponse()
+          ..found = true
+          ..block = indexFile.toProto(),
+      );
+
+      final dirNode = dag_pb.PBNode(
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+        links: [
+          dag_pb.PBLink(name: 'index.html', hash: indexFile.cid.toBytes()),
+        ],
+      );
+      final dirBlock = await Block.fromData(
+        dirNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      when(mockBlockStore.getBlock(dirBlock.cid.encode())).thenAnswer(
+        (_) async => GetBlockResponse()
+          ..found = true
+          ..block = dirBlock.toProto(),
+      );
+
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/${dirBlock.cid.encode()}/'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final body = await response.read().expand((i) => i).toList();
+      expect(body, equals('<html>index</html>'.codeUnits));
+    });
+
+    test('handlePath caps index.html indirection depth at 8', () async {
+      // Each directory's index.html link points at another directory;
+      // the chain exceeds _maxIndexHtmlDepth so serving must stop with a
+      // 500 instead of recursing forever.
+      CID? childCid;
+      for (var i = 0; i < 10; i++) {
+        final node = dag_pb.PBNode(
+          data: unixfs_pb.Data(
+            type: unixfs_pb.Data_DataType.Directory,
+          ).writeToBuffer(),
+          links: [
+            if (childCid != null)
+              dag_pb.PBLink(name: 'index.html', hash: childCid.toBytes()),
+          ],
+        );
+        final block = await Block.fromData(
+          node.writeToBuffer(),
+          format: 'dag-pb',
+        );
+        when(mockBlockStore.getBlock(block.cid.encode())).thenAnswer(
+          (_) async => GetBlockResponse()
+            ..found = true
+            ..block = block.toProto(),
+        );
+        childCid = block.cid;
+      }
+
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/${childCid!.encode()}/'),
+        ),
+      );
+      expect(response.statusCode, equals(500));
+      expect(
+        await response.readAsString(),
+        contains('index.html resolution depth exceeded'),
+      );
+    });
+
     test('handlePath serves a block fetched through Bitswap', () async {
       final remote = await Block.fromData(
         Uint8List.fromList('network'.codeUnits),
