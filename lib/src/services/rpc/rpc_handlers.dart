@@ -378,11 +378,30 @@ class RPCHandlers {
   }
 
   /// POST /api/v0/cat - Get file content
+  ///
+  /// Kubo accepts a full IPFS path (`<cid>`, `/ipfs/<cid>/sub/path`, or
+  /// `<cid>/sub/path`); the segments after the root resolve through named
+  /// DAG-PB directory links.
   Future<Response> handleCat(Request request) async {
-    final cid = request.url.queryParameters['arg'];
-    if (cid == null || cid.isEmpty) {
+    var arg = request.url.queryParameters['arg'];
+    if (arg == null || arg.isEmpty) {
       return _errorResponse('Missing argument: cid');
     }
+
+    // Normalize /ipfs/<cid>[/sub/path] or bare <cid>[/sub/path].
+    if (arg.startsWith('/ipfs/')) {
+      arg = arg.substring(6);
+    } else if (arg.startsWith('ipfs/')) {
+      arg = arg.substring(5);
+    } else if (arg.startsWith('/')) {
+      arg = arg.substring(1);
+    }
+    final segments = arg.split('/').where((s) => s.isNotEmpty).toList();
+    if (segments.isEmpty) {
+      return _errorResponse('Missing argument: cid');
+    }
+    final cid = segments.first;
+    final subPath = segments.sublist(1).join('/');
 
     final blocked = _checkDenylist(cid);
     if (blocked != null) {
@@ -390,10 +409,13 @@ class RPCHandlers {
     }
 
     try {
-      final content = await node.cat(cid);
+      final content = await node.get(cid, path: subPath);
+      if (content == null) {
+        return _errorResponse('Path not found: $arg', code: 404);
+      }
       return Response.ok(content);
     } catch (e, st) {
-      _logger.error('Cat failed for cid: $cid', e, st);
+      _logger.error('Cat failed for cid: $arg', e, st);
       return _errorResponse('Cat failed');
     }
   }

@@ -121,7 +121,7 @@ void main() {
     test('handleCat', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
       when(
-        mockNode.cat(cid),
+        mockNode.get(cid, path: ''),
       ).thenAnswer((_) async => Uint8List.fromList([1, 2, 3]));
 
       final request = Request(
@@ -134,6 +134,47 @@ void main() {
         await response.read().expand((i) => i).toList(),
         equals([1, 2, 3]),
       );
+    });
+
+    test('handleCat resolves cid/path sub-paths like Kubo', () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(
+        mockNode.get(cid, path: 'dir/file.txt'),
+      ).thenAnswer((_) async => Uint8List.fromList([9, 9]));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/cat?arg=$cid/dir/file.txt'),
+      );
+      final response = await handlers.handleCat(request);
+      expect(response.statusCode, equals(200));
+      expect(await response.read().expand((i) => i).toList(), equals([9, 9]));
+    });
+
+    test('handleCat normalizes /ipfs/ prefixed paths', () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(
+        mockNode.get(cid, path: 'a.txt'),
+      ).thenAnswer((_) async => Uint8List.fromList([7]));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/cat?arg=/ipfs/$cid/a.txt'),
+      );
+      final response = await handlers.handleCat(request);
+      expect(response.statusCode, equals(200));
+    });
+
+    test('handleCat returns 404 when the path does not resolve', () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(mockNode.get(cid, path: 'missing')).thenAnswer((_) async => null);
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/cat?arg=$cid/missing'),
+      );
+      final response = await handlers.handleCat(request);
+      expect(response.statusCode, equals(404));
     });
 
     test('handleSwarmPeers', () async {

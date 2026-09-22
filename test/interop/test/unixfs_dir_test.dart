@@ -1,8 +1,10 @@
 @Tags(['p0'])
 library;
 
+import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:test/test.dart';
 
 // ignore: avoid_relative_lib_imports
@@ -48,11 +50,49 @@ void main() {
         'b.txt': 'bravo contents'.codeUnits,
       };
 
+      // First verify the child file CIDs agree — isolates file-level
+      // divergence from dir-level divergence.
+      for (final entry in files.entries) {
+        final kuboFile = await kubo.add(Uint8List.fromList(entry.value));
+        final dartFile = await dartIpfs.add(entry.value);
+        expect(
+          dartFile['Hash'],
+          equals(kuboFile['Hash']),
+          reason: 'file CID for ${entry.key} must match Kubo',
+        );
+      }
+
       final kuboDir = await kubo.addWrapped(files);
       final dartDir = await dartIpfs.addWrapped(files);
 
       print('Kubo wrapped dir: ${kuboDir['Hash']}');
       print('dart_ipfs wrapped dir: ${dartDir['Hash']}');
+
+      if (dartDir['Hash'] != kuboDir['Hash']) {
+        // Decode both dir blocks for a field-level diff in the CI log.
+        final kuboBlock = dag_pb.PBNode.fromBuffer(
+          await kubo.blockGet(kuboDir['Hash'] as String),
+        );
+        final dartBlock = dag_pb.PBNode.fromBuffer(
+          Uint8List.fromList(
+            await dartIpfs.blockGet(dartDir['Hash'] as String),
+          ),
+        );
+        print('Kubo links:');
+        for (final l in kuboBlock.links) {
+          print(
+            '  name=${l.name} tsize=${l.size} hash=${base64.encode(l.hash)}',
+          );
+        }
+        print('dart_ipfs links:');
+        for (final l in dartBlock.links) {
+          print(
+            '  name=${l.name} tsize=${l.size} hash=${base64.encode(l.hash)}',
+          );
+        }
+        print('Kubo data: ${base64.encode(kuboBlock.data)}');
+        print('dart data: ${base64.encode(dartBlock.data)}');
+      }
 
       expect(
         dartDir['Hash'],
