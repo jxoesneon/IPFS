@@ -1,7 +1,7 @@
-import 'package:fixnum/fixnum.dart';
-import 'package:test/test.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import 'package:fixnum/fixnum.dart';
+import 'package:test/test.dart' hide Matcher;
 
 void main() {
   group('IPLDSelector Coverage Tests', () {
@@ -302,6 +302,98 @@ void main() {
         expect(decoded.type, equals(original.type));
         expect(decoded.maxDepth, equals(original.maxDepth));
         expect(decoded.stopAtLink, equals(original.stopAtLink));
+      });
+    });
+
+    group('decoding error branches', () {
+      test('fromNode rejects malformed big-integer sign bytes', () {
+        final criteriaNode = IPLDNode()
+          ..kind = Kind.MAP
+          ..mapValue = (IPLDMap()
+            ..entries.add(
+              MapEntry()
+                ..key = 'big'
+                ..value = (IPLDNode()
+                  ..kind = Kind.BIG_INT
+                  ..bigIntValue = [2, 0x01]),
+            ));
+        final node = IPLDNode()
+          ..kind = Kind.MAP
+          ..mapValue = (IPLDMap()
+            ..entries.addAll([
+              MapEntry()
+                ..key = '.tag'
+                ..value = (IPLDNode()
+                  ..kind = Kind.STRING
+                  ..stringValue = 'SelectorType.matcher'),
+              MapEntry()
+                ..key = 'criteria'
+                ..value = criteriaNode,
+            ]));
+        expect(
+          () => IPLDSelector.fromNode(node),
+          throwsA(isA<IPLDDecodingError>()),
+        );
+      });
+    });
+
+    group('toSpecSelector conversion', () {
+      test('recursive selectors convert to ExploreRecursive', () {
+        final spec = IPLDSelector.recursive(
+          selector: IPLDSelector.all(),
+          maxDepth: 5,
+        ).toSpecSelector();
+        expect(spec, isA<ExploreRecursive>());
+      });
+
+      test('recursive selectors without subs use a matcher', () {
+        final spec = IPLDSelector(
+          type: SelectorType.recursive,
+        ).toSpecSelector();
+        expect(spec, isA<ExploreRecursive>());
+      });
+
+      test('union and intersection selectors convert', () {
+        final union = IPLDSelector.union([
+          IPLDSelector.all(),
+          IPLDSelector.none(),
+        ]).toSpecSelector();
+        expect(union, isA<ExploreUnion>());
+
+        final intersection = IPLDSelector.intersection([
+          IPLDSelector.matcher(criteria: const {}),
+        ]).toSpecSelector();
+        expect(intersection, isA<Matcher>());
+      });
+
+      test('none, matcher, and explore selectors convert', () {
+        expect(IPLDSelector.none().toSpecSelector(), isA<ExploreFields>());
+        expect(
+          IPLDSelector.matcher(criteria: const {'k': 'v'}).toSpecSelector(),
+          isA<Matcher>(),
+        );
+
+        final spec = IPLDSelector.explore(
+          path: 'a/0/b',
+          selector: IPLDSelector.all(),
+        ).toSpecSelector();
+        // a/0/b nests ExploreFields -> ExploreIndex -> ExploreFields.
+        expect(spec, isA<ExploreFields>());
+        final outer = spec as ExploreFields;
+        expect(outer.fields.keys, contains('a'));
+        expect(outer.fields['a'], isA<ExploreIndex>());
+        final index = outer.fields['a']! as ExploreIndex;
+        expect(index.index, 0);
+        expect(index.next, isA<ExploreFields>());
+      });
+
+      test('explore with an empty path returns the sub-selector', () {
+        final spec = IPLDSelector.explore(
+          path: '',
+          selector: IPLDSelector.all(),
+        ).toSpecSelector();
+        // The bare sub-selector is returned directly.
+        expect(spec, isA<ExploreRecursive>());
       });
     });
   });

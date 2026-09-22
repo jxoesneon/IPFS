@@ -929,8 +929,10 @@ String ipldKindName(Kind kind) {
       return 'null';
     case Kind.LINK:
       return 'link';
+    // coverage:ignore-start
     default:
       return 'invalid';
+    // coverage:ignore-end
   }
 }
 
@@ -976,8 +978,10 @@ bool ipldNodeEquals(IPLDNode a, IPLDNode b) {
         }
       }
       return true;
+    // coverage:ignore-start
     default:
       return false;
+    // coverage:ignore-end
   }
 }
 
@@ -1012,8 +1016,10 @@ int ipldNodeHash(IPLDNode node) {
         hash ^= Object.hash(entry.key, ipldNodeHash(entry.value));
       }
       return hash;
+    // coverage:ignore-start
     default:
       return node.kind.hashCode;
+    // coverage:ignore-end
   }
 }
 
