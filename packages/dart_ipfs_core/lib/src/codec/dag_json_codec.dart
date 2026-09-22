@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../cid/cid.dart';
 import 'codec.dart';
 
 /// Codec for DAG-JSON.
@@ -9,7 +10,9 @@ import 'codec.dart';
 /// The DAG-JSON multicodec (`0x0129`) encodes/decodes IPLD data using JSON.
 ///
 /// This implementation handles the standard JSON types. CID links are encoded
-/// as `{'/': '<cid-string>'}` maps, matching the DAG-JSON spec.
+/// as `{'/': '<cid-string>'}` single-key maps and byte strings as
+/// `{'/': {'bytes': '<base64>'}}`, matching the DAG-JSON spec. Map keys must
+/// be strings, and non-finite floats are rejected.
 class DagJsonCodec implements IPLDCodec {
   /// Creates a new [DagJsonCodec] instance.
   DagJsonCodec();
@@ -40,16 +43,29 @@ class DagJsonCodec implements IPLDCodec {
       };
     }
     if (value is Map) {
-      if (value.containsKey('/')) {
+      // The '/' sentinel only applies when it is the map's sole key; a map
+      // carrying '/' alongside other keys is a regular map and must not
+      // silently drop its sibling entries.
+      if (value.length == 1 && value.containsKey('/')) {
         final link = value['/'];
-        if (link is String) return {'/': link};
+        if (link is String) {
+          _validateCidString(link);
+          return {'/': link};
+        }
         if (link is Map && link.containsKey('bytes')) {
           return {
             '/': {'bytes': link['bytes']},
           };
         }
       }
-      return value.map((k, v) => MapEntry(k.toString(), _normalize(v)));
+      return value.map((k, v) {
+        if (k is! String) {
+          throw ArgumentError(
+            'DAG-JSON map keys must be strings, got ${k.runtimeType}',
+          );
+        }
+        return MapEntry(k, _normalize(v));
+      });
     }
     if (value is List) {
       return value.map(_normalize).toList();
@@ -65,7 +81,15 @@ class DagJsonCodec implements IPLDCodec {
   /// Denormalizes JSON-decoded values back to Dart values.
   dynamic _denormalize(dynamic value) {
     if (value is Map) {
-      if (value.containsKey('/')) {
+      if (value.length == 1 && value.containsKey('/')) {
+        final link = value['/'];
+        if (link is String) {
+          try {
+            _validateCidString(link);
+          } on ArgumentError catch (e) {
+            throw FormatException('Invalid DAG-JSON link: ${e.message}');
+          }
+        }
         return value;
       }
       return value.map((k, v) => MapEntry(k.toString(), _denormalize(v)));
@@ -74,5 +98,14 @@ class DagJsonCodec implements IPLDCodec {
       return value.map(_denormalize).toList();
     }
     return value;
+  }
+
+  /// Ensures a `{'/': ...}` link string is a parseable CID.
+  static void _validateCidString(String link) {
+    try {
+      CID.decode(link);
+    } catch (e) {
+      throw ArgumentError('Invalid CID in DAG-JSON link: $link ($e)');
+    }
   }
 }

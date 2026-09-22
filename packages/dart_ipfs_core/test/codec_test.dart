@@ -39,6 +39,46 @@ void main() {
       expect(decoded['/'], isA<Map<String, dynamic>>());
       expect(decoded['/']['bytes'], equals(base64Encode(data)));
     });
+
+    test('round-trips a CID link', () async {
+      final codec = DagJsonCodec();
+      final cid = await CID.fromContent(Uint8List.fromList([1, 2, 3]));
+      final value = {
+        'link': {'/': cid.encode()},
+      };
+      final encoded = await codec.encode(value);
+      expect(utf8.decode(encoded), contains('"${cid.encode()}"'));
+      final decoded = await codec.decode(encoded);
+      expect(decoded, equals(value));
+    });
+
+    test('rejects invalid CID strings in link form', () async {
+      final codec = DagJsonCodec();
+      expect(() => codec.encode({'/': 'not-a-cid'}), throwsArgumentError);
+      expect(() => codec.encode({'/': ''}), throwsArgumentError);
+      expect(
+        () => codec.decode(Uint8List.fromList(utf8.encode('{"/":"nope"}'))),
+        throwsFormatException,
+      );
+    });
+
+    test('map with / key plus siblings is a regular map, not a link',
+        () async {
+      final codec = DagJsonCodec();
+      final value = {'/': 'x', 'other': 1};
+      final encoded = await codec.encode(value);
+      final decoded = await codec.decode(encoded);
+      // Sibling keys must survive: '/' is not the sole key.
+      expect(decoded, equals(value));
+    });
+
+    test('rejects non-string map keys', () async {
+      final codec = DagJsonCodec();
+      expect(
+        () => codec.encode(<dynamic, dynamic>{1: 'x'}),
+        throwsArgumentError,
+      );
+    });
   });
 
   group('DagCborCodec', () {
