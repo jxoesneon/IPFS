@@ -25,10 +25,10 @@ class MFSStat {
     required this.type,
     this.withLocal,
     this.local,
+    this.sizeLocal,
     this.mode,
     this.mtime,
-    this.hashOnly,
-    this.sizeOnly,
+    this.mtimeNsecs,
   });
 
   /// CID string of the target node.
@@ -43,7 +43,8 @@ class MFSStat {
   /// Number of direct links (child blocks).
   final int blocks;
 
-  /// Node type: 'file', 'directory', or 'raw'.
+  /// Node type: 'file' or 'directory' (Kubo maps everything else —
+  /// raw leaves, symlinks, metadata — onto one of these two).
   final String type;
 
   /// Whether the `with-local` flag was requested.
@@ -52,26 +53,24 @@ class MFSStat {
   /// Whether all blocks are present locally.
   final bool? local;
 
+  /// Cumulative size of the locally available portion of the DAG.
+  final int? sizeLocal;
+
   /// Unix mode, when available.
   final int? mode;
 
   /// Modification time in seconds since epoch, when available.
   final int? mtime;
 
-  /// When true, only the hash field should be serialized.
-  final bool? hashOnly;
-
-  /// When true, only the size field should be serialized.
-  final bool? sizeOnly;
+  /// Nanosecond fraction of the modification time, when available.
+  final int? mtimeNsecs;
 
   /// Converts this stat to a Kubo-compatible JSON map.
+  ///
+  /// Kubo's `files stat` always returns the full object over HTTP (the
+  /// `--hash`/`--size` flags only affect the CLI text format), and `Mode`
+  /// is serialized as a four-digit octal string, omitted when unset.
   Map<String, dynamic> toJson() {
-    if (hashOnly == true) {
-      return <String, dynamic>{'Hash': hash};
-    }
-    if (sizeOnly == true) {
-      return <String, dynamic>{'Size': size};
-    }
     final result = <String, dynamic>{
       'Hash': hash,
       'Size': size,
@@ -79,10 +78,17 @@ class MFSStat {
       'Blocks': blocks,
       'Type': type,
     };
-    if (withLocal != null) result['WithLocal'] = withLocal;
-    if (local != null) result['Local'] = local;
-    if (mode != null) result['Mode'] = mode;
+    if (withLocal == true) {
+      result['WithLocality'] = true;
+      result['Local'] = local ?? true;
+      result['SizeLocal'] = sizeLocal ?? cumulativeSize;
+    }
+    final m = mode;
+    if (m != null && m != 0) {
+      result['Mode'] = m.toRadixString(8).padLeft(4, '0');
+    }
     if (mtime != null) result['Mtime'] = mtime;
+    if (mtimeNsecs != null) result['MtimeNsecs'] = mtimeNsecs;
     return result;
   }
 }
@@ -97,15 +103,22 @@ class MFSListEntry {
     required this.hash,
     this.mode,
     this.mtime,
+    this.mtimeNsecs,
   });
 
   /// Entry name.
   final String name;
 
-  /// Entry type: 0=raw, 1=directory, 2=file (Kubo convention).
+  /// Entry type: 0=file (including raw leaves), 1=directory.
+  ///
+  /// Matches Kubo's `mfs.NodeListing` where `TFile = 0` and `TDir = 1`.
+  /// For non-long listings only [name] is populated; [type], [size] and
+  /// [hash] carry their zero values, matching Kubo `files ls`.
   final int type;
 
-  /// Cumulative entry size in bytes.
+  /// Logical file size in bytes for files, 0 for directories — matching
+  /// Kubo's `files ls -l`, which reports `File.Size()` (the UnixFS filesize,
+  /// not the cumulative DAG size).
   final int size;
 
   /// CID string of the entry.
@@ -117,6 +130,9 @@ class MFSListEntry {
   /// Modification time in seconds since epoch, when requested.
   final int? mtime;
 
+  /// Nanosecond fraction of the modification time, when requested.
+  final int? mtimeNsecs;
+
   /// Converts this entry to a Kubo-compatible JSON map.
   Map<String, dynamic> toJson() {
     final result = <String, dynamic>{
@@ -127,6 +143,7 @@ class MFSListEntry {
     };
     if (mode != null) result['Mode'] = mode;
     if (mtime != null) result['Mtime'] = mtime;
+    if (mtimeNsecs != null) result['MtimeNsecs'] = mtimeNsecs;
     return result;
   }
 }
@@ -143,7 +160,63 @@ class MFSPathError extends Error {
   String toString() => 'MFSPathError: $message';
 }
 
+/// Shared byte cursor for ranged reads across a recursive DAG walk.
+class _ReadCursor {
+  _ReadCursor({required this.skip, this.limit});
+
+  /// Bytes to skip before emitting.
+  final int skip;
+
+  /// Maximum bytes to emit, or null for unbounded.
+  final int? limit;
+
+  int _skipped = 0;
+  int _emitted = 0;
+
+  /// Whether no more bytes should be emitted.
+  bool get done => limit != null && _emitted >= limit!;
+
+  /// Emits the requested slice of [chunk], honoring skip/limit.
+  /// Returns the bytes to emit (possibly empty).
+  List<int> take(List<int> chunk) {
+    if (done) return const <int>[];
+    if (_skipped < skip) {
+      final need = skip - _skipped;
+      if (need >= chunk.length) {
+        _skipped += chunk.length;
+        return const <int>[];
+      }
+      chunk = chunk.sublist(need);
+      _skipped = skip;
+    }
+    final remaining = limit == null ? chunk.length : limit! - _emitted;
+    if (remaining <= 0) return const <int>[];
+    if (chunk.length > remaining) {
+      chunk = chunk.sublist(0, remaining);
+    }
+    _emitted += chunk.length;
+    return chunk;
+  }
+}
+
+/// Optional UnixFS 1.5 metadata read from or applied to a node.
+class _NodeMetadata {
+  _NodeMetadata({this.mode, this.mtimeSecs, this.mtimeNsecs});
+
+  final int? mode;
+  final int? mtimeSecs;
+  final int? mtimeNsecs;
+
+  bool get hasMtime => mtimeSecs != null;
+}
+
 /// Manages the Mutable File System (MFS) for an IPFS node.
+///
+/// Every mutation writes its blocks to the block store and persists the new
+/// root CID to the datastore (write-through). [flush]/[sync] therefore act as
+/// barriers that wait for in-flight mutations and re-persist the root — which
+/// is also what Kubo's `ipfs files flush` does when the MFS write buffer is
+/// drained.
 class MFSManager implements ILifecycle {
   /// Creates a new [MFSManager] with the given [blockStore] and [datastore].
   MFSManager(
@@ -206,28 +279,58 @@ class MFSManager implements ILifecycle {
   /// Creates a directory at the given [path].
   ///
   /// [parents] and [recursive] are aliases for creating intermediate
-  /// directories.
+  /// directories and succeeding when the directory already exists — matching
+  /// Kubo's `ipfs files mkdir --parents`. Without them an existing path is an
+  /// error, as is a path whose parent does not exist.
+  ///
+  /// [mode], [mtimeSecs] and [mtimeNsecs] store optional UnixFS 1.5 metadata
+  /// on the created directory.
   Future<void> mkdir(
     String path, {
     bool recursive = false,
     bool parents = false,
     int? cidVersion,
     String? hash,
+    int? mode,
+    int? mtimeSecs,
+    int? mtimeNsecs,
   }) async {
     final createMissing = recursive || parents;
     final parts = _splitPath(path);
-    if (parts.isEmpty) return;
+    if (parts.isEmpty) {
+      // `mkdir /` is a no-op only when parents is requested.
+      if (createMissing) return;
+      throw Exception('file already exists: $path');
+    }
 
     await _mutationLock.synchronized(() async {
       await _modifyPath(
         parts,
         (currentCid) async {
           if (currentCid != null) {
-            // Directory already exists
-            return currentCid;
+            final existingType = await _unixfsType(currentCid);
+            if (createMissing &&
+                existingType == Data_DataType.Directory) {
+              // Directory already exists: `mkdir -p` is idempotent.
+              return currentCid;
+            }
+            throw Exception('file already exists: $path');
           }
           final dirManager = IPFSDirectoryManager();
+          if (mode != null) dirManager.setMode(mode);
+          if (mtimeSecs != null) {
+            dirManager.setModificationTime(
+              DateTime.fromMillisecondsSinceEpoch(
+                mtimeSecs * 1000,
+                isUtc: true,
+              ),
+            );
+          }
           final node = dirManager.build();
+          if (mtimeNsecs != null) {
+            final unixData = Data.fromBuffer(node.data)..mtimeNsecs = mtimeNsecs;
+            node.data = unixData.writeToBuffer();
+          }
           final data = node.writeToBuffer();
           final cid = await CID.fromContent(
             data,
@@ -247,35 +350,135 @@ class MFSManager implements ILifecycle {
   }
 
   /// Copies a file or directory from [src] to [dst].
-  Future<void> cp(String src, String dst) async {
+  ///
+  /// [src] may be an MFS path (`/dir/file`) or an IPFS path
+  /// (`/ipfs/<cid>[/sub/path]`), matching Kubo `files cp`. When [dst] ends
+  /// with a trailing slash the source is copied inside that directory under
+  /// its basename (`ipfs files cp /src /dir/`).
+  ///
+  /// [parents] creates missing destination directories. [force] overwrites an
+  /// existing file at the destination; it refuses to overwrite a directory,
+  /// matching Kubo's `unlinkNodeIfExists`. Without [force], an existing
+  /// destination of any kind is an error.
+  Future<void> cp(
+    String src,
+    String dst, {
+    bool force = false,
+    bool parents = false,
+  }) async {
+    final denylist = _denylistService;
+    if (denylist != null && _pathLooksBlocked(src)) {
+      throw StateError('Content blocked by operator policy');
+    }
+
+    final srcCid = await _resolveAny(src);
+    if (srcCid == null) {
+      throw Exception('Source path not found: $src');
+    }
+
+    // Kubo only treats the destination as a container when it ends with a
+    // trailing slash; an existing directory named without a slash is an
+    // "already exists" error there, not an implicit container.
+    var dstPath = dst;
+    if (dst.endsWith('/')) {
+      dstPath = '$dst${_basename(src)}';
+    }
+    final destParts = _splitPath(dstPath);
+    if (destParts.isEmpty) {
+      throw Exception('Cannot overwrite MFS root: $dst');
+    }
+
+    await _mutationLock.synchronized(() async {
+      await _modifyPath(
+        destParts,
+        (currentCid) async {
+          if (currentCid != null) {
+            if (!force) {
+              throw Exception('file already exists: $dst');
+            }
+            final existingType = await _unixfsType(currentCid);
+            if (existingType == Data_DataType.Directory ||
+                existingType == Data_DataType.HAMTShard) {
+              throw Exception(
+                'cp: cannot overwrite directory with --force: $dst',
+              );
+            }
+          }
+          return srcCid;
+        },
+        recursive: parents,
+      );
+    });
+  }
+
+  /// Moves a file or directory from [src] to [dst].
+  ///
+  /// Matches Kubo's `mfs.Mv`: a [dst] ending in `/` or naming an existing
+  /// directory moves the source inside it under its basename; an existing
+  /// file at [dst] is silently replaced; a name collision inside a target
+  /// directory is an error.
+  Future<void> mv(String src, String dst) async {
     final denylist = _denylistService;
     if (denylist != null && _pathLooksBlocked(src)) {
       throw StateError('Content blocked by operator policy');
     }
 
     final srcParts = _splitPath(src);
+    if (srcParts.isEmpty) {
+      throw Exception('Cannot move MFS root: $src');
+    }
     final srcCid = await _resolvePath(_rootCid!, srcParts);
     if (srcCid == null) {
       throw Exception('Source path not found: $src');
     }
 
-    final destParts = _splitPath(dst);
-    await _mutationLock.synchronized(() async {
-      await _modifyPath(destParts, (currentCid) async {
-        return srcCid;
-      });
-    });
-  }
+    final srcName = srcParts.last;
+    var dstPath = dst;
+    var redirectedIntoDir = dst.endsWith('/');
+    if (!redirectedIntoDir) {
+      final dstCid = await _resolvePath(_rootCid!, _splitPath(dst));
+      if (dstCid != null) {
+        final dstType = await _unixfsType(dstCid);
+        if (dstType == Data_DataType.Directory ||
+            dstType == Data_DataType.HAMTShard) {
+          dstPath = '${_normalizePath(dst)}/$srcName';
+          redirectedIntoDir = true;
+        }
+      }
+    } else {
+      dstPath = '$dst$srcName';
+    }
 
-  /// Moves a file or directory from [src] to [dst].
-  Future<void> mv(String src, String dst) async {
-    await cp(src, dst);
+    final normalizedDst = _normalizePath(dstPath);
+    if (_normalizePath(src) == normalizedDst) {
+      return; // Moving a node onto itself is a no-op.
+    }
+
+    final dstParts = _splitPath(normalizedDst);
+    final existing = await _resolvePath(_rootCid!, dstParts);
+    if (existing != null) {
+      if (redirectedIntoDir) {
+        // Inside a target directory Kubo's AddChild fails on any name
+        // collision, file or directory.
+        throw Exception('file already exists: $normalizedDst');
+      }
+      final existingType = await _unixfsType(existing);
+      if (existingType == Data_DataType.Directory ||
+          existingType == Data_DataType.HAMTShard) {
+        throw Exception('file already exists: $normalizedDst');
+      }
+      // An existing file at the destination is silently replaced (Kubo
+      // unlinks it before re-adding the source node).
+    }
+
+    await cp(src, normalizedDst, force: true);
     await rm(src, recursive: true);
   }
 
   /// Removes a file or directory at the given [path].
   ///
-  /// [force] causes missing paths to be ignored.
+  /// [force] ignores missing paths and implies [recursive] for directories,
+  /// matching Kubo `files rm --force`.
   Future<void> rm(
     String path, {
     bool recursive = false,
@@ -310,7 +513,8 @@ class MFSManager implements ILifecycle {
           throw Exception('Path not found: $path');
         }
 
-        if (!recursive) {
+        final removeDirs = recursive || force;
+        if (!removeDirs) {
           final removedLink = parentNode.links.firstWhere(
             (l) => l.name == nameToRemove,
           );
@@ -321,7 +525,7 @@ class MFSManager implements ILifecycle {
             final removedNode = PBNode.fromBuffer(removedBlock.block.data);
             final unixData = Data.fromBuffer(removedNode.data);
             if (unixData.type == Data_DataType.Directory) {
-              throw Exception('Directory not empty');
+              throw Exception('Cannot remove directory without -r: $path');
             }
           }
         }
@@ -341,19 +545,45 @@ class MFSManager implements ILifecycle {
 
   /// Lists the contents of the directory at the given [path].
   ///
-  /// [long] includes mode and mtime in the entries. [u] requests unsorted
-  /// order (Kubo compatibility flag).
+  /// [path] may be an MFS path or an `/ipfs/<cid>[/sub]` path. If the target
+  /// is a file, a single entry describing it is returned — matching Kubo
+  /// `files ls` on a non-directory path.
+  ///
+  /// [long] mirrors `files ls -l`: entries get their `Type` (0=file,
+  /// 1=directory), `Size` (logical file size; 0 for directories) and `Hash`
+  /// populated, plus UnixFS 1.5 `Mode`/`Mtime` when stored. Without it only
+  /// `Name` is populated, matching Kubo's `ListNames` response. [u] requests
+  /// unsorted order (Kubo compatibility flag).
   Future<List<MFSListEntry>> ls(
     String path, {
     bool long = false,
     bool u = false,
   }) async {
-    final parts = _splitPath(path);
-    final cid = await _resolvePath(_rootCid!, parts);
+    final cid = await _resolveAny(path);
     if (cid == null) throw Exception('Path not found: $path');
 
     final block = await _blockStore.getBlock(cid.encode());
     if (!block.found) throw Exception('Block not found for CID: $cid');
+
+    final type = await _unixfsType(cid);
+    if (type != Data_DataType.Directory &&
+        type != Data_DataType.HAMTShard) {
+      // Kubo lists the file itself when the target is not a directory.
+      if (!long) {
+        return [
+          MFSListEntry(name: _basename(path), type: 0, size: 0, hash: ''),
+        ];
+      }
+      final node = _tryParseNode(block.block.data);
+      return [
+        _entryFor(
+          _basename(path),
+          cid,
+          node,
+          dataLength: block.block.data.length,
+        ),
+      ];
+    }
 
     final node = PBNode.fromBuffer(block.block.data);
     var entries = node.links.toList();
@@ -361,33 +591,26 @@ class MFSManager implements ILifecycle {
       entries.sort((a, b) => a.name.compareTo(b.name));
     }
 
+    if (!long) {
+      // Kubo `files ls` without -l resolves only the names.
+      return [
+        for (final link in entries)
+          MFSListEntry(name: link.name, type: 0, size: 0, hash: ''),
+      ];
+    }
+
     final result = <MFSListEntry>[];
     for (final link in entries) {
       final childCid = CID.fromBytes(Uint8List.fromList(link.hash));
       final childBlock = await _blockStore.getBlock(childCid.encode());
-      int type = 2;
-      int? mode;
-      int? mtime;
+      PBNode? childNode;
+      var dataLength = 0;
       if (childBlock.found) {
-        final childNode = PBNode.fromBuffer(childBlock.block.data);
-        final unixData = Data.fromBuffer(childNode.data);
-        if (unixData.type == Data_DataType.Directory) {
-          type = 1;
-        } else if (unixData.type == Data_DataType.Raw) {
-          type = 0;
-        }
-        if (unixData.hasMode()) mode = unixData.mode.toInt();
-        if (unixData.hasMtime()) mtime = unixData.mtime.toInt();
+        dataLength = childBlock.block.data.length;
+        childNode = _tryParseNode(childBlock.block.data);
       }
       result.add(
-        MFSListEntry(
-          name: link.name,
-          type: type,
-          size: link.size.toInt(),
-          hash: childCid.encode(),
-          mode: long ? mode : null,
-          mtime: long ? mtime : null,
-        ),
+        _entryFor(link.name, childCid, childNode, dataLength: dataLength),
       );
     }
     return result;
@@ -395,22 +618,48 @@ class MFSManager implements ILifecycle {
 
   /// Gets Kubo-compatible information about a file or directory at [path].
   ///
-  /// [hash] and [size] mirror Kubo's `hash`/`size` flags and, when true,
-  /// include only the requested field in the returned JSON. [cidBase] controls
-  /// the multibase used to encode the returned CID (e.g. `base32`).
+  /// [path] may be an MFS path or an `/ipfs/<cid>[/sub]` path.
+  ///
+  /// [cidBase] controls the multibase used to encode the returned CID (e.g.
+  /// `base32`). [withLocal] computes how much of the DAG is present locally.
+  /// Kubo's `hash`/`size` flags only affect the CLI text format, so they are
+  /// accepted by the RPC handler but intentionally ignored here.
   Future<MFSStat> stat(
     String path, {
     bool withLocal = false,
-    bool? hash,
-    bool? size,
     String? cidBase,
   }) async {
-    final parts = _splitPath(path);
-    final cid = await _resolvePath(_rootCid!, parts);
+    final cid = await _resolveAny(path);
     if (cid == null) throw Exception('Path not found: $path');
 
     final block = await _blockStore.getBlock(cid.encode());
     if (!block.found) throw Exception('Block not found for CID: $cid');
+
+    final hashString = cidBase != null
+        ? cid.encodeWithBaseName(cidBase)
+        : cid.encode();
+
+    // Raw blocks carry no UnixFS wrapper; report them as files whose size is
+    // the block payload itself.
+    if (cid.codec == 'raw') {
+      final dataLength = block.block.data.length;
+      bool? local;
+      int? sizeLocal;
+      if (withLocal) {
+        local = true;
+        sizeLocal = dataLength;
+      }
+      return MFSStat(
+        hash: hashString,
+        size: dataLength,
+        cumulativeSize: dataLength,
+        blocks: 0,
+        type: 'file',
+        withLocal: withLocal ? true : null,
+        local: local,
+        sizeLocal: sizeLocal,
+      );
+    }
 
     final node = PBNode.fromBuffer(block.block.data);
     final unixData = Data.fromBuffer(node.data);
@@ -421,12 +670,18 @@ class MFSManager implements ILifecycle {
 
     int? mode;
     int? mtime;
-    if (unixData.hasMode()) mode = unixData.mode.toInt();
+    int? mtimeNsecs;
+    if (unixData.hasMode()) mode = unixData.mode;
     if (unixData.hasMtime()) mtime = unixData.mtime.toInt();
+    if (unixData.hasMtimeNsecs()) mtimeNsecs = unixData.mtimeNsecs;
 
-    final hashString = cidBase != null
-        ? cid.encodeWithBaseName(cidBase)
-        : cid.encode();
+    bool? local;
+    int? sizeLocal;
+    if (withLocal) {
+      final localStats = await _localStats(cid);
+      local = localStats.$1;
+      sizeLocal = localStats.$2;
+    }
 
     return MFSStat(
       hash: hashString,
@@ -435,38 +690,57 @@ class MFSManager implements ILifecycle {
       blocks: node.links.length,
       type: typeName,
       withLocal: withLocal ? true : null,
-      local: withLocal ? true : null,
+      local: local,
+      sizeLocal: sizeLocal,
       mode: mode,
       mtime: mtime,
-      hashOnly: hash,
-      sizeOnly: size,
+      mtimeNsecs: mtimeNsecs,
     );
   }
 
   /// Writes [data] to a file at the given [path].
   ///
-  /// [offset] starts writing at the given byte position. [truncate] controls
-  /// whether existing content is discarded before writing. When
-  /// [truncate] is true, the file is first zeroed to [offset] bytes and then
-  /// the supplied data is written. When [truncate] is false, the file must
-  /// already exist. [count] limits how many bytes from [data] are written.
+  /// Mirrors Kubo `ipfs files write` semantics:
+  /// - [create] (default false): create the file if it does not exist;
+  ///   without it, writing a missing path is an error.
+  /// - [truncate] (default false): discard existing content and zero-fill up
+  ///   to [offset] before writing. With [truncate] false the existing tail
+  ///   beyond the written range is preserved.
+  /// - [offset] starts writing at the given byte position; an offset beyond
+  ///   the current end of a non-truncated file is an error.
+  /// - [count] limits how many bytes from [data] are written.
+  /// - [parents] creates missing parent directories.
+  /// - [cidVersion], [rawLeaves] and [hash] control the CID format of the
+  ///   newly built UnixFS DAG.
+  /// - [mode], [mtimeSecs] and [mtimeNsecs] store optional UnixFS 1.5
+  ///   metadata; supplying any of them disables raw leaves, matching Kubo.
   ///
-  /// [cidVersion], [rawLeaves] and [hash] control the CID format of the newly
-  /// built UnixFS DAG. Full preservation of existing chunk boundaries is
-  /// future work; at present unmodified bytes are read back and the DAG is
-  /// rebuilt from the merged byte stream.
+  /// When the existing file already stores an mtime and no explicit
+  /// [mtimeSecs] is given, the mtime is bumped to the current time — matching
+  /// Kubo's automatic mtime update on `files write`.
+  ///
+  /// Full preservation of existing chunk boundaries is future work; at present
+  /// unmodified bytes are read back and the DAG is rebuilt from the merged
+  /// byte stream.
   Future<void> write(
     String path,
     Stream<List<int>> data, {
-    bool create = true,
+    bool create = false,
     int? offset,
-    bool truncate = true,
+    bool truncate = false,
     int? count,
+    bool parents = false,
     int? cidVersion,
     bool? rawLeaves,
     String? hash,
+    int? mode,
+    int? mtimeSecs,
+    int? mtimeNsecs,
   }) async {
     final parts = _splitPath(path);
+    if (parts.isEmpty) {
+      throw Exception('Cannot write to MFS root path: $path');
+    }
     final startOffset = offset ?? 0;
 
     if (startOffset < 0) {
@@ -480,11 +754,17 @@ class MFSManager implements ILifecycle {
       final existingCid = await _resolvePath(_rootCid!, parts);
       final bool hasExisting = existingCid != null;
 
-      if (!create && !hasExisting) {
-        throw Exception('File does not exist and create is false');
+      if (!hasExisting && !create) {
+        throw Exception('File does not exist and create is false: $path');
       }
-      if (!truncate && !hasExisting) {
-        throw Exception('File does not exist and truncate is false');
+
+      _NodeMetadata? existingMeta;
+      if (hasExisting) {
+        final existingType = await _unixfsType(existingCid);
+        if (existingType == Data_DataType.Directory) {
+          throw Exception('Cannot write over directory: $path');
+        }
+        existingMeta = await _readMetadata(existingCid);
       }
 
       final allBytes = await data.expand((b) => b).toList();
@@ -501,22 +781,39 @@ class MFSManager implements ILifecycle {
         updatedBytes = buffer.toBytes();
       } else {
         // Partial update: read existing file, patch the requested range, and
-        // rebuild the DAG. Note: true chunk-boundary preservation is complex and
+        // rebuild the DAG. A missing file (create=true) is treated as empty.
+        // An offset beyond the end of file zero-fills the gap, matching
+        // Kubo's DagModifier sparse expansion on seek.
+        // Note: true chunk-boundary preservation is complex and
         // left as future work; we rebuild from the merged byte stream.
-        final existingBytes = await _readAllBytes(existingCid!);
-        if (startOffset > existingBytes.length) {
-          throw ArgumentError(
-            'Offset $startOffset is beyond file size ${existingBytes.length}',
-          );
-        }
+        final existingBytes = hasExisting
+            ? await _readAllBytes(existingCid)
+            : Uint8List(0);
         updatedBytes = Uint8List.fromList(
           _patchBytes(existingBytes, bytes, startOffset),
         );
       }
 
+      // Determine effective UnixFS 1.5 metadata. Explicit parameters win;
+      // otherwise carry over stored metadata (with an mtime bump), matching
+      // Kubo's mtime-preserving write behavior. Storing metadata forces a
+      // dag-pb root and disables raw leaves.
+      final effectiveMode = mode ?? existingMeta?.mode;
+      var effectiveMtimeSecs = mtimeSecs ?? existingMeta?.mtimeSecs;
+      var effectiveMtimeNsecs = mtimeNsecs ?? existingMeta?.mtimeNsecs;
+      if (mtimeSecs == null && existingMeta?.hasMtime == true) {
+        final now = DateTime.now().toUtc();
+        effectiveMtimeSecs = now.millisecondsSinceEpoch ~/ 1000;
+        effectiveMtimeNsecs = (now.millisecondsSinceEpoch % 1000) * 1000000;
+      }
+      final hasMeta =
+          effectiveMode != null ||
+          effectiveMtimeSecs != null ||
+          effectiveMtimeNsecs != null;
+
       final builder = UnixFSBuilder(
         cidVersion: cidVersion ?? 0,
-        rawLeaves: rawLeaves ?? false,
+        rawLeaves: hasMeta ? false : (rawLeaves ?? false),
         hashType: hash ?? 'sha2-256',
       );
       final blocks = await builder
@@ -525,34 +822,62 @@ class MFSManager implements ILifecycle {
       if (blocks.isEmpty) {
         throw Exception('Failed to build UnixFS DAG');
       }
-      final rootBlock = blocks.last;
+      var rootBlock = blocks.last;
       for (final block in blocks) {
         await _blockStore.putBlock(block);
       }
-      await _modifyPath(parts, (currentCid) async {
-        if (currentCid == null && !create) {
-          throw Exception('File does not exist and create is false');
-        }
-        return rootBlock.cid;
-      }, isDirectory: false);
+      if (hasMeta) {
+        rootBlock = await _applyMetadata(
+          rootBlock,
+          mode: effectiveMode,
+          mtimeSecs: effectiveMtimeSecs,
+          mtimeNsecs: effectiveMtimeNsecs,
+          hashType: hash ?? 'sha2-256',
+          cidVersion: cidVersion ?? 0,
+        );
+        await _blockStore.putBlock(rootBlock);
+      }
+      await _modifyPath(
+        parts,
+        (currentCid) async {
+          if (currentCid == null && !create) {
+            throw Exception('File does not exist and create is false');
+          }
+          return rootBlock.cid;
+        },
+        recursive: parents,
+        isDirectory: false,
+      );
     });
   }
 
   /// Reads data from a file at the given [path], optionally starting at
   /// [offset] and limiting to [count] bytes.
+  ///
+  /// [path] may be an MFS path or an `/ipfs/<cid>[/sub]` path. Reading a
+  /// directory is an error, matching Kubo `files read`.
   Future<Stream<List<int>>> read(String path, {int? offset, int? count}) async {
-    final parts = _splitPath(path);
-    final cid = await _resolvePath(_rootCid!, parts);
+    final cid = await _resolveAny(path);
     if (cid == null) throw Exception('Path not found: $path');
 
+    if (cid.codec != 'raw') {
+      final type = await _unixfsType(cid);
+      if (type == Data_DataType.Directory ||
+          type == Data_DataType.HAMTShard) {
+        throw Exception('Path is a directory: $path');
+      }
+    }
+    // A missing root block surfaces as an error on the returned stream
+    // rather than throwing here, so consumers terminate instead of hanging.
+
     final controller = StreamController<List<int>>();
+    final cursor = _ReadCursor(skip: offset ?? 0, limit: count);
 
     unawaited(
       _readRecursive(
         cid,
         controller,
-        offset: offset,
-        count: count,
+        cursor,
       ).then((_) => controller.close()).catchError((Object e) {
         controller.addError(e);
         // Close the stream after the error so consumers terminate
@@ -564,17 +889,25 @@ class MFSManager implements ILifecycle {
     return controller.stream;
   }
 
-  /// Flushes the current MFS state and returns the root CID.
+  /// Flushes pending mutations for [path] (or the whole MFS when null or `/`)
+  /// and returns the CID of the flushed path.
   ///
-  /// If [path] is provided, it is validated but the whole root is flushed.
+  /// The manager writes through on every mutation, so flushing waits for
+  /// in-flight operations and re-persists the root CID — matching
+  /// `ipfs files flush [--path]`, which returns `{"Cid": "<cid>"}`.
   Future<CID> flush({String? path}) async {
-    if (path != null) {
-      _splitPath(path); // validate and normalize
-    }
-    await _mutationLock.synchronized(() async {
+    final effectivePath = path ?? '/';
+    return _mutationLock.synchronized(() async {
+      final parts = _splitPath(effectivePath);
+      final cid = parts.isEmpty
+          ? _rootCid
+          : await _resolvePath(_rootCid!, parts);
+      if (cid == null) {
+        throw Exception('Path not found: $effectivePath');
+      }
       await _persistRoot();
+      return cid;
     });
-    return _rootCid!;
   }
 
   /// Flushes the entire MFS and returns the root CID.
@@ -582,28 +915,41 @@ class MFSManager implements ILifecycle {
 
   /// Waits for in-flight operations to complete and ensures the root CID is
   /// persisted.
+  ///
+  /// Mutations are already write-through, so this is primarily a barrier that
+  /// drains the mutation lock and re-persists the current root.
   Future<void> sync() async {
     await _mutationLock.synchronized(() async {
       await _persistRoot();
     });
   }
 
-  /// Changes the CID codec/hash for the DAG at [path].
+  /// Changes the CID version/hash function of the node at [path].
   ///
-  /// [cidVersion] selects the CID version to convert the target to. [hash]
-  /// selects the multihash function to use for re-hashing (default
-  /// 'sha2-256').
+  /// Matches Kubo `files chcid`: [path] must not be `/` and must resolve to
+  /// a directory ("can only update directories"). With neither [cidVersion]
+  /// nor [hash] given the call is a no-op. Supplying [hash] without
+  /// [cidVersion] upgrades to CIDv1, matching Kubo's `getPrefix`.
   Future<void> chcid(
     String path, {
     int? cidVersion,
-    String? hash = 'sha2-256',
+    String? hash,
   }) async {
     final parts = _splitPath(path);
+    if (parts.isEmpty) {
+      throw Exception('Cannot change CID of MFS root');
+    }
+    // Kubo: no prefix options at all means the CID builder is nil and the
+    // command changes nothing.
+    if (cidVersion == null && hash == null) {
+      return;
+    }
     final hashType = hash ?? 'sha2-256';
     if (hashType != 'sha2-256') {
       throw UnsupportedError('Hash type $hashType not supported');
     }
-    final targetVersion = cidVersion ?? 0;
+    // A hash option without an explicit cid-version selects CIDv1.
+    final targetVersion = cidVersion ?? 1;
     if (targetVersion != 0 && targetVersion != 1) {
       throw ArgumentError('Unsupported CID version: $targetVersion');
     }
@@ -614,12 +960,54 @@ class MFSManager implements ILifecycle {
       if (currentCid == null) {
         throw Exception('Path not found: $path');
       }
+      final type = await _unixfsType(currentCid);
+      if (type != Data_DataType.Directory &&
+          type != Data_DataType.HAMTShard) {
+        throw Exception('can only update directories');
+      }
       final newCid = await _rehashNode(currentCid, hashType, targetVersion);
       if (newCid == currentCid) {
         // No change
         return;
       }
       await _modifyPath(parts, (existingCid) async => newCid);
+    });
+  }
+
+  /// Sets the modification time on the node at [path] (`files touch`).
+  ///
+  /// When [mtimeSecs] is null the current time is used. [mtimeNsecs] supplies
+  /// the optional nanosecond fraction.
+  Future<void> touch(
+    String path, {
+    int? mtimeSecs,
+    int? mtimeNsecs,
+  }) async {
+    final secs =
+        mtimeSecs ?? DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+    await _mutationLock.synchronized(() async {
+      await _setMetadata(
+        path,
+        mtimeSecs: secs,
+        mtimeNsecs: mtimeNsecs,
+      );
+    });
+  }
+
+  /// Alias for [touch] — sets the mtime of the node at [path].
+  Future<void> mtime(
+    String path, {
+    int? mtimeSecs,
+    int? mtimeNsecs,
+  }) => touch(path, mtimeSecs: mtimeSecs, mtimeNsecs: mtimeNsecs);
+
+  /// Sets the POSIX mode on the node at [path] (`files chmod`).
+  Future<void> chmod(String path, int mode) async {
+    if (mode < 0 || mode > 0xFFFFFFFF) {
+      throw ArgumentError('Invalid mode: $mode');
+    }
+    await _mutationLock.synchronized(() async {
+      await _setMetadata(path, mode: mode);
     });
   }
 
@@ -631,93 +1019,283 @@ class MFSManager implements ILifecycle {
     await _datastore.put(Key(_rootKey), _rootCid!.toBytes());
   }
 
+  /// Resolves [path] to a CID. Supports MFS paths and `/ipfs/<cid>[/sub]`
+  /// paths (the latter read-only, used by `cp`/`stat`/`ls`/`read`).
+  Future<CID?> _resolveAny(String path) async {
+    final normalized = _normalizePath(path);
+    if (normalized == '/ipfs' || normalized.startsWith('/ipfs/')) {
+      return _resolveIpfsPath(normalized);
+    }
+    return _resolvePath(_rootCid!, _splitPath(path));
+  }
+
+  /// Resolves an `/ipfs/<cid>[/sub/path]` reference through the block store.
+  Future<CID?> _resolveIpfsPath(String normalized) async {
+    final segments = normalized
+        .split('/')
+        .where((s) => s.isNotEmpty)
+        .toList();
+    // segments[0] == 'ipfs'
+    if (segments.length < 2) return null;
+    CID cid;
+    try {
+      cid = CID.decode(segments[1]);
+    } catch (_) {
+      throw MFSPathError('Invalid IPFS path: $normalized');
+    }
+    return _resolveDagPath(cid, segments.sublist(2));
+  }
+
+  /// Walks named dag-pb links from [root] following [parts].
+  Future<CID?> _resolveDagPath(CID root, List<String> parts) async {
+    var current = root;
+    for (final part in parts) {
+      final block = await _blockStore.getBlock(current.encode());
+      if (!block.found) return null;
+      final node = _tryParseNode(block.block.data);
+      if (node == null) return null;
+      CID? next;
+      for (final link in node.links) {
+        if (link.name == part) {
+          next = CID.fromBytes(Uint8List.fromList(link.hash));
+          break;
+        }
+      }
+      if (next == null) return null;
+      current = next;
+    }
+    return current;
+  }
+
+  /// Returns the UnixFS type of the node at [cid], or null for raw blocks /
+  /// unparseable nodes.
+  Future<Data_DataType?> _unixfsType(CID cid) async {
+    if (cid.codec == 'raw') return null;
+    final block = await _blockStore.getBlock(cid.encode());
+    if (!block.found) return null;
+    final node = _tryParseNode(block.block.data);
+    if (node == null || !node.hasData()) return null;
+    try {
+      return Data.fromBuffer(node.data).type;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Reads optional UnixFS 1.5 metadata (mode/mtime) from the node at [cid].
+  Future<_NodeMetadata?> _readMetadata(CID cid) async {
+    if (cid.codec == 'raw') return null;
+    final block = await _blockStore.getBlock(cid.encode());
+    if (!block.found) return null;
+    final node = _tryParseNode(block.block.data);
+    if (node == null || !node.hasData()) return null;
+    Data unixData;
+    try {
+      unixData = Data.fromBuffer(node.data);
+    } catch (_) {
+      return null;
+    }
+    return _NodeMetadata(
+      mode: unixData.hasMode() ? unixData.mode : null,
+      mtimeSecs: unixData.hasMtime() ? unixData.mtime.toInt() : null,
+      mtimeNsecs: unixData.hasMtimeNsecs() ? unixData.mtimeNsecs : null,
+    );
+  }
+
+  /// Re-writes [block]'s root node with the given UnixFS 1.5 metadata fields
+  /// set and returns the re-hashed block.
+  Future<Block> _applyMetadata(
+    Block block, {
+    int? mode,
+    int? mtimeSecs,
+    int? mtimeNsecs,
+    required String hashType,
+    required int cidVersion,
+  }) async {
+    final node = PBNode.fromBuffer(block.data);
+    final unixData = node.hasData()
+        ? Data.fromBuffer(node.data)
+        : (Data()..type = Data_DataType.File);
+    if (mode != null) unixData.mode = mode;
+    if (mtimeSecs != null) unixData.mtime = Int64(mtimeSecs);
+    if (mtimeNsecs != null) unixData.mtimeNsecs = mtimeNsecs;
+    node.data = unixData.writeToBuffer();
+    final newData = node.writeToBuffer();
+    final newCid = await CID.fromContent(
+      newData,
+      codec: 'dag-pb',
+      hashType: hashType,
+      version: cidVersion,
+    );
+    return Block(cid: newCid, data: newData, format: 'dag-pb');
+  }
+
+  /// Mutates the UnixFS metadata of the node at [path] and re-links it into
+  /// the MFS tree.
+  Future<void> _setMetadata(
+    String path, {
+    int? mode,
+    int? mtimeSecs,
+    int? mtimeNsecs,
+  }) async {
+    final parts = _splitPath(path);
+    final currentCid = parts.isEmpty
+        ? _rootCid
+        : await _resolvePath(_rootCid!, parts);
+    if (currentCid == null) {
+      throw Exception('Path not found: $path');
+    }
+    if (currentCid.codec == 'raw') {
+      throw Exception('Cannot set metadata on a raw block: $path');
+    }
+    final block = await _blockStore.getBlock(currentCid.encode());
+    if (!block.found) {
+      throw Exception('Block not found for CID: $currentCid');
+    }
+    final newBlock = await _applyMetadata(
+      block.block.toBlock(),
+      mode: mode,
+      mtimeSecs: mtimeSecs,
+      mtimeNsecs: mtimeNsecs,
+      hashType: 'sha2-256',
+      cidVersion: currentCid.version,
+    );
+    await _blockStore.putBlock(newBlock);
+    if (newBlock.cid == currentCid) return;
+    await _modifyPath(parts, (existingCid) async => newBlock.cid);
+  }
+
+  /// Computes whether the DAG rooted at [cid] is fully present locally and
+  /// the cumulative size of the locally available portion.
+  Future<(bool, int)> _localStats(CID cid) async {
+    var allLocal = true;
+    var sizeLocal = 0;
+    final visited = <String>{};
+    final queue = <CID>[cid];
+    while (queue.isNotEmpty) {
+      final current = queue.removeLast();
+      if (!visited.add(current.encode())) continue;
+      final block = await _blockStore.getBlock(current.encode());
+      if (!block.found) {
+        allLocal = false;
+        continue;
+      }
+      sizeLocal += block.block.data.length;
+      final node = _tryParseNode(block.block.data);
+      if (node == null) continue;
+      for (final link in node.links) {
+        queue.add(CID.fromBytes(Uint8List.fromList(link.hash)));
+      }
+    }
+    return (allLocal, sizeLocal);
+  }
+
+  /// Parses [bytes] as a [PBNode], returning null for non-dag-pb payloads
+  /// (e.g. raw leaf blocks) instead of throwing.
+  PBNode? _tryParseNode(List<int> bytes) {
+    try {
+      return PBNode.fromBuffer(bytes);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Builds a long-format list entry for [cid], extracting UnixFS type and
+  /// UnixFS 1.5 metadata from [node] when parseable. [dataLength] is the raw
+  /// size of the node's block, used as the size for non-dag-pb payloads.
+  MFSListEntry _entryFor(
+    String name,
+    CID cid,
+    PBNode? node, {
+    required int dataLength,
+  }) {
+    // Kubo mfs.NodeListing: TFile = 0, TDir = 1.
+    var type = 0;
+    var size = dataLength;
+    int? mode;
+    int? mtime;
+    int? mtimeNsecs;
+    if (node != null && node.hasData()) {
+      try {
+        final unixData = Data.fromBuffer(node.data);
+        if (unixData.type == Data_DataType.Directory ||
+            unixData.type == Data_DataType.HAMTShard) {
+          type = 1;
+          size = 0; // Directories report no size in `files ls -l`.
+        } else {
+          size = unixData.filesize.toInt();
+        }
+        if (unixData.hasMode()) mode = unixData.mode;
+        if (unixData.hasMtime()) mtime = unixData.mtime.toInt();
+        if (unixData.hasMtimeNsecs()) mtimeNsecs = unixData.mtimeNsecs;
+      } catch (_) {
+        // Leave defaults.
+      }
+    }
+    return MFSListEntry(
+      name: name,
+      type: type,
+      size: size,
+      hash: cid.encode(),
+      mode: mode,
+      mtime: mtime,
+      mtimeNsecs: mtimeNsecs,
+    );
+  }
+
+  String _basename(String path) {
+    final parts = path.split('/').where((p) => p.isNotEmpty).toList();
+    return parts.isEmpty ? '/' : parts.last;
+  }
+
   Future<void> _readRecursive(
     CID cid,
-    StreamController<List<int>> controller, {
-    int? offset,
-    int? count,
-  }) async {
+    StreamController<List<int>> controller,
+    _ReadCursor cursor,
+  ) async {
+    if (cursor.done) return;
     final block = await _blockStore.getBlock(cid.encode());
     if (!block.found) throw Exception('Block not found');
+
+    // Raw leaf blocks have no UnixFS envelope; emit the payload directly.
+    if (cid.codec == 'raw') {
+      final chunk = cursor.take(block.block.data);
+      if (chunk.isNotEmpty) controller.add(chunk);
+      return;
+    }
 
     final node = PBNode.fromBuffer(block.block.data);
     final unixData = Data.fromBuffer(node.data);
 
     if (unixData.type == Data_DataType.File ||
         unixData.type == Data_DataType.Raw) {
-      // Data is emitted sequentially; we can skip leading bytes and cap the
-      // total output with a single byte counter.
-      int emitted = 0;
-      int skipped = 0;
-      final skip = offset ?? 0;
-      final limit = count;
-
-      Future<void> emit(List<int> chunk) async {
-        if (limit != null && emitted >= limit) return;
-
-        final available = chunk.length;
-        if (skipped < skip) {
-          final need = skip - skipped;
-          if (need >= available) {
-            skipped += available;
-            return;
-          }
-          final remaining = chunk.sublist(need);
-          skipped = skip;
-          chunk = remaining;
-        }
-
-        if (limit != null) {
-          final remaining = limit - emitted;
-          if (remaining <= 0) return;
-          if (chunk.length > remaining) {
-            chunk = chunk.sublist(0, remaining);
-          }
-        }
-
-        emitted += chunk.length;
-        controller.add(chunk);
-      }
-
       if (unixData.hasData()) {
-        await emit(unixData.data);
+        final chunk = cursor.take(unixData.data);
+        if (chunk.isNotEmpty) controller.add(chunk);
       }
       for (final link in node.links) {
+        if (cursor.done) break;
         await _readRecursive(
           CID.fromBytes(Uint8List.fromList(link.hash)),
           controller,
-          offset: null,
-          count: null,
+          cursor,
         );
-      }
-
-      // If offset/count was requested, we emitted the whole file. The
-      // caller requested a range, so we need to enforce it. We do so by
-      // buffering the whole stream. This is acceptable for MFS files where
-      // the offset/count semantics are required by the RPC API.
-      if (offset != null || count != null) {
-        // Handled via the emit counter above.
       }
     } else {
       throw Exception('Not a file');
     }
   }
 
-  // The _readRecursive offset/count implementation above uses a simple counter
-  // per invocation. Because recursion continues after emitting all requested
-  // bytes, we stop the stream when the limit is reached. This is a pragmatic
-  // implementation for MFS-sized files.
-
   Future<Uint8List> _readAllBytes(CID cid) async {
     final controller = StreamController<List<int>>();
     final buffer = BytesBuilder();
+    final cursor = _ReadCursor(skip: 0);
 
     unawaited(
       _readRecursive(
         cid,
         controller,
-        offset: 0,
-        count: null,
+        cursor,
       ).then((_) => controller.close()).catchError((Object e) {
         controller.addError(e);
         // Close the stream after the error so consumers terminate
@@ -732,19 +1310,19 @@ class MFSManager implements ILifecycle {
     return buffer.toBytes();
   }
 
+  /// Splices [patch] into [original] at [offset]. When [offset] is beyond
+  /// the end of [original] the gap is zero-filled, matching Kubo's sparse
+  /// expansion for `files write --offset` past EOF.
   List<int> _patchBytes(List<int> original, List<int> patch, int offset) {
     if (offset == 0 && patch.length >= original.length) {
       return patch;
     }
-    final result = List<int>.from(original);
-    for (var i = 0; i < patch.length; i++) {
-      final pos = offset + i;
-      if (pos < result.length) {
-        result[pos] = patch[i];
-      } else {
-        result.add(patch[i]);
-      }
-    }
+    final length = original.length > offset + patch.length
+        ? original.length
+        : offset + patch.length;
+    final result = Uint8List(length);
+    result.setRange(0, original.length, original);
+    result.setRange(offset, offset + patch.length, patch);
     return result;
   }
 
@@ -753,6 +1331,9 @@ class MFSManager implements ILifecycle {
     return normalized.split('/').where((p) => p.isNotEmpty).toList();
   }
 
+  /// Normalizes [path] the way Kubo's `checkPath` does: `gopath.Clean`
+  /// resolves `.`/`..` segments and clamps `..` at the root (`/../x` is
+  /// `/x`), it does not error on escaping the root.
   String _normalizePath(String path) {
     if (path.isEmpty || path == '/') return '/';
 
@@ -761,10 +1342,7 @@ class MFSManager implements ILifecycle {
     for (final part in parts) {
       if (part == '.') continue;
       if (part == '..') {
-        if (stack.isEmpty) {
-          throw MFSPathError('Path traversal outside MFS root: $path');
-        }
-        stack.removeLast();
+        if (stack.isNotEmpty) stack.removeLast();
         continue;
       }
       stack.add(part);
@@ -778,7 +1356,8 @@ class MFSManager implements ILifecycle {
     final block = await _blockStore.getBlock(current.encode());
     if (!block.found) return null;
 
-    final node = PBNode.fromBuffer(block.block.data);
+    final node = _tryParseNode(block.block.data);
+    if (node == null) return null;
     for (final link in node.links) {
       if (link.name == parts[0]) {
         return _resolvePath(
@@ -901,17 +1480,17 @@ class MFSManager implements ILifecycle {
     return updatedCid;
   }
 
+  /// Maps a UnixFS node type to Kubo's `files stat` Type string. Kubo
+  /// reports only "file" and "directory" (HAMT shards count as directories).
   String _typeName(Data_DataType type) {
     switch (type) {
-      case Data_DataType.Raw:
-        return 'raw';
       case Data_DataType.Directory:
+      case Data_DataType.HAMTShard:
         return 'directory';
+      case Data_DataType.Raw:
       case Data_DataType.File:
-        return 'file';
       case Data_DataType.Metadata:
       case Data_DataType.Symlink:
-      case Data_DataType.HAMTShard:
       default:
         return 'file';
     }

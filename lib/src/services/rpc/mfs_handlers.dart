@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:shelf/shelf.dart';
+import 'package:shelf_router/shelf_router.dart';
 
 import '../../core/ipfs_node/ipfs_node.dart';
 import '../../utils/logger.dart';
@@ -16,7 +17,10 @@ const _maxMultipartSize = 100 * 1024 * 1024;
 /// RPC handlers for the `/api/v0/files/*` MFS endpoint surface.
 ///
 /// These handlers mirror Kubo's `ipfs files` command API and delegate to the
-/// shared [MFSManager] instance exposed by [IPFSNode.mfs].
+/// shared [MFSManager] instance exposed by [IPFSNode.mfs]. The full Kubo verb
+/// set is covered: `mkdir`, `write`, `read`, `stat`, `ls`, `cp`, `mv`, `rm`,
+/// `flush`, `chcid`, plus the UnixFS 1.5 metadata verbs `touch` (mtime) and
+/// `chmod`.
 class MFSHandlers {
   /// Creates a new [MFSHandlers] for the given [node].
   MFSHandlers(this.node);
@@ -25,6 +29,46 @@ class MFSHandlers {
   final IPFSNode node;
 
   final _logger = Logger('MFSHandlers');
+
+  /// Registers every `/api/v0/files/*` route on [router].
+  ///
+  /// The RPC server owns the top-level router; calling this from its setup is
+  /// the only wiring needed to expose the complete `ipfs files` surface.
+  void registerOn(Router router) {
+    router.post('/api/v0/files/ls', handleFilesLs);
+    router.post('/api/v0/files/stat', handleFilesStat);
+    router.post('/api/v0/files/read', handleFilesRead);
+    router.post('/api/v0/files/write', handleFilesWrite);
+    router.post('/api/v0/files/mkdir', handleFilesMkdir);
+    router.post('/api/v0/files/cp', handleFilesCp);
+    router.post('/api/v0/files/mv', handleFilesMv);
+    router.post('/api/v0/files/rm', handleFilesRm);
+    router.post('/api/v0/files/flush', handleFilesFlush);
+    router.post('/api/v0/files/chcid', handleFilesChcid);
+    router.post('/api/v0/files/touch', handleFilesTouch);
+    router.post('/api/v0/files/mtime', handleFilesTouch);
+    router.post('/api/v0/files/chmod', handleFilesChmod);
+  }
+
+  /// Builds a standalone router handling the files verbs at relative paths
+  /// (e.g. for `Router.mount('/api/v0/files/', ...)`).
+  Handler get filesHandler {
+    final router = Router()
+      ..post('/ls', handleFilesLs)
+      ..post('/stat', handleFilesStat)
+      ..post('/read', handleFilesRead)
+      ..post('/write', handleFilesWrite)
+      ..post('/mkdir', handleFilesMkdir)
+      ..post('/cp', handleFilesCp)
+      ..post('/mv', handleFilesMv)
+      ..post('/rm', handleFilesRm)
+      ..post('/flush', handleFilesFlush)
+      ..post('/chcid', handleFilesChcid)
+      ..post('/touch', handleFilesTouch)
+      ..post('/mtime', handleFilesTouch)
+      ..post('/chmod', handleFilesChmod);
+    return router.call;
+  }
 
   Response? _checkDenylistForPath(String path) {
     final service = node.denylistService;
@@ -47,18 +91,25 @@ class MFSHandlers {
 
   /// POST /api/v0/files/ls
   ///
-  /// Query parameters: `arg` (path), `long`, `U` (unsorted).
+  /// Query parameters: `arg` (path, MFS or `/ipfs/<cid>`), `long`, `U`
+  /// (unsorted). Kubo returns `{"Entries": [...]}`; without `long` each
+  /// entry carries only its `Name`.
   Future<Response> handleFilesLs(Request request) async {
-    final path = _singleArg(request) ?? '/';
+    final rawPath = _singleArg(request) ?? '/';
+    final path = _contentOrMfsPath(rawPath);
+    if (path == null) {
+      return _errorResponse(
+        'paths must start with a leading slash: $rawPath',
+        code: 400,
+      );
+    }
     final long = _boolParam(request, 'long');
     final u = _boolParam(request, 'U');
 
     try {
       final entries = await node.mfs.ls(path, long: long, u: u);
-      final stat = await node.mfs.stat(path);
       return _jsonResponse({
         'Entries': entries.map((e) => e.toJson()).toList(),
-        'Hash': stat.hash,
       });
     } catch (e, st) {
       _logger.error('files/ls failed for path: $path', e, st);
@@ -68,20 +119,26 @@ class MFSHandlers {
 
   /// POST /api/v0/files/stat
   ///
-  /// Query parameters: `arg`, `with-local`, `hash`, `size`, `cid-base`.
+  /// Query parameters: `arg` (MFS or `/ipfs/<cid>` path), `with-local`,
+  /// `cid-base`. Kubo's `hash`/`size` flags only change the CLI text format;
+  /// the RPC response is always the full stat object, so they are accepted
+  /// and ignored here.
   Future<Response> handleFilesStat(Request request) async {
-    final path = _singleArg(request) ?? '/';
+    final rawPath = _singleArg(request) ?? '/';
+    final path = _contentOrMfsPath(rawPath);
+    if (path == null) {
+      return _errorResponse(
+        'paths must start with a leading slash: $rawPath',
+        code: 400,
+      );
+    }
     final withLocal = _boolParam(request, 'with-local');
-    final hash = _boolParam(request, 'hash');
-    final size = _boolParam(request, 'size');
     final cidBase = request.url.queryParameters['cid-base'];
 
     try {
       final stat = await node.mfs.stat(
         path,
         withLocal: withLocal,
-        hash: hash,
-        size: size,
         cidBase: cidBase,
       );
       return _jsonResponse(stat.toJson());
@@ -95,9 +152,16 @@ class MFSHandlers {
   ///
   /// Query parameters: `arg`, `offset`, `count`.
   Future<Response> handleFilesRead(Request request) async {
-    final path = _singleArg(request);
+    final rawPath = _singleArg(request);
+    if (rawPath == null) {
+      return _errorResponse('argument "path" is required', code: 400);
+    }
+    final path = _contentOrMfsPath(rawPath);
     if (path == null) {
-      return _errorResponse('Missing argument: path');
+      return _errorResponse(
+        'paths must start with a leading slash: $rawPath',
+        code: 400,
+      );
     }
 
     final offset = _intParam(request, 'offset');
@@ -122,22 +186,32 @@ class MFSHandlers {
 
   /// POST /api/v0/files/write
   ///
-  /// Query parameters: `arg` (path), `create`, `offset`, `truncate`, `count`,
-  /// `raw-leaves`, `cid-version`, `hash`.
+  /// Query parameters: `arg` (path), `create`, `parents`, `offset`,
+  /// `truncate`, `count`, `raw-leaves`, `cid-version`, `hash`, `mode`,
+  /// `mtime`, `mtime-nsecs`.
   /// The request body is multipart/form-data with the file content.
   Future<Response> handleFilesWrite(Request request) async {
-    final path = _singleArg(request);
+    final path = _mfsPath(_singleArg(request));
     if (path == null) {
-      return _errorResponse('Missing argument: path');
+      return _errorResponse(
+        'argument "path" is required and must be an absolute MFS path',
+        code: 400,
+      );
     }
 
-    final create = _boolParam(request, 'create', defaultValue: true);
+    // Kubo defaults: --create and --truncate are both false; writing a
+    // missing file without `create` is an error.
+    final create = _boolParam(request, 'create');
+    final parents = _boolParam(request, 'parents');
     final offset = _intParam(request, 'offset');
-    final truncate = _boolParam(request, 'truncate', defaultValue: true);
+    final truncate = _boolParam(request, 'truncate');
     final count = _intParam(request, 'count');
     final rawLeaves = _boolParam(request, 'raw-leaves');
     final cidVersion = _intParam(request, 'cid-version');
     final hash = request.url.queryParameters['hash'];
+    final mode = _modeParam(request);
+    final mtimeSecs = _intParam(request, 'mtime');
+    final mtimeNsecs = _intParam(request, 'mtime-nsecs');
 
     final invalid = _validateOffsetCount(offset, count);
     if (invalid != null) {
@@ -145,6 +219,15 @@ class MFSHandlers {
     }
     if (cidVersion != null && (cidVersion < 0 || cidVersion > 1)) {
       return _errorResponse('Invalid cid-version: $cidVersion', code: 400);
+    }
+    if (mtimeNsecs != null && (mtimeNsecs < 0 || mtimeNsecs >= 1000000000)) {
+      return _errorResponse('Invalid mtime-nsecs: $mtimeNsecs', code: 400);
+    }
+    if (request.url.queryParameters.containsKey('mode') && mode == null) {
+      return _errorResponse(
+        'Invalid mode: ${request.url.queryParameters['mode']}',
+        code: 400,
+      );
     }
 
     if (!request.headers.containsKey('content-type')) {
@@ -188,9 +271,13 @@ class MFSHandlers {
         offset: offset,
         truncate: truncate,
         count: count,
+        parents: parents,
         rawLeaves: rawLeaves,
         cidVersion: cidVersion,
         hash: hash,
+        mode: mode,
+        mtimeSecs: mtimeSecs,
+        mtimeNsecs: mtimeNsecs,
       );
 
       return Response.ok('');
@@ -202,20 +289,36 @@ class MFSHandlers {
 
   /// POST /api/v0/files/mkdir
   ///
-  /// Query parameters: `arg`, `parents`, `recursive`, `cid-version`, `hash`.
+  /// Query parameters: `arg`, `parents`, `recursive`, `cid-version`, `hash`,
+  /// `mode`, `mtime`, `mtime-nsecs`.
   Future<Response> handleFilesMkdir(Request request) async {
-    final path = _singleArg(request);
+    final path = _mfsPath(_singleArg(request));
     if (path == null) {
-      return _errorResponse('Missing argument: path');
+      return _errorResponse(
+        'argument "path" is required and must be an absolute MFS path',
+        code: 400,
+      );
     }
 
     final parents = _boolParam(request, 'parents');
     final recursive = _boolParam(request, 'recursive');
     final cidVersion = _intParam(request, 'cid-version');
     final hash = request.url.queryParameters['hash'];
+    final mode = _modeParam(request);
+    final mtimeSecs = _intParam(request, 'mtime');
+    final mtimeNsecs = _intParam(request, 'mtime-nsecs');
 
     if (cidVersion != null && (cidVersion < 0 || cidVersion > 1)) {
       return _errorResponse('Invalid cid-version: $cidVersion', code: 400);
+    }
+    if (mtimeNsecs != null && (mtimeNsecs < 0 || mtimeNsecs >= 1000000000)) {
+      return _errorResponse('Invalid mtime-nsecs: $mtimeNsecs', code: 400);
+    }
+    if (request.url.queryParameters.containsKey('mode') && mode == null) {
+      return _errorResponse(
+        'Invalid mode: ${request.url.queryParameters['mode']}',
+        code: 400,
+      );
     }
 
     try {
@@ -225,6 +328,9 @@ class MFSHandlers {
         parents: parents,
         cidVersion: cidVersion,
         hash: hash,
+        mode: mode,
+        mtimeSecs: mtimeSecs,
+        mtimeNsecs: mtimeNsecs,
       );
       return Response.ok('');
     } catch (e, st) {
@@ -235,80 +341,132 @@ class MFSHandlers {
 
   /// POST /api/v0/files/cp
   ///
-  /// Query parameters: two `arg` values (source, destination).
+  /// Query parameters: two `arg` values (source, destination), `force`,
+  /// `parents`. The source may be an MFS path, `/ipfs/<cid>[/sub/path]` or
+  /// an `ipfs://` URI; the destination must be an absolute MFS path.
   Future<Response> handleFilesCp(Request request) async {
     final args = _allArgs(request);
     if (args.length < 2) {
-      return _errorResponse('Missing arguments: source and destination');
+      return _errorResponse(
+        'argument "source" and "destination" are required',
+        code: 400,
+      );
     }
 
-    final blocked = _checkDenylistForPath(args[0]);
+    final src = _contentOrMfsPath(args[0]);
+    final dst = _mfsPath(args[1]);
+    if (src == null || dst == null) {
+      return _errorResponse(
+        'paths must start with a leading slash',
+        code: 400,
+      );
+    }
+
+    final force = _boolParam(request, 'force');
+    final parents = _boolParam(request, 'parents');
+
+    final blocked = _checkDenylistForPath(src);
     if (blocked != null) {
       return blocked;
     }
 
     try {
-      await node.mfs.cp(args[0], args[1]);
+      await node.mfs.cp(src, dst, force: force, parents: parents);
       return Response.ok('');
     } catch (e, st) {
-      _logger.error('files/cp failed: ${args[0]} -> ${args[1]}', e, st);
+      _logger.error('files/cp failed: $src -> $dst', e, st);
       return _errorResponse('files/cp failed: $e');
     }
   }
 
   /// POST /api/v0/files/mv
   ///
-  /// Query parameters: two `arg` values (source, destination).
+  /// Query parameters: two `arg` values (source, destination), both absolute
+  /// MFS paths.
   Future<Response> handleFilesMv(Request request) async {
     final args = _allArgs(request);
     if (args.length < 2) {
-      return _errorResponse('Missing arguments: source and destination');
+      return _errorResponse(
+        'argument "source" and "destination" are required',
+        code: 400,
+      );
     }
 
-    final blocked = _checkDenylistForPath(args[0]);
+    final src = _mfsPath(args[0]);
+    final dst = _mfsPath(args[1]);
+    if (src == null || dst == null) {
+      return _errorResponse(
+        'paths must start with a leading slash',
+        code: 400,
+      );
+    }
+
+    final blocked = _checkDenylistForPath(src);
     if (blocked != null) {
       return blocked;
     }
 
     try {
-      await node.mfs.mv(args[0], args[1]);
+      await node.mfs.mv(src, dst);
       return Response.ok('');
     } catch (e, st) {
-      _logger.error('files/mv failed: ${args[0]} -> ${args[1]}', e, st);
+      _logger.error('files/mv failed: $src -> $dst', e, st);
       return _errorResponse('files/mv failed: $e');
     }
   }
 
   /// POST /api/v0/files/rm
   ///
-  /// Query parameters: `arg`, `recursive`, `force`.
+  /// Query parameters: one or more `arg` values (Kubo `files rm` is
+  /// variadic), `recursive`, `force`.
   Future<Response> handleFilesRm(Request request) async {
-    final path = _singleArg(request);
-    if (path == null) {
-      return _errorResponse('Missing argument: path');
+    final args = _allArgs(request);
+    if (args.isEmpty) {
+      return _errorResponse('argument "path" is required', code: 400);
     }
 
     final recursive = _boolParam(request, 'recursive');
     final force = _boolParam(request, 'force');
 
-    try {
-      await node.mfs.rm(path, recursive: recursive, force: force);
-      return Response.ok('');
-    } catch (e, st) {
-      _logger.error('files/rm failed for path: $path', e, st);
-      return _errorResponse('files/rm failed: $e');
+    final errors = <String>[];
+    for (final arg in args) {
+      final path = _mfsPath(arg);
+      if (path == null) {
+        errors.add('$arg is not a valid path');
+        continue;
+      }
+      try {
+        await node.mfs.rm(path, recursive: recursive, force: force);
+      } catch (e) {
+        errors.add('$path: $e');
+      }
     }
+    if (errors.isNotEmpty) {
+      _logger.error('files/rm failed: ${errors.join('; ')}');
+      return _errorResponse(
+        "can't remove some files: ${errors.join('; ')}",
+      );
+    }
+    return Response.ok('');
   }
 
   /// POST /api/v0/files/flush
   ///
-  /// Query parameters: `arg` (default `/`).
+  /// Query parameters: `arg` (default `/`). Returns `{"Cid": "<cid>"}` with
+  /// the CID of the flushed path (the root CID for `/`), matching Kubo.
   Future<Response> handleFilesFlush(Request request) async {
-    final path = _singleArg(request) ?? '/';
+    final rawPath = _singleArg(request) ?? '/';
+    final path = _mfsPath(rawPath);
+    if (path == null) {
+      return _errorResponse(
+        'paths must start with a leading slash: $rawPath',
+        code: 400,
+      );
+    }
 
     try {
-      final rootCid = await node.mfs.flush(path: path);
-      return _jsonResponse({'Hash': rootCid.encode()});
+      final cid = await node.mfs.flush(path: path);
+      return _jsonResponse({'Cid': cid.encode()});
     } catch (e, st) {
       _logger.error('files/flush failed for path: $path', e, st);
       return _errorResponse('files/flush failed: $e');
@@ -317,11 +475,15 @@ class MFSHandlers {
 
   /// POST /api/v0/files/chcid
   ///
-  /// Query parameters: `arg`, `cid-version`, `hash`.
+  /// Query parameters: `arg` (must not be `/`; directories only in Kubo),
+  /// `cid-version`, `hash`.
   Future<Response> handleFilesChcid(Request request) async {
-    final path = _singleArg(request);
+    final path = _mfsPath(_singleArg(request));
     if (path == null) {
-      return _errorResponse('Missing argument: path');
+      return _errorResponse(
+        'argument "path" is required and must be an absolute MFS path',
+        code: 400,
+      );
     }
 
     final cidVersion = _intParam(request, 'cid-version');
@@ -340,6 +502,81 @@ class MFSHandlers {
     }
   }
 
+  /// POST /api/v0/files/touch
+  ///
+  /// Sets the modification time on an MFS path (UnixFS 1.5). Query
+  /// parameters: `arg` (path), `mtime` (seconds), `mtime-nsecs`. Without
+  /// `mtime` the current time is applied.
+  Future<Response> handleFilesTouch(Request request) async {
+    final path = _mfsPath(_singleArg(request));
+    if (path == null) {
+      return _errorResponse(
+        'argument "path" is required and must be an absolute MFS path',
+        code: 400,
+      );
+    }
+
+    final mtimeSecs = _intParam(request, 'mtime');
+    final mtimeNsecs = _intParam(request, 'mtime-nsecs');
+
+    if (mtimeNsecs != null && (mtimeNsecs < 0 || mtimeNsecs >= 1000000000)) {
+      return _errorResponse('Invalid mtime-nsecs: $mtimeNsecs', code: 400);
+    }
+
+    try {
+      await node.mfs.touch(
+        path,
+        mtimeSecs: mtimeSecs,
+        mtimeNsecs: mtimeNsecs,
+      );
+      return Response.ok('');
+    } catch (e, st) {
+      _logger.error('files/touch failed for path: $path', e, st);
+      return _errorResponse('files/touch failed: $e');
+    }
+  }
+
+  /// POST /api/v0/files/mtime
+  ///
+  /// Alias for [handleFilesTouch] — sets the modification time on an MFS
+  /// path. Accepts the same `arg`, `mtime`, `mtime-nsecs` parameters.
+  Future<Response> handleFilesMtime(Request request) =>
+      handleFilesTouch(request);
+
+  /// POST /api/v0/files/chmod
+  ///
+  /// Query parameters: two `arg` values (mode in numeric notation, path).
+  Future<Response> handleFilesChmod(Request request) async {
+    final args = _allArgs(request);
+    if (args.length < 2) {
+      return _errorResponse(
+        'argument "mode" and "path" are required',
+        code: 400,
+      );
+    }
+
+    final mode = _parseMode(args[0]);
+    if (mode == null) {
+      return _errorResponse('Invalid mode: ${args[0]}', code: 400);
+    }
+
+    final path = _mfsPath(args[1]);
+    if (path == null) {
+      return _errorResponse(
+        'paths must start with a leading slash: ${args[1]}',
+        code: 400,
+      );
+    }
+
+    try {
+      await node.mfs.chmod(path, mode);
+      return Response.ok('');
+    } catch (e, st) {
+      _logger.error('files/chmod failed for path: $path', e, st);
+      return _errorResponse('files/chmod failed: $e');
+    }
+  }
+
   // --------------------------------------------------------------------------
   // Helper methods
   // --------------------------------------------------------------------------
@@ -354,9 +591,32 @@ class MFSHandlers {
     return request.url.queryParametersAll['arg'] ?? [];
   }
 
+  /// Validates an MFS-only path argument the way Kubo's `checkPath` does:
+  /// it must be non-empty and start with a leading slash. Returns null when
+  /// invalid.
+  String? _mfsPath(String? arg) {
+    if (arg == null || arg.isEmpty || !arg.startsWith('/')) return null;
+    return arg;
+  }
+
+  /// Validates an argument that may be an MFS path or a content path, like
+  /// Kubo's `checkContentOrMfsPath`: `/ipfs/...` (and `ipfs://`/`ipns://`
+  /// URIs, rewritten to canonical path form) alongside absolute MFS paths.
+  /// Returns null when the argument is not an acceptable path.
+  String? _contentOrMfsPath(String? arg) {
+    if (arg == null || arg.isEmpty) return null;
+    if (arg.startsWith('ipfs://')) return '/ipfs/${arg.substring(7)}';
+    if (arg.startsWith('ipns://')) return '/ipns/${arg.substring(7)}';
+    if (!arg.startsWith('/')) return null;
+    return arg;
+  }
+
+  /// Parses a Kubo-style boolean query option. A present-but-empty value
+  /// (`?flag=`) counts as `true`, matching Kubo's option parsing.
   bool _boolParam(Request request, String name, {bool defaultValue = false}) {
     final value = request.url.queryParameters[name];
     if (value == null) return defaultValue;
+    if (value.isEmpty) return true;
     return value == 'true' || value == '1';
   }
 
@@ -364,6 +624,39 @@ class MFSHandlers {
     final value = request.url.queryParameters[name];
     if (value == null || value.isEmpty) return null;
     return int.tryParse(value);
+  }
+
+  /// Parses the `mode` query parameter (POSIX numeric mode). Accepts octal
+  /// (`0644`, `644`) or `0o644`/`0x1a4` style values.
+  int? _modeParam(Request request) {
+    final value = request.url.queryParameters['mode'];
+    if (value == null) return null;
+    return _parseMode(value);
+  }
+
+  /// Parses a POSIX mode string. Modes are conventionally octal; a leading
+  /// `0` or an explicit `0o`/`0x` prefix is honored, otherwise the value is
+  /// treated as octal when all digits are valid octal digits and decimal
+  /// otherwise — matching `ipfs files chmod` numeric notation.
+  static int? _parseMode(String value) {
+    var v = value.trim();
+    if (v.isEmpty) return null;
+    if (v.startsWith('0x') || v.startsWith('0X')) {
+      return int.tryParse(v.substring(2), radix: 16);
+    }
+    if (v.startsWith('0o') || v.startsWith('0O')) {
+      return int.tryParse(v.substring(2), radix: 8);
+    }
+    if (v.startsWith('0') && v.length > 1) {
+      return int.tryParse(v, radix: 8);
+    }
+    // Prefer octal when the digits are all valid octal digits (POSIX mode
+    // convention: 644 means 0644), falling back to decimal for values like
+    // '999' that cannot be octal.
+    if (RegExp(r'^[0-7]+$').hasMatch(v)) {
+      return int.tryParse(v, radix: 8);
+    }
+    return int.tryParse(v);
   }
 
   String? _getBoundary(String contentType) {

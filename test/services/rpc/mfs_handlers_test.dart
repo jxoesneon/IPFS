@@ -2,15 +2,15 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:mockito/mockito.dart';
-import 'package:shelf/shelf.dart';
-import 'package:test/test.dart';
-
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/mfs/mfs_manager.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/services/rpc/mfs_handlers.dart';
+import 'package:mockito/mockito.dart';
+import 'package:shelf/shelf.dart';
+import 'package:shelf_router/shelf_router.dart';
+import 'package:test/test.dart';
 
 class FakeMFSManager extends Fake implements MFSManager {
   FakeMFSManager({this.lsResult = const [], this.statResult, this.readBytes});
@@ -19,13 +19,16 @@ class FakeMFSManager extends Fake implements MFSManager {
   MFSStat? statResult;
   List<int>? readBytes;
 
-  final List<_WriteCall> writes = [];
+  final List<WriteCall> writes = [];
   String lastMkdirPath = '';
   String lastCpSrc = '';
   String lastCpDst = '';
+  bool lastCpForce = false;
+  bool lastCpParents = false;
   String lastMvSrc = '';
   String lastMvDst = '';
   String lastRmPath = '';
+  final List<String> rmCalls = [];
   String lastFlushPath = '';
   String lastChcidPath = '';
   int? lastChcidVersion;
@@ -50,8 +53,6 @@ class FakeMFSManager extends Fake implements MFSManager {
   Future<MFSStat> stat(
     String path, {
     bool withLocal = false,
-    bool? hash,
-    bool? size,
     String? cidBase,
   }) async {
     _throwIfNeeded();
@@ -93,27 +94,35 @@ class FakeMFSManager extends Fake implements MFSManager {
   Future<void> write(
     String path,
     Stream<List<int>> data, {
-    bool create = true,
+    bool create = false,
     int? offset,
-    bool truncate = true,
+    bool truncate = false,
     int? count,
+    bool parents = false,
     int? cidVersion,
     bool? rawLeaves,
     String? hash,
+    int? mode,
+    int? mtimeSecs,
+    int? mtimeNsecs,
   }) async {
     final bytes = await data.expand((b) => b).toList();
     _throwIfNeeded();
     writes.add(
-      _WriteCall(
+      WriteCall(
         path: path,
         bytes: Uint8List.fromList(bytes),
         create: create,
         offset: offset,
         truncate: truncate,
         count: count,
+        parents: parents,
         cidVersion: cidVersion,
         rawLeaves: rawLeaves,
         hash: hash,
+        mode: mode,
+        mtimeSecs: mtimeSecs,
+        mtimeNsecs: mtimeNsecs,
       ),
     );
   }
@@ -125,15 +134,25 @@ class FakeMFSManager extends Fake implements MFSManager {
     bool parents = false,
     int? cidVersion,
     String? hash,
+    int? mode,
+    int? mtimeSecs,
+    int? mtimeNsecs,
   }) async {
     lastMkdirPath = path;
     _throwIfNeeded();
   }
 
   @override
-  Future<void> cp(String src, String dst) async {
+  Future<void> cp(
+    String src,
+    String dst, {
+    bool force = false,
+    bool parents = false,
+  }) async {
     lastCpSrc = src;
     lastCpDst = dst;
+    lastCpForce = force;
+    lastCpParents = parents;
     _throwIfNeeded();
   }
 
@@ -151,6 +170,7 @@ class FakeMFSManager extends Fake implements MFSManager {
     bool force = false,
   }) async {
     lastRmPath = path;
+    rmCalls.add(path);
     _throwIfNeeded();
   }
 
@@ -172,19 +192,62 @@ class FakeMFSManager extends Fake implements MFSManager {
     lastChcidHash = hash;
     _throwIfNeeded();
   }
+
+  String lastTouchPath = '';
+  int? lastTouchSecs;
+  int? lastTouchNsecs;
+  String lastChmodPath = '';
+  int? lastChmodMode;
+
+  @override
+  Future<void> touch(
+    String path, {
+    int? mtimeSecs,
+    int? mtimeNsecs,
+  }) async {
+    lastTouchPath = path;
+    lastTouchSecs = mtimeSecs;
+    lastTouchNsecs = mtimeNsecs;
+    _throwIfNeeded();
+  }
+
+  @override
+  Future<void> mtime(
+    String path, {
+    int? mtimeSecs,
+    int? mtimeNsecs,
+  }) async {
+    lastTouchPath = path;
+    lastTouchSecs = mtimeSecs;
+    lastTouchNsecs = mtimeNsecs;
+    _throwIfNeeded();
+  }
+
+  @override
+  Future<void> chmod(String path, int mode) async {
+    lastChmodPath = path;
+    lastChmodMode = mode;
+    _throwIfNeeded();
+  }
 }
 
-class _WriteCall {
-  _WriteCall({
+/// Recorded invocation of [MFSManager.write] on [FakeMFSManager].
+class WriteCall {
+  /// Creates a record of a single `write` call.
+  WriteCall({
     required this.path,
     required this.bytes,
     required this.create,
     required this.offset,
     required this.truncate,
     required this.count,
+    required this.parents,
     required this.cidVersion,
     required this.rawLeaves,
     required this.hash,
+    required this.mode,
+    required this.mtimeSecs,
+    required this.mtimeNsecs,
   });
 
   final String path;
@@ -193,9 +256,13 @@ class _WriteCall {
   final int? offset;
   final bool truncate;
   final int? count;
+  final bool parents;
   final int? cidVersion;
   final bool? rawLeaves;
   final String? hash;
+  final int? mode;
+  final int? mtimeSecs;
+  final int? mtimeNsecs;
 }
 
 class FakeDenylistService extends Fake implements DenylistService {
@@ -228,18 +295,16 @@ class FakeIPFSNode extends Fake implements IPFSNode {
   final DenylistService? denylistService;
 }
 
-MFSStat _makeStat({bool? hash, bool? size}) => MFSStat(
+MFSStat _makeStat() => MFSStat(
   hash: 'QmStat',
   size: 42,
   cumulativeSize: 100,
   blocks: 1,
   type: 'file',
-  hashOnly: hash,
-  sizeOnly: size,
 );
 
 MFSListEntry _makeEntry(String name) =>
-    MFSListEntry(name: name, type: 2, size: 10, hash: 'QmEntry');
+    MFSListEntry(name: name, type: 0, size: 10, hash: 'QmEntry');
 
 void main() {
   group('MFSHandlers', () {
@@ -259,7 +324,7 @@ void main() {
       );
     });
 
-    test('handleFilesLs returns entries and hash', () async {
+    test('handleFilesLs returns Kubo Entries shape', () async {
       final request = Request(
         'POST',
         Uri.parse('http://localhost/api/v0/files/ls?arg=/&long=true&U=true'),
@@ -267,8 +332,18 @@ void main() {
       final response = await handlers.handleFilesLs(request);
       expect(response.statusCode, equals(200));
       final body = json.decode(await response.readAsString());
+      // Kubo `files ls` returns only {"Entries": [...]}.
       expect(body['Entries'], hasLength(1));
-      expect(body['Hash'], equals('QmStat'));
+      expect(body.containsKey('Hash'), isFalse);
+    });
+
+    test('handleFilesLs rejects a relative path', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/ls?arg=relative'),
+      );
+      final response = await handlers.handleFilesLs(request);
+      expect(response.statusCode, equals(400));
     });
 
     test('handleFilesLs error path', () async {
@@ -294,11 +369,15 @@ void main() {
       expect(response.statusCode, equals(200));
       final body = json.decode(await response.readAsString());
       expect(body['Hash'], equals('QmStat'));
-      expect(body['WithLocal'], isTrue);
+      expect(body['WithLocality'], isTrue);
+      expect(body['Local'], isTrue);
+      expect(body['SizeLocal'], isA<int>());
     });
 
-    test('handleFilesStat hash only flag', () async {
-      fakeMfs.statResult = _makeStat(hash: true);
+    test('handleFilesStat hash flag still returns the full object', () async {
+      // Kubo's --hash/--size flags only change the CLI text format; the RPC
+      // JSON response is always the full stat object.
+      fakeMfs.statResult = _makeStat();
       final request = Request(
         'POST',
         Uri.parse('http://localhost/api/v0/files/stat?arg=/&hash=true'),
@@ -306,7 +385,16 @@ void main() {
       final response = await handlers.handleFilesStat(request);
       final body = json.decode(await response.readAsString());
       expect(body['Hash'], equals('QmStat'));
-      expect(body.containsKey('Size'), isFalse);
+      expect(body['Size'], equals(42));
+    });
+
+    test('handleFilesStat rejects a relative path', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/stat?arg=noslash'),
+      );
+      final response = await handlers.handleFilesStat(request);
+      expect(response.statusCode, equals(400));
     });
 
     test('handleFilesStat error path', () async {
@@ -338,9 +426,9 @@ void main() {
         Uri.parse('http://localhost/api/v0/files/read'),
       );
       final response = await handlers.handleFilesRead(request);
-      expect(response.statusCode, equals(500));
+      expect(response.statusCode, equals(400));
       final body = json.decode(await response.readAsString());
-      expect(body['Message'], contains('Missing argument'));
+      expect(body['Message'], contains('argument'));
     });
 
     test('handleFilesRead invalid offset/count', () async {
@@ -392,7 +480,20 @@ void main() {
         Uri.parse('http://localhost/api/v0/files/write'),
       );
       final response = await handlers.handleFilesWrite(request);
-      expect(response.statusCode, equals(500));
+      expect(response.statusCode, equals(400));
+      expect(fakeMfs.writes, isEmpty);
+    });
+
+    test('handleFilesWrite relative path rejected', () async {
+      const boundary = 'boundary';
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/write?arg=rel.txt'),
+        headers: {'content-type': 'multipart/form-data; boundary=$boundary'},
+        body: '--$boundary\r\n\r\nx\r\n--$boundary--\r\n',
+      );
+      final response = await handlers.handleFilesWrite(request);
+      expect(response.statusCode, equals(400));
       expect(fakeMfs.writes, isEmpty);
     });
 
@@ -492,7 +593,7 @@ void main() {
         Uri.parse('http://localhost/api/v0/files/mkdir'),
       );
       final response = await handlers.handleFilesMkdir(request);
-      expect(response.statusCode, equals(500));
+      expect(response.statusCode, equals(400));
     });
 
     test('handleFilesMkdir invalid cid-version', () async {
@@ -533,7 +634,7 @@ void main() {
         Uri.parse('http://localhost/api/v0/files/cp?arg=/src'),
       );
       final response = await handlers.handleFilesCp(request);
-      expect(response.statusCode, equals(500));
+      expect(response.statusCode, equals(400));
     });
 
     test('handleFilesCp blocked path returns 451', () async {
@@ -606,7 +707,7 @@ void main() {
         Uri.parse('http://localhost/api/v0/files/mv?arg=/src'),
       );
       final response = await handlers.handleFilesMv(request);
-      expect(response.statusCode, equals(500));
+      expect(response.statusCode, equals(400));
     });
 
     test('handleFilesMv error path', () async {
@@ -637,7 +738,31 @@ void main() {
         Uri.parse('http://localhost/api/v0/files/rm'),
       );
       final response = await handlers.handleFilesRm(request);
+      expect(response.statusCode, equals(400));
+    });
+
+    test('handleFilesRm removes multiple paths', () async {
+      // Kubo `files rm` is variadic: multiple `arg` values are removed.
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/rm?arg=/a&arg=/b'),
+      );
+      final response = await handlers.handleFilesRm(request);
+      expect(response.statusCode, equals(200));
+      expect(fakeMfs.rmCalls, equals(['/a', '/b']));
+    });
+
+    test('handleFilesRm reports per-path failures', () async {
+      fakeMfs.shouldThrow = true;
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/rm?arg=/a&arg=/b'),
+      );
+      final response = await handlers.handleFilesRm(request);
       expect(response.statusCode, equals(500));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('/a'));
+      expect(body['Message'], contains('/b'));
     });
 
     test('handleFilesRm error path', () async {
@@ -650,6 +775,17 @@ void main() {
       expect(response.statusCode, equals(500));
     });
 
+    test('handleFilesRm rejects a relative path', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/rm?arg=relfile'),
+      );
+      final response = await handlers.handleFilesRm(request);
+      expect(response.statusCode, equals(500));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('not a valid path'));
+    });
+
     test('handleFilesFlush success', () async {
       final request = Request(
         'POST',
@@ -658,10 +794,12 @@ void main() {
       final response = await handlers.handleFilesFlush(request);
       expect(response.statusCode, equals(200));
       final body = json.decode(await response.readAsString());
+      // Kubo `files flush` returns {"Cid": "<cid>"}.
       expect(
-        body['Hash'],
+        body['Cid'],
         equals('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
       );
+      expect(body.keys, equals(['Cid']));
     });
 
     test('handleFilesFlush error path', () async {
@@ -693,7 +831,7 @@ void main() {
         Uri.parse('http://localhost/api/v0/files/chcid'),
       );
       final response = await handlers.handleFilesChcid(request);
-      expect(response.statusCode, equals(500));
+      expect(response.statusCode, equals(400));
     });
 
     test('handleFilesChcid invalid cid-version', () async {
@@ -715,6 +853,176 @@ void main() {
       );
       final response = await handlers.handleFilesChcid(request);
       expect(response.statusCode, equals(500));
+    });
+
+    test('handleFilesWrite forwards parents/mode/mtime options', () async {
+      const boundary = 'boundary';
+      final request = Request(
+        'POST',
+        Uri.parse(
+          'http://localhost/api/v0/files/write'
+          '?arg=/dir/file&parents=true&mode=0644&mtime=1700000000&mtime-nsecs=5',
+        ),
+        headers: {'content-type': 'multipart/form-data; boundary=$boundary'},
+        body: '--$boundary\r\n\r\ndata\r\n--$boundary--\r\n',
+      );
+      final response = await handlers.handleFilesWrite(request);
+      expect(response.statusCode, equals(200));
+      final w = fakeMfs.writes.single;
+      expect(w.parents, isTrue);
+      expect(w.mode, equals(0x1A4)); // 0644
+      expect(w.mtimeSecs, equals(1700000000));
+      expect(w.mtimeNsecs, equals(5));
+    });
+
+    test('handleFilesWrite invalid mode', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/write?arg=/t&mode=zzz'),
+      );
+      final response = await handlers.handleFilesWrite(request);
+      expect(response.statusCode, equals(400));
+    });
+
+    test('handleFilesWrite invalid mtime-nsecs', () async {
+      final request = Request(
+        'POST',
+        Uri.parse(
+          'http://localhost/api/v0/files/write?arg=/t&mtime-nsecs=1000000000',
+        ),
+      );
+      final response = await handlers.handleFilesWrite(request);
+      expect(response.statusCode, equals(400));
+    });
+
+    test('handleFilesCp forwards force and parents', () async {
+      final request = Request(
+        'POST',
+        Uri.parse(
+          'http://localhost/api/v0/files/cp?arg=/src&arg=/dst&force=true&parents=true',
+        ),
+      );
+      final response = await handlers.handleFilesCp(request);
+      expect(response.statusCode, equals(200));
+      expect(fakeMfs.lastCpForce, isTrue);
+      expect(fakeMfs.lastCpParents, isTrue);
+    });
+
+    test('handleFilesTouch sets mtime', () async {
+      final request = Request(
+        'POST',
+        Uri.parse(
+          'http://localhost/api/v0/files/touch?arg=/file&mtime=1700000000&mtime-nsecs=12',
+        ),
+      );
+      final response = await handlers.handleFilesTouch(request);
+      expect(response.statusCode, equals(200));
+      expect(fakeMfs.lastTouchPath, equals('/file'));
+      expect(fakeMfs.lastTouchSecs, equals(1700000000));
+      expect(fakeMfs.lastTouchNsecs, equals(12));
+    });
+
+    test('handleFilesTouch defaults to now', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/touch?arg=/file'),
+      );
+      final response = await handlers.handleFilesTouch(request);
+      expect(response.statusCode, equals(200));
+      expect(fakeMfs.lastTouchPath, equals('/file'));
+      expect(fakeMfs.lastTouchSecs, isNull);
+    });
+
+    test('handleFilesTouch missing path', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/touch'),
+      );
+      final response = await handlers.handleFilesTouch(request);
+      expect(response.statusCode, equals(400));
+    });
+
+    test('handleFilesTouch invalid mtime-nsecs', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/touch?arg=/f&mtime-nsecs=-1'),
+      );
+      final response = await handlers.handleFilesTouch(request);
+      expect(response.statusCode, equals(400));
+    });
+
+    test('handleFilesMtime is an alias for touch', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/mtime?arg=/file&mtime=42'),
+      );
+      final response = await handlers.handleFilesMtime(request);
+      expect(response.statusCode, equals(200));
+      expect(fakeMfs.lastTouchPath, equals('/file'));
+      expect(fakeMfs.lastTouchSecs, equals(42));
+    });
+
+    test('handleFilesChmod sets mode from octal notation', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/chmod?arg=0755&arg=/file'),
+      );
+      final response = await handlers.handleFilesChmod(request);
+      expect(response.statusCode, equals(200));
+      expect(fakeMfs.lastChmodPath, equals('/file'));
+      expect(fakeMfs.lastChmodMode, equals(0x1ED)); // 0755
+    });
+
+    test('handleFilesChmod missing args', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/chmod?arg=0755'),
+      );
+      final response = await handlers.handleFilesChmod(request);
+      expect(response.statusCode, equals(400));
+    });
+
+    test('handleFilesChmod invalid mode', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/chmod?arg=xyz&arg=/file'),
+      );
+      final response = await handlers.handleFilesChmod(request);
+      expect(response.statusCode, equals(400));
+    });
+
+    test('registerOn registers all files verbs', () async {
+      final router = Router();
+      handlers.registerOn(router);
+      final verbs = [
+        'ls',
+        'stat',
+        'read',
+        'write',
+        'mkdir',
+        'cp',
+        'mv',
+        'rm',
+        'flush',
+        'chcid',
+        'touch',
+        'mtime',
+        'chmod',
+      ];
+      for (final verb in verbs) {
+        // Each registered route must respond (with an argument/handler
+        // error), not fall through to the router's 404 notFound.
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/files/$verb'),
+        );
+        final response = await router.call(request);
+        expect(
+          response.statusCode,
+          isNot(equals(404)),
+          reason: 'files/$verb must be registered',
+        );
+      }
     });
   });
 }
