@@ -194,6 +194,31 @@ void main() {
       expect(response.statusCode, equals(200));
     });
 
+    test('handleCat returns error when arg is only slashes', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/cat?arg=/'),
+      );
+      final response = await handlers.handleCat(request);
+      expect(response.statusCode, equals(500));
+      expect(await response.readAsString(), contains('Missing argument'));
+    });
+
+    test('handleCat returns error when node.get throws', () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(
+        mockNode.get(cid, path: ''),
+      ).thenAnswer((_) async => throw StateError('backend down'));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/cat?arg=$cid'),
+      );
+      final response = await handlers.handleCat(request);
+      expect(response.statusCode, equals(500));
+      expect(await response.readAsString(), contains('Cat failed'));
+    });
+
     test('handleCat returns 404 when the path does not resolve', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
       when(mockNode.get(cid, path: 'missing')).thenAnswer((_) async => null);
