@@ -107,9 +107,9 @@ void main() {
         final block = inv.positionalArguments[0] as Block;
         stored[block.cid.toString()] = block;
       });
-      when(mockDatastore.getBlock(any)).thenAnswer(
-        (inv) async => stored[inv.positionalArguments[0] as String],
-      );
+      when(
+        mockDatastore.getBlock(any),
+      ).thenAnswer((inv) async => stored[inv.positionalArguments[0] as String]);
 
       final directoryContent = {
         'file.txt': Uint8List.fromList([1, 2, 3]),
@@ -124,22 +124,24 @@ void main() {
       verify(mockDatastore.putBlock(any)).called(greaterThan(1));
     });
 
-    test('addDirectory fails when a stored child block cannot be read back',
-        () async {
-      // The block-store facade reports found:false when _fetchBlock misses,
-      // which surfaces as a Tsize computation failure.
-      when(mockDatastore.putBlock(any)).thenAnswer((_) async {});
-      when(mockDatastore.getBlock(any)).thenAnswer((_) async => null);
+    test(
+      'addDirectory fails when a stored child block cannot be read back',
+      () async {
+        // The block-store facade reports found:false when _fetchBlock misses,
+        // which surfaces as a Tsize computation failure.
+        when(mockDatastore.putBlock(any)).thenAnswer((_) async {});
+        when(mockDatastore.getBlock(any)).thenAnswer((_) async => null);
 
-      final directoryContent = {
-        'file.txt': Uint8List.fromList([1, 2, 3]),
-      };
+        final directoryContent = {
+          'file.txt': Uint8List.fromList([1, 2, 3]),
+        };
 
-      expect(
-        () => contentManager.addDirectory(directoryContent),
-        throwsA(anything),
-      );
-    });
+        expect(
+          () => contentManager.addDirectory(directoryContent),
+          throwsA(anything),
+        );
+      },
+    );
 
     test('get gateway fallback and internal path resolution errors', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';

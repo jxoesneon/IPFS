@@ -62,8 +62,7 @@ void main() {
       );
     });
 
-    test('map with / key plus siblings is a regular map, not a link',
-        () async {
+    test('map with / key plus siblings is a regular map, not a link', () async {
       final codec = DagJsonCodec();
       final value = {'/': 'x', 'other': 1};
       final encoded = await codec.encode(value);

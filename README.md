@@ -62,7 +62,24 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
 
 ---
 
-## What's New in v1.16 (current: v1.18.0)
+## What's New in v1.19 (current: v1.19.0)
+
+### Major Features & Security
+
+| Feature | Description |
+| ------- | ----------- |
+| **HAMT-Sharded Directories** | Large-directory sharding on write and read — reachable from the gateway, `ContentManager`, and RPC `cat`/`get`/`ls`, with Kubo-compatible wire layout. |
+| **Trustless & Subdomain Gateways** | `Accept`/`format` negotiation (raw, CAR, ipns-record, dag-json/cbor) plus spec-compliant `CID.ipfs.localhost` subdomain resolution with DNSLink. |
+| **Content Denylist** | Operator policy enforced across gateway, RPC (including `cid/path` scoping and mid-traversal), Bitswap egress, and `dag/export`. |
+| **IPLD Schemas & Selectors** | Full selector vocabulary and schema DSL validation with link `expectedType` and advanced-representation ADLs. |
+| **Complete MFS Surface** | All `files/*` verbs with Kubo semantics, registered on the RPC server. |
+| **Safety Hardening** | Bounded file buffering (512 MiB), rate-limit coverage for subdomain requests, forwarded-header trust gating, and recursive `index.html` caps. |
+| **DAG-PB Kubo Parity** | go-merkledag links-first wire order and unknown-field preservation — byte-identical encodings for linked nodes. |
+| **Observability** | Verified Prometheus exposition and an optional OTLP/OpenTelemetry exporter; DHT reprovider strategies with XOR-ordered provide sweeps. |
+
+---
+
+## What's New in v1.16
 
 ### Major Features & Fixes
 
@@ -205,7 +222,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.18.0
+  dart_ipfs: ^1.19.0
 ```
 
 Or from Git for latest development:

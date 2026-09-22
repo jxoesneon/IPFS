@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.19.0] - 2026-09-22
+
+### Security
+- **Daemon gateway denylist/metrics wiring**: the daemon-spawned `GatewayServer` now receives the node's `DenylistService`, `MetricsCollector`, metrics config, DNSLink resolver, and IPNS resolvers — previously it served content with none of the operator policy applied. When `gateway.enabled` already makes the node builder start a gateway, the daemon no longer double-binds.
+- **Rate limiting covers subdomain requests**: gateway middleware is reordered to `rate-limit → CORS → metrics → logging → subdomain → router`, closing a bypass where subdomain gateway requests skipped rate limiting entirely.
+- **Bounded file buffering**: `unixfsReadFile` enforces a byte budget (`unixfsReadDefaultMaxBytes`, 512 MiB) across inline and linked chunks, and gateway file responses are capped by `GatewayConfig.maxFileResponseBytes` (HTTP 413 on overflow). Recursive `index.html` serving is capped at 8 levels, and `x-forwarded-host`/`x-forwarded-proto` are only honored under the new opt-in `GatewayConfig.trustForwardedHeaders` (default `false`).
+- **Missing-block responses no longer masquerade as content**: gateway traversal failures and missing linked blocks return 500 instead of falling through to a raw `200` of the root block.
+- **Denylist enforcement completeness**: RPC `cat`/`get` evaluate path-scoped denylist rules on `cid/path` arguments, `ls` checks the denylist, `dag/export` denies mid-traversal child blocks, `ContentManager` gates every child block fetched during `get()` traversal, and Bitswap serve/want egress paths are denylist-gated.
+- **DNSLink resolver hardening**: internally created HTTP clients are always closed, and the resolver endpoint is configurable (`https://dnslink.io` default).
+- **Global traversal budgets**: TAR/CAR/dag-export traversals enforce global depth, node, and byte limits.
+
+### Added
+- **UnixFS basic directories**: complete directory nodes with cumulative `Tsize`, `addDirectory` routed through the Kubo-parity builder, and full path resolution.
+- **HAMT sharding for large directories**: sharded directory write (`shardThreshold`, now threaded through `addDirectory`), `resolveHAMTSegment`/`hamtLeafEntries` traversal, symlink nodes, and cycle-guarded resolution — reachable from the gateway, `ContentManager`, and RPC `cat`/`get`/`ls`.
+- **IPLD selectors**: spec-compliant selector vocabulary with dag-cbor serialization, plus schema DSL validation (kinds, representations, typed errors), link `expectedType` resolution, and advanced-representation ADL support.
+- **Trustless gateway**: `Accept`/`format` negotiation for `raw`, `car`, `ipns-record`, and `dag-json`/`dag-cbor` responses.
+- **Subdomain gateway**: spec-compliant `CID.ipfs.localhost`-style resolution with DNSLink.
+- **MFS completeness**: full `files/*` verb surface (ls/stat/read/write/mkdir/cp/mv/rm/flush/chcid/touch) with Kubo semantics, now registered on the RPC server.
+- **Reprovider strategies**: XOR-ordered provide sweep, on-demand `routing/provide` RPC, and per-sweep routing-key caching.
+- **Metrics**: verified Prometheus exposition plus an optional OTLP/OpenTelemetry exporter.
+- **Denylist service**: compact-format lists, audit logging, and egress checks.
+- **Samples**: local-first CAR sync template and production example apps.
+
+### Fixed
+- **DAG-PB wire order**: PBNodes with links marshal in go-merkledag's links-first field order — the 1.18.0 release notes overstated canonical-order CID parity, which held only for leaf nodes. Linked nodes now produce byte-identical encodings to Kubo.
+- **DAG-PB unknown-field preservation**: unknown protobuf fields are serialized after known fields on remarshal, so parse→marshal round-trips are byte-stable and CIDs don't drift.
+- **UTF-8 directory link ordering**: legacy directory links sort by UTF-8 byte order instead of UTF-16 code units, matching go-unixfs for non-ASCII names.
+- **Full-precision XOR distance**: Kademlia peer ordering uses `BigInt` distances (no reduction loss), with a per-sweep routing-key cache to keep the comparator out of hot allocation paths.
+- **`cat` sub-paths**: RPC `cat` resolves `cid/path` sub-paths through the HAMT-aware `UnixFSPathResolver` (cycle-guarded, budget-bounded) instead of flat link matching.
+- **Float16 decoding**: mantissa scaling was 1024× too large.
+- **Schema `ipld/put`**: link resolver is wired into schema validation.
+
+### Internal
+- Removed dead `byte_reader.dart` and the shadowed `node_lookup.dart` extension.
+- Interop workflow path filters cover the new surfaces; upstream `dart_libp2p` release watch CI added.
+- Requires `dart_ipfs_core ^1.13.0` (strict DAG-CBOR canonical codec).
+
 ## [1.18.0] - 2026-09-21
 
 ### Fixed

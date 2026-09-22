@@ -250,14 +250,9 @@ class DagCborCodec implements IPLDCodec {
 
     // Duplicate keys cannot be represented canonically.
     for (var i = 1; i < order.length; i++) {
-      if (_compareKeyOrder(
-            encodedKeys[order[i - 1]],
-            encodedKeys[order[i]],
-          ) ==
+      if (_compareKeyOrder(encodedKeys[order[i - 1]], encodedKeys[order[i]]) ==
           0) {
-        throw ArgumentError(
-          'Duplicate map key: ${entries[order[i]].key}',
-        );
+        throw ArgumentError('Duplicate map key: ${entries[order[i]].key}');
       }
     }
 
@@ -455,9 +450,7 @@ class DagCborCodec implements IPLDCodec {
     for (var i = 0; i < length; i++) {
       final key = _decodeItem(reader, depth + 1);
       if (key is! String) {
-        throw const FormatException(
-          'DAG-CBOR map keys must be strings',
-        );
+        throw const FormatException('DAG-CBOR map keys must be strings');
       }
       final keyBytes = Uint8List.fromList(utf8.encode(key));
       if (strict &&
@@ -481,14 +474,10 @@ class DagCborCodec implements IPLDCodec {
     if (tag == _tag42) {
       final inner = _decodeItem(reader, depth + 1);
       if (inner is! Uint8List) {
-        throw const FormatException(
-          'Tag 42 must be applied to a byte string',
-        );
+        throw const FormatException('Tag 42 must be applied to a byte string');
       }
       if (inner.isEmpty || inner[0] != 0x00) {
-        throw const FormatException(
-          'Tag 42 byte string must start with 0x00',
-        );
+        throw const FormatException('Tag 42 byte string must start with 0x00');
       }
       return _decodeLink(Uint8List.fromList(inner.sublist(1)));
     }
@@ -496,9 +485,7 @@ class DagCborCodec implements IPLDCodec {
     if (tag == _tag2 || tag == _tag3) {
       final inner = _decodeItem(reader, depth + 1);
       if (inner is! Uint8List) {
-        throw FormatException(
-          'Tag $tag must be applied to a byte string',
-        );
+        throw FormatException('Tag $tag must be applied to a byte string');
       }
       if (strict && inner.isNotEmpty && inner[0] == 0x00) {
         throw const FormatException('Non-minimal big-integer byte string');
