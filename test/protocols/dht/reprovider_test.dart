@@ -384,6 +384,53 @@ void main() {
       },
     );
 
+    test(
+      'falls back gracefully when the concrete DHT is not initialized',
+      () async {
+        final router = FakeRouter();
+        final nodeConfig = IPFSConfig(
+          dht: const DHTConfig(requestTimeout: Duration(milliseconds: 100)),
+        );
+        final networkHandler = NetworkHandler(nodeConfig, router: router);
+        final uninitializedDht = DHTHandler(
+          nodeConfig,
+          router,
+          networkHandler,
+          storage: datastore,
+        );
+        // Deliberately do not initialize the DHT client — peerId and the
+        // routing table are late fields that throw when read too early.
+        addTearDown(() async {
+          await uninitializedDht.stop();
+        });
+
+        final cid = await addBlock(Uint8List.fromList([37, 38, 39]));
+        await pinRecursive(cid);
+
+        reprovider = Reprovider(
+          config: const DHTConfig(
+            reproviderEnabled: false,
+            reproviderStrategy: 'pinned',
+            reproviderSweepOptimization: true,
+          ),
+          dhtHandler: uninitializedDht,
+          pinManager: pinManager,
+          mfsManager: mfsManager,
+          metrics: metrics,
+        );
+
+        final result = await reprovider.trigger(wait: true);
+
+        // XOR ordering and peer grouping both degrade gracefully; the
+        // provide itself then fails on the uninitialized client, which the
+        // batch loop reports rather than propagating.
+        expect(result.groupedCids, isEmpty);
+        expect(result.attempted, equals(1));
+        expect(result.failed, equals(1));
+        expect(result.errors, isNotEmpty);
+      },
+    );
+
     test('falls back to empty grouping with a non-concrete handler', () async {
       final cid = await addBlock(Uint8List.fromList([34, 35, 36]));
       await pinRecursive(cid);

@@ -141,6 +141,61 @@ void main() {
         final decoded = EnhancedCBORHandler.decodeDagCbor(bytes);
         expect(decoded.linkValue.codec, equals('raw'));
       });
+
+      test('rejects a CIDv1 link whose multihash fails to decode', () {
+        final node = IPLDNode()
+          ..kind = Kind.LINK
+          ..linkValue = (IPLDLink()
+            ..version = 1
+            ..codec = 'dag-pb'
+            ..multihash = [0x12]); // truncated multihash
+
+        expect(
+          () => EnhancedCBORHandler.encodeDagCbor(node),
+          throwsA(
+            isA<IPLDEncodingError>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Failed to encode CIDv1 link'),
+            ),
+          ),
+        );
+      });
+
+      test('rejects tag 42 wrapping bytes that are not a CID', () {
+        // Tag 42 + 0x00 multibase prefix + garbage CID bytes.
+        final bytes = Uint8List.fromList([0xd8, 0x2a, 0x43, 0x00, 0x99, 0x99]);
+        expect(
+          () => EnhancedCBORHandler.decodeDagCbor(bytes),
+          throwsA(
+            isA<IPLDDecodingError>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Failed to decode CID'),
+            ),
+          ),
+        );
+      });
+
+      test('rejects a link with an unsupported CID version', () {
+        final node = IPLDNode()
+          ..kind = Kind.LINK
+          ..linkValue = (IPLDLink()
+            ..version = 7
+            ..codec = 'dag-pb'
+            ..multihash = [0x12, 0x20, ...List.filled(32, 0)]);
+
+        expect(
+          () => EnhancedCBORHandler.encodeDagCbor(node),
+          throwsA(
+            isA<IPLDEncodingError>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Unsupported CID version: 7'),
+            ),
+          ),
+        );
+      });
     });
 
     group('Canonical map ordering', () {
@@ -244,6 +299,43 @@ void main() {
         final decoded = EnhancedCBORHandler.decodeDagCbor(bytes);
         expect(decoded.kind, equals(Kind.BIG_INT));
         expect(EnhancedCBORHandler.encodeDagCbor(decoded), equals(bytes));
+      });
+
+      test('strict mode rejects tag 3 for values that fit major type 1', () {
+        // Tag 3 wrapping n = 5 encodes -6, which major type 1 already
+        // covers — the tag is redundant and therefore non-canonical.
+        final bytes = Uint8List.fromList([
+          0xC3, // tag 3
+          0x41, // byte string of length 1
+          0x05,
+        ]);
+        expect(
+          () => EnhancedCBORHandler.decodeDagCbor(bytes),
+          throwsA(
+            isA<IPLDDecodingError>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Tag 3 used for a value representable without a tag'),
+            ),
+          ),
+        );
+      });
+
+      test('rejects a BIG_INT node with a malformed sign byte', () {
+        final node = IPLDNode()
+          ..kind = Kind.BIG_INT
+          ..bigIntValue = [9, 0x01]; // sign byte must be 0 or 1
+
+        expect(
+          () => EnhancedCBORHandler.encodeDagCbor(node),
+          throwsA(
+            isA<IPLDEncodingError>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Malformed big-integer sign byte'),
+            ),
+          ),
+        );
       });
     });
 
