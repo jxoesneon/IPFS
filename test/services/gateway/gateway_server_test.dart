@@ -289,6 +289,22 @@ void main() {
       expect(await response.readAsString(), isEmpty);
     });
 
+    test('HEAD /ipns request returns headers only', () async {
+      await server.start();
+      final handler = mockAdapter.lastHandler!;
+
+      // No IPNS resolver is configured, so the handler reports 501; the
+      // server-side HEAD wrapper must still strip the body.
+      final request = Request(
+        'HEAD',
+        Uri.parse('http://localhost/ipns/test.local'),
+      );
+      final response = await handler(request);
+
+      expect(response.statusCode, equals(501));
+      expect(await response.readAsString(), isEmpty);
+    });
+
     test('Rate limiting middleware with X-Forwarded-For', () async {
       await server.start();
       final handler = mockAdapter.lastHandler!;

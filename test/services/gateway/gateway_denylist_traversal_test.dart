@@ -217,6 +217,48 @@ void main() {
       expect(denylist.getAuditLog(), isEmpty);
     });
 
+    test('IPNS path traversal reaching a denylisted child is 451', () async {
+      final denylist = makeDenylist();
+      final chunkData = Uint8List.fromList([19, 20, 21]);
+      final chunkCid = await CID.computeForData(chunkData, format: 'raw');
+      final (fileCid, fileBytes) = await makeFile(chunkCid, chunkData.length);
+      stubBlock(chunkCid, chunkData);
+      stubBlock(fileCid, fileBytes);
+
+      denylist.blockCidString(chunkCid.encode());
+
+      final handler = GatewayHandler(
+        mockBlockStore,
+        denylistService: denylist,
+        ipnsResolver: (name) async => fileCid.encode(),
+      );
+      final response = await handler.handlePath(
+        Request('GET', Uri.parse('http://localhost/ipns/test.local')),
+      );
+      expect(response.statusCode, equals(451));
+    });
+
+    test('subdomain traversal reaching a denylisted child is 451', () async {
+      final denylist = makeDenylist();
+      final chunkData = Uint8List.fromList([22, 23, 24]);
+      final chunkCid = await CID.computeForData(chunkData, format: 'raw');
+      final (fileCid, fileBytes) = await makeFile(chunkCid, chunkData.length);
+      stubBlock(chunkCid, chunkData);
+      stubBlock(fileCid, fileBytes);
+
+      denylist.blockCidString(chunkCid.encode());
+
+      final handler = makeHandler(denylist);
+      final response = await handler.handleSubdomain(
+        Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': '${fileCid.encode()}.ipfs.localhost'},
+        ),
+      );
+      expect(response.statusCode, equals(451));
+    });
+
     test('non-denylisted CAR traversal is unaffected', () async {
       final denylist = makeDenylist();
       final handler = makeHandler(denylist);
