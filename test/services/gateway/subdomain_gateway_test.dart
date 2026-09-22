@@ -14,6 +14,7 @@ import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
+import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
 import 'package:fixnum/fixnum.dart';
@@ -777,6 +778,261 @@ void main() {
         );
         final response = await handler.handlePath(request);
         expect(response.statusCode, equals(400));
+      });
+
+      test('authority-less ipfs uri redirects to the content path', () async {
+        final request = Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/ipfs/'
+            '?uri=ipfs%3A$cidV1Base32%2Fdir%2Ffile.txt',
+          ),
+          headers: {'host': 'localhost:8080'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('http://localhost:8080/ipfs/$cidV1Base32/dir/file.txt'),
+        );
+      });
+
+      test('uri parameter without a content root returns 400', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/?uri=ipfs%3A'),
+          headers: {'host': 'localhost'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(400));
+        expect(
+          await response.readAsString(),
+          equals('Invalid uri query parameter'),
+        );
+      });
+    });
+
+    group('IPNS identifier edge branches', () {
+      test('base36 peer-id ipns subdomain resolves', () async {
+        final peer = PeerId.fromBase58(cidV0).toBase36();
+        handler = GatewayHandler(
+          blockStore,
+          ipnsResolver: (name) async => cidV1Base32,
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': '$peer.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+        expect(response.headers['x-ipfs-path'], equals('/ipns/$peer'));
+      });
+
+      test('de-inlined .k suffix resolves as an ipns name', () async {
+        // `kabc-k` is the inlined single-label form of `kabc.k`, the
+        // subdomain-safe spelling of a `.k` ipns name.
+        String? resolvedName;
+        handler = GatewayHandler(
+          blockStore,
+          ipnsResolver: (name) async {
+            resolvedName = name;
+            return cidV1Base32;
+          },
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': 'kabc-k.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+        expect(resolvedName, equals('kabc.k'));
+      });
+
+      test('resolver failure without DNSLink candidates returns 502', () async {
+        final peer = PeerId.fromBase58(cidV0).toBase36();
+        handler = GatewayHandler(
+          blockStore,
+          ipnsResolver: (name) async => throw StateError('no record'),
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': '$peer.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(502));
+      });
+    });
+
+    group('resolved ipns content', () {
+      test('sub-path resolves below the resolved content root', () async {
+        final fileBytes = Uint8List.fromList(utf8.encode('hello ipfs'));
+        final fileNode = PBNode()
+          ..data =
+              (Data()
+                    ..type = Data_DataType.File
+                    ..data = fileBytes)
+                  .writeToBuffer();
+        final fileCid = CID.computeForDataSync(
+          fileNode.writeToBuffer(),
+          codec: 'dag-pb',
+        );
+        blockStore.add(Block(cid: fileCid, data: fileNode.writeToBuffer()));
+
+        final dirNode = PBNode()
+          ..data = (Data()..type = Data_DataType.Directory).writeToBuffer()
+          ..links.add(
+            PBLink()
+              ..name = 'hello.txt'
+              ..hash = fileCid.toBytes()
+              ..size = Int64(fileNode.writeToBuffer().length),
+          );
+        final dirCid = CID.computeForDataSync(
+          dirNode.writeToBuffer(),
+          codec: 'dag-pb',
+        );
+        blockStore.add(Block(cid: dirCid, data: dirNode.writeToBuffer()));
+
+        final peer = PeerId.fromBase58(cidV0).toBase36();
+        handler = GatewayHandler(
+          blockStore,
+          ipnsResolver: (name) async => dirCid.encode(),
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/hello.txt'),
+          headers: {'host': '$peer.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+        expect(await response.readAsString(), equals('hello ipfs'));
+      });
+
+      test('trustless format serves the resolved content root', () async {
+        final peer = PeerId.fromBase58(cidV0).toBase36();
+        handler = GatewayHandler(
+          blockStore,
+          ipnsResolver: (name) async => cidV1Base32,
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/?format=raw'),
+          headers: {'host': '$peer.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+        expect(
+          response.headers['content-type'],
+          equals('application/vnd.ipld.raw'),
+        );
+      });
+
+      test('ipns-record format serves the record for the name', () async {
+        final record = IPNSRecord.internal(
+          value: Uint8List.fromList('/ipfs/QmResolved'.codeUnits),
+          validity: DateTime.now().add(const Duration(hours: 1)),
+          ttl: const Duration(minutes: 2),
+          publicKey: Uint8List.fromList([9, 9]),
+          signature: Uint8List.fromList([8, 8]),
+          signatureV2: Uint8List.fromList([7, 7]),
+        );
+        final peer = PeerId.fromBase58(cidV0).toBase36();
+        handler = GatewayHandler(
+          blockStore,
+          ipnsResolver: (name) async => cidV1Base32,
+          ipnsRecordResolver: (name) async => record.toCBOR(),
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/?format=ipns-record'),
+          headers: {'host': '$peer.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(200));
+        expect(
+          response.headers['content-type'],
+          equals('application/vnd.ipfs.ipns-record'),
+        );
+      });
+
+      test('invalid ?format on a resolved ipns name returns 400', () async {
+        final peer = PeerId.fromBase58(cidV0).toBase36();
+        handler = GatewayHandler(
+          blockStore,
+          ipnsResolver: (name) async => cidV1Base32,
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/?format=bogus'),
+          headers: {'host': '$peer.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(400));
+      });
+
+      test('resolved content on the denylist returns 451', () async {
+        final denylist = DenylistService(
+          const SecurityConfig(enableDenylist: true),
+          _MockMetrics(),
+        )..blockCidString(cidV1Base32);
+        final peer = PeerId.fromBase58(cidV0).toBase36();
+        handler = GatewayHandler(
+          blockStore,
+          denylistService: denylist,
+          ipnsResolver: (name) async => cidV1Base32,
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': '$peer.ipns.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(451));
+      });
+    });
+
+    group('IPv6 host splitting', () {
+      test('bracketed hosts are split into name and port', () {
+        for (final host in ['[::1]:8080', '[::1]', '[::1']) {
+          final request = Request(
+            'GET',
+            Uri.parse('http://localhost/'),
+            headers: {'host': host},
+          );
+          expect(handler.isSubdomainRequest(request), isFalse);
+        }
+      });
+
+      test('IPv6 loopback host migrates paths to a subdomain URL', () async {
+        handler = GatewayHandler(blockStore, enableSubdomainGateway: true);
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/$cidV1Base32'),
+          headers: {'host': '[::1]:8080'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(response.headers['location'], contains('.ipfs.'));
+      });
+    });
+
+    group('ipns path migration', () {
+      test('base36 peer id migrates to a lowercase subdomain label', () async {
+        handler = GatewayHandler(blockStore, enableSubdomainGateway: true);
+        final peer = PeerId.fromBase58(cidV0).toBase36();
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipns/$peer'),
+          headers: {'host': 'localhost'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('http://$peer.ipns.localhost/'),
+        );
       });
     });
 

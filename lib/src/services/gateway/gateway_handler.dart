@@ -2291,6 +2291,9 @@ class GatewayHandler {
       root = segments.first;
       rest = segments.length > 1 ? '/${segments.sublist(1).join('/')}' : '';
     }
+    // Unreachable: `root` is either the (non-empty) URI host or the first
+    // path segment, which is checked to be non-empty above.
+    // coverage:ignore-start
     if (root.isEmpty) {
       return Response(
         400,
@@ -2298,6 +2301,7 @@ class GatewayHandler {
         headers: const {'Content-Type': 'text/plain; charset=utf-8'},
       );
     }
+    // coverage:ignore-end
 
     final scheme = _forwardedScheme(request);
     final host = request.headers['host'] ?? request.url.authority;
