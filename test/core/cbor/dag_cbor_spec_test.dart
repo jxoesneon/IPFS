@@ -347,6 +347,16 @@ void main() {
         final node = EnhancedCBORHandler.decodeDagCbor(bytes, strict: false);
         expect(node.kind, equals(Kind.FLOAT));
       }
+      // Regression: half-precision decode must scale the mantissa by 2^-10 —
+      // f16 0x3c00 is exactly 1.0, f32 0x3fc00000 is exactly 1.5.
+      expect(
+        EnhancedCBORHandler.decodeDagCbor(f16, strict: false).floatValue,
+        equals(1.0),
+      );
+      expect(
+        EnhancedCBORHandler.decodeDagCbor(f32, strict: false).floatValue,
+        equals(1.5),
+      );
     });
 
     test('rejects -0.0 in strict mode, normalizes when lenient', () {

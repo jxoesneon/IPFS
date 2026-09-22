@@ -889,7 +889,7 @@ class EnhancedCBORHandler {
     }
     return (sign == 1 ? -1.0 : 1.0) *
         math.pow(2.0, exponent - 15).toDouble() *
-        (1024 + mantissa).toDouble();
+        (1 + mantissa / 1024.0);
   }
 
   static double _readFloat32(_CborReader reader) {
