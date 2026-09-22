@@ -474,6 +474,205 @@ void main() {
     });
   });
 
+  group('DenylistService compact format edge branches', () {
+    late _MockMetricsCollector metrics;
+    late CID blockedCid;
+    late CID allowedCid;
+    late String blockedCidStr;
+    late String blockedMultihashStr;
+
+    setUp(() async {
+      metrics = _MockMetricsCollector();
+      blockedCid = await CID.fromContent(
+        Uint8List.fromList([11, 22, 33]),
+        codec: 'raw',
+      );
+      allowedCid = await CID.fromContent(
+        Uint8List.fromList([44, 55, 66]),
+        codec: 'raw',
+      );
+      blockedCidStr = blockedCid.encode();
+      blockedMultihashStr = multibaseEncode(
+        Multibase.base32,
+        blockedCid.multihash.toBytes(),
+      );
+    });
+
+    test('supports ipns:// URI block items and ipns:// request paths', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.loadCompactBytes(utf8.encode('ipns://bad.example'));
+      expect(service.isBlockedPath('/ipns/bad.example'), isTrue);
+      expect(service.isBlockedPath('ipns://bad.example/deep'), isTrue);
+      expect(service.isBlockedPath('ipns://other.example'), isFalse);
+    });
+
+    test('!<bare multihash> removes the entry and adds an allow rule', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.loadCompactBytes(
+        utf8.encode('$blockedMultihashStr\n!$blockedMultihashStr'),
+      );
+      expect(service.isBlocked(blockedCid), isFalse);
+      expect(service.isBlockedByMultihash(blockedMultihashStr), isFalse);
+    });
+
+    test('!<bare CID> unblocks via a negated path rule', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.loadCompactBytes(utf8.encode('$blockedCidStr\n!$blockedCidStr'));
+      expect(service.isBlocked(blockedCid), isFalse);
+      expect(service.isBlockedPath('/ipfs/$blockedCidStr'), isFalse);
+    });
+
+    test('trailing slashes are trimmed from /ipfs path rules', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.loadCompactBytes(utf8.encode('/ipfs/$blockedCidStr/path/'));
+      expect(service.isBlockedPath('/ipfs/$blockedCidStr/path'), isTrue);
+      expect(service.isBlockedPath('/ipfs/$blockedCidStr/path/x'), isFalse);
+      expect(service.isBlocked(blockedCid), isFalse);
+    });
+
+    test('/ipfs/CID/path/* trims the slash before the wildcard', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.loadCompactBytes(utf8.encode('/ipfs/$blockedCidStr/path/*'));
+      expect(service.isBlockedPath('/ipfs/$blockedCidStr/path/x'), isTrue);
+      expect(service.isBlockedPath('/ipfs/$blockedCidStr/path'), isTrue);
+      expect(service.isBlockedPath('/ipfs/$blockedCidStr/other'), isFalse);
+    });
+
+    test('trailing slashes are trimmed from /ipns path rules', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.loadCompactBytes(utf8.encode('/ipns/bad.example/path/'));
+      expect(service.isBlockedPath('/ipns/bad.example/path'), isTrue);
+      expect(service.isBlockedPath('/ipns/bad.example/path/x'), isFalse);
+      expect(service.isBlockedPath('/ipns/bad.example'), isFalse);
+    });
+
+    test('/ipns/NAME/path/* trims the slash before the wildcard', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.loadCompactBytes(utf8.encode('/ipns/bad.example/path/*'));
+      expect(service.isBlockedPath('/ipns/bad.example/path/x'), isTrue);
+      expect(service.isBlockedPath('/ipns/bad.example/path'), isTrue);
+      expect(service.isBlockedPath('/ipns/bad.example/other'), isFalse);
+    });
+
+    test('!/ipns/NAME removes a blocked non-CID name', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.loadCompactBytes(
+        utf8.encode('/ipns/bad.example\n!/ipns/bad.example'),
+      );
+      expect(service.isBlockedPath('/ipns/bad.example'), isFalse);
+      expect(service.isBlockedPath('/ipns/bad.example/any/path'), isFalse);
+    });
+
+    test('!//LEGACY removes a legacy double-hash entry', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      final cidV1Base32 = blockedCid.encodeWithBase(Multibase.base32);
+      final entry = _legacyDoubleHashEntry('$cidV1Base32/');
+      service.loadCompactBytes(utf8.encode('//$entry\n!//$entry\n$allowedCid'));
+      expect(service.isBlocked(blockedCid), isFalse);
+      expect(service.isBlocked(allowedCid), isTrue);
+    });
+
+    test('!//MULTIHASH removes a modern double-hash entry', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      final entry = _modernDoubleHashEntry(_b58Multihash(blockedCid));
+      service.loadCompactBytes(utf8.encode('//$entry\n!//$entry\n$allowedCid'));
+      expect(service.isBlocked(blockedCid), isFalse);
+      expect(service.isBlocked(allowedCid), isTrue);
+    });
+
+    test('non-sha256 // multihash entries are stored but never match', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      // A structurally valid sha1 multihash (code 0x11, length 32 bytes).
+      final digest = sha256.convert(utf8.encode('preimage')).bytes;
+      final mhBytes = Uint8List.fromList([0x11, 0x20, ...digest]);
+      final entry = multibaseEncode(Multibase.base58btc, mhBytes);
+      service.loadCompactBytes(utf8.encode('//$entry'));
+      expect(service.isEnabled, isTrue);
+      expect(service.isBlocked(blockedCid), isFalse);
+      expect(service.isBlocked(allowedCid), isFalse);
+    });
+
+    test('isBlockedByMultihash matches modern // double-hash entries', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      final entry = _modernDoubleHashEntry(_b58Multihash(blockedCid));
+      service.loadCompactBytes(utf8.encode('//$entry'));
+      expect(service.isBlockedByMultihash(blockedMultihashStr), isTrue);
+      expect(
+        service.isBlockedByMultihash(
+          multibaseEncode(Multibase.base32, allowedCid.multihash.toBytes()),
+        ),
+        isFalse,
+      );
+    });
+
+    test('isBlockedByMultihash matches /ipfs/CID/* path rules', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.loadCompactBytes(utf8.encode('/ipfs/$blockedCidStr/*'));
+      expect(service.isBlockedByMultihash(blockedMultihashStr), isTrue);
+    });
+
+    test('isBlockedPath matches literal non-CID /ipfs entries', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.blockCidString('not-a-real-cid');
+      expect(service.isBlockedPath('/ipfs/not-a-real-cid'), isTrue);
+      expect(service.isBlockedPath('/ipfs/not-a-real-cid/sub'), isTrue);
+      expect(service.isBlockedPath('/ipfs/other-entry'), isFalse);
+    });
+
+    test('/ipns/CID-name requests fall through to CID-level blocking', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      // Block the CIDv0 form; the request uses the CIDv1 form of the same
+      // multihash as an IPNS name, which is not a literal cidStrings entry.
+      final cidV0 = CID.v0(Uint8List.fromList(blockedCid.multihash.digest));
+      service.loadCompactBytes(utf8.encode(cidV0.encode()));
+      expect(service.isBlockedPath('/ipns/$blockedCidStr'), isTrue);
+      expect(service.isBlockedPath('/ipns/$blockedCidStr/any/path'), isTrue);
+    });
+
+    test('recordHit under log action resolves and records reasons', () {
+      final service = DenylistService(_denylistConfig(action: 'log'), metrics);
+      service.loadCompactBytes(utf8.encode(blockedCidStr));
+      final action = service.recordHit(
+        blockedCidStr,
+        source: 'gateway',
+        reason: 'operator note',
+      );
+      expect(action, equals('log'));
+      expect(service.getAuditLog().single.reason, equals('operator note'));
+      expect(metrics.securityEvents.last['type'], equals('denylist_logged'));
+    });
+
+    test('unblock clears CID, path rules, and hashed entries', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      final cidV0 = CID.v0(Uint8List.fromList(blockedCid.multihash.digest));
+      final cidV1Base32 = CID
+          .v1('dag-pb', blockedCid.multihash)
+          .encodeWithBase(Multibase.base32);
+      final entry = _legacyDoubleHashEntry('$cidV1Base32/');
+      service.loadCompactBytes(utf8.encode('//$entry'));
+      // The CIDv0 form must convert to CIDv1 base32 for the legacy anchor.
+      expect(service.isBlocked(cidV0), isTrue);
+      service.unblock(cidV0);
+      expect(service.isBlocked(cidV0), isFalse);
+      expect(service.isBlocked(blockedCid), isFalse);
+    });
+
+    test('unblockCidString removes CID, IPNS names, and hashed entries', () {
+      final service = DenylistService(_denylistConfig(), metrics);
+      service.loadCompactBytes(
+        utf8.encode('/ipfs/$blockedCidStr/sub\n$blockedCidStr'),
+      );
+      service.unblockCidString(blockedCidStr);
+      expect(service.isBlocked(blockedCid), isFalse);
+      expect(service.isBlockedPath('/ipfs/$blockedCidStr/sub'), isFalse);
+
+      // Non-CID strings are removed as literal/IPNS-name entries.
+      service.blockCidString('not-a-real-cid');
+      service.unblockCidString('not-a-real-cid');
+      expect(service.isBlockedPath('/ipfs/not-a-real-cid'), isFalse);
+    });
+  });
+
   group('Gateway denylist integration', () {
     test('returns 451 for blocked CID with default block action', () async {
       final blockStore = BlockStore(path: 'test_blocks');

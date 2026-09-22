@@ -1007,9 +1007,13 @@ class DenylistService implements ILifecycle {
       if (namespace != 'ipfs' && namespace != 'ipns') continue;
       final value = segments[i + 1];
       var subPath = segments.sublist(i + 2).join('/');
+      // Unreachable: segments contain no '/' and are non-empty, so the
+      // joined sub-path can never end with '/'. Kept defensively.
+      // coverage:ignore-start
       while (subPath.endsWith('/')) {
         subPath = subPath.substring(0, subPath.length - 1);
       }
+      // coverage:ignore-end
       final blocked = namespace == 'ipfs'
           ? _isBlockedIpfsItem(value, subPath)
           : _isBlockedIpnsItem(value, subPath);
