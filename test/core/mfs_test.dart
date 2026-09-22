@@ -918,27 +918,30 @@ void main() {
         await expectLater(readAll('/ts.txt'), throwsA(anything));
       });
 
-      test('mv on a denylisted source throws StateError', () async {
-        final denylisted = MFSManager(
-          blockStore,
-          datastore,
-          denylistService: _FakeDenylistService({'/blocked.txt'}),
-        );
-        await denylisted.init();
-        await denylisted.write(
-          '/blocked.txt',
-          Stream.value(utf8.encode('b')),
-          create: true,
-        );
-        await expectLater(
-          denylisted.mv('/blocked.txt', '/dst.txt'),
-          throwsA(isA<StateError>()),
-        );
-        await expectLater(
-          denylisted.cp('/blocked.txt', '/dst.txt'),
-          throwsA(isA<StateError>()),
-        );
-      });
+      test(
+        'mv/cp on a denylisted source throws DenylistBlockedException',
+        () async {
+          final denylisted = MFSManager(
+            blockStore,
+            datastore,
+            denylistService: _FakeDenylistService({'/blocked.txt'}),
+          );
+          await denylisted.init();
+          await denylisted.write(
+            '/blocked.txt',
+            Stream.value(utf8.encode('b')),
+            create: true,
+          );
+          await expectLater(
+            denylisted.mv('/blocked.txt', '/dst.txt'),
+            throwsA(isA<DenylistBlockedException>()),
+          );
+          await expectLater(
+            denylisted.cp('/blocked.txt', '/dst.txt'),
+            throwsA(isA<DenylistBlockedException>()),
+          );
+        },
+      );
 
       test('cp on a missing source throws', () async {
         await expectLater(mfs.cp('/ghost', '/dst'), throwsA(anything));

@@ -1,5 +1,5 @@
 import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart'
-    show unixfsReadDefaultMaxBytes;
+    show carExportDefaultMaxBytes, unixfsReadDefaultMaxBytes;
 
 /// Configuration for the IPFS HTTP Gateway.
 class GatewayConfig {
@@ -37,7 +37,7 @@ class GatewayConfig {
     this.autoTlsRenewalThresholdDays = 30,
     this.trustForwardedHeaders = false,
     this.maxFileResponseBytes = unixfsReadDefaultMaxBytes,
-    this.maxCarResponseBytes = 1024 * 1024 * 1024,
+    this.maxCarResponseBytes = carExportDefaultMaxBytes,
   });
 
   /// Creates a [GatewayConfig] from a JSON map.
@@ -82,7 +82,7 @@ class GatewayConfig {
       maxFileResponseBytes:
           json['maxFileResponseBytes'] as int? ?? unixfsReadDefaultMaxBytes,
       maxCarResponseBytes:
-          json['maxCarResponseBytes'] as int? ?? 1024 * 1024 * 1024,
+          json['maxCarResponseBytes'] as int? ?? carExportDefaultMaxBytes,
     );
   }
 

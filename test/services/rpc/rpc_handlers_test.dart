@@ -19,6 +19,8 @@ import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart'
+    show carExportDefaultMaxBytes;
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
@@ -1877,6 +1879,47 @@ void main() {
       verifyNever(mockNode.ls(any));
     });
 
+    test('handleLs rejects an empty normalized path', () async {
+      // ?arg=/ipfs/ normalizes to nothing — an error, not a listing.
+      final response = await handlers.handleLs(
+        Request('POST', Uri.parse('http://localhost/api/v0/ls?arg=/ipfs/')),
+      );
+      expect(response.statusCode, equals(500));
+      verifyNever(mockNode.ls(any));
+    });
+
+    test('handleLs resolves a bare cid/ trailing-slash arg', () async {
+      final file = await Block.fromData(
+        Uint8List.fromList(utf8.encode('x')),
+        format: 'raw',
+      );
+      storeBlock(file);
+      final dirNode = dag_pb.PBNode(
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+        links: [dag_pb.PBLink(name: 'f', hash: file.cid.toBytes())],
+      );
+      final dir = await Block.fromData(
+        dirNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      storeBlock(dir);
+      when(mockNode.bitswap).thenReturn(null);
+      when(mockNode.ls(dir.cid.encode())).thenAnswer(
+        (_) async => [Link(name: 'f', cid: file.cid, size: file.data.length)],
+      );
+
+      final response = await handlers.handleLs(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/ls?arg=${dir.cid.encode()}/'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      verify(mockNode.ls(dir.cid.encode())).called(1);
+    });
+
     /// Reflective handle to the private `_tarAddNode` method plus factories
     /// for the private `_TarWriter`/`_TarTraversalBudget` types.
     ({
@@ -2001,6 +2044,93 @@ void main() {
             as Future<void>,
         throwsStateError,
       );
+    });
+
+    test('dag/export enforces a payload byte budget', () async {
+      // The CAR writer buffers in memory; a byte cap bounds it alongside
+      // the block-count and depth limits. _ByteCounter is private, so build
+      // it reflectively with a tiny budget and invoke _exportBlock directly.
+      final mirror = mirrors.reflect(handlers);
+      final lib = mirror.type.owner! as mirrors.LibraryMirror;
+      mirrors.ClassMirror classNamed(String name) =>
+          lib.declarations.entries
+                  .firstWhere(
+                    (e) => mirrors.MirrorSystem.getName(e.key) == name,
+                  )
+                  .value
+              as mirrors.ClassMirror;
+      final byteCounter = classNamed(
+        '_ByteCounter',
+      ).newInstance(const Symbol(''), [4]).reflectee;
+      // CarWriter is imported into the library, not declared in it.
+      final writer = mirrors.reflectClass(CarWriter).newInstance(
+        const Symbol(''),
+        [],
+        {const Symbol('roots'): <CID>[]},
+      ).reflectee;
+
+      final block = await Block.fromData(
+        Uint8List.fromList(List.filled(64, 7)),
+        format: 'raw',
+      );
+      storeBlock(block);
+
+      final exportSym = mirror.type.declarations.keys.firstWhere(
+        (s) => mirrors.MirrorSystem.getName(s) == '_exportBlock',
+      );
+      await expectLater(
+        mirror.invoke(exportSym, [
+              block.cid,
+              writer,
+              <String>{},
+              byteCounter,
+            ]).reflectee
+            as Future<void>,
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('handleGet writes directory entries with mode 0755', () async {
+      // Kubo emits 0755 for directories and 0644 for files; the ustar mode
+      // field is the octal string at header offset 100.
+      final file = await Block.fromData(
+        Uint8List.fromList(utf8.encode('m')),
+        format: 'raw',
+      );
+      storeBlock(file);
+      final dirNode = dag_pb.PBNode(
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+        links: [dag_pb.PBLink(name: 'f', hash: file.cid.toBytes())],
+      );
+      final dir = await Block.fromData(
+        dirNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      storeBlock(dir);
+      when(mockNode.bitswap).thenReturn(null);
+
+      final response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/get?arg=${dir.cid.encode()}'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final tar = await response.read().expand((i) => i).toList();
+      String modeAt(int off) => utf8
+          .decode(tar.sublist(off + 100, off + 107))
+          .replaceAll(RegExp(r'\x00.*$'), '');
+      // First entry is the directory header (typeflag '5').
+      expect(tar[156], equals(0x35));
+      expect(modeAt(0), '0000755');
+      // The file entry (typeflag '0') keeps 0644.
+      for (var off = 0; off + 512 <= tar.length; off += 512) {
+        if (tar[off + 156] == 0x30) {
+          expect(modeAt(off), '0000644');
+        }
+      }
     });
 
     group('denylist enforcement', () {
@@ -2209,6 +2339,34 @@ void main() {
           );
           expect(response.statusCode, equals(200), reason: 'prefix $prefix');
         }
+      });
+
+      test('handleLs maps mid-traversal denylist blocks to 451', () async {
+        // The root CID is not itself blocked; node.ls throws when HAMT
+        // enumeration reaches a blocked child — same mapping as cat/get.
+        const cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        when(mockNode.ls(cid)).thenThrow(const DenylistBlockedException(cid));
+
+        final response = await handlers.handleLs(
+          Request('POST', Uri.parse('http://localhost/api/v0/ls?arg=$cid')),
+        );
+        expect(response.statusCode, equals(451));
+        final body = json.decode(await response.readAsString());
+        expect(body['Message'], contains('blocked by operator policy'));
+      });
+
+      test('handleBlockStat returns 451 for a denylisted CID', () async {
+        const cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        denylist.blockCidString(cid);
+
+        final response = await handlers.handleBlockStat(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/api/v0/block/stat?arg=$cid'),
+          ),
+        );
+        expect(response.statusCode, equals(451));
+        verifyNever(mockBlockStore.getBlock(cid));
       });
 
       test(
@@ -2451,6 +2609,18 @@ void main() {
       );
       final visited = <String>{for (var i = 0; i < 10000; i++) 'k$i'};
       final mirror = mirrors.reflect(handlers);
+      final lib = mirror.type.owner! as mirrors.LibraryMirror;
+      final byteCounter =
+          (lib.declarations.entries
+                      .firstWhere(
+                        (e) =>
+                            mirrors.MirrorSystem.getName(e.key) ==
+                            '_ByteCounter',
+                      )
+                      .value
+                  as mirrors.ClassMirror)
+              .newInstance(const Symbol(''), [carExportDefaultMaxBytes])
+              .reflectee;
       final exportSym = mirror.type.declarations.keys.firstWhere(
         (s) => mirrors.MirrorSystem.getName(s) == '_exportBlock',
       );
@@ -2459,6 +2629,7 @@ void main() {
               block.cid,
               CarWriter(roots: [coreCid(block.cid)]),
               visited,
+              byteCounter,
             ]).reflectee
             as Future<void>,
         throwsStateError,

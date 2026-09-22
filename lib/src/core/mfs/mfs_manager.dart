@@ -370,7 +370,7 @@ class MFSManager implements ILifecycle {
   }) async {
     final denylist = _denylistService;
     if (denylist != null && _pathLooksBlocked(src)) {
-      throw StateError('Content blocked by operator policy');
+      throw DenylistBlockedException(src);
     }
 
     final srcCid = await _resolveAny(src);
@@ -418,7 +418,7 @@ class MFSManager implements ILifecycle {
   Future<void> mv(String src, String dst) async {
     final denylist = _denylistService;
     if (denylist != null && _pathLooksBlocked(src)) {
-      throw StateError('Content blocked by operator policy');
+      throw DenylistBlockedException(src);
     }
 
     final srcParts = _splitPath(src);

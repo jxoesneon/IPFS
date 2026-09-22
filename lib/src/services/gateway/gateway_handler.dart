@@ -282,7 +282,7 @@ class GatewayHandler {
   /// Default limits for CAR traversal to prevent unbounded resource use.
   static const int _defaultMaxCarDepth = 32;
   static const int _defaultMaxCarBlocks = 10000;
-  static const int _defaultMaxCarBytes = 1024 * 1024 * 1024;
+  static const int _defaultMaxCarBytes = carExportDefaultMaxBytes;
 
   /// Default TTL for IPNS record Cache-Control when no record TTL is available.
   static const int _defaultIpnsTtlSeconds = 60;

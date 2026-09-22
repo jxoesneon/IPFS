@@ -13,7 +13,6 @@ import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
-import 'package:dart_ipfs/src/core/unixfs/unixfs_errors.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart';
@@ -545,7 +544,7 @@ class RPCHandlers {
   /// translates into the 451 response.
   Future<Block?> _rpcGetBlock(String cid) async {
     if (_checkDenylist(cid) != null) {
-      throw const DenylistBlockedException();
+      throw DenylistBlockedException(cid);
     }
     final response = await node.blockStore.getBlock(cid);
     if (response.found) {
@@ -584,65 +583,65 @@ class RPCHandlers {
     budget.addNode();
 
     if (block.cid.codec == 'dag-pb') {
+      // Detection only: parse failures mean "not a UnixFS directory" and
+      // fall through to the file branch. Traversal errors must propagate —
+      // once a directory header is written, a swallowed mid-loop error
+      // would also emit `name` as a file and corrupt the archive.
+      UnixFSNode? unixfsNode;
+      var isDirectory = false;
       try {
-        final unixfsNode = UnixFSNode.fromBlock(block);
-        if (unixfsNode.isHAMTShard) {
-          // A HAMT shard is a logical directory: enumerate leaf entries
-          // (hash-prefixed names stripped) and recurse per entry.
-          tar.addDirectory(name);
-          final entries = await hamtLeafEntries(
-            _RpcBlockStore(this),
-            unixfsNode,
-          );
-          for (final entry in entries) {
-            final child = await _rpcGetBlock(entry.cid.encode());
-            if (child == null) {
-              throw StateError(
-                'Missing linked block ${entry.cid.encode()} during TAR export',
-              );
-            }
-            await _tarAddNode(
-              tar,
-              '$name/${_sanitizeTarName(entry.name)}',
-              child,
-              depth: depth + 1,
-              budget: budget,
+        unixfsNode = UnixFSNode.fromBlock(block);
+        if (!unixfsNode.isHAMTShard && unixfsNode.pbNode.hasData()) {
+          isDirectory =
+              unixfs_pb.Data.fromBuffer(unixfsNode.pbNode.data).type ==
+              unixfs_pb.Data_DataType.Directory;
+        }
+      } catch (_) {
+        unixfsNode = null;
+      }
+
+      if (unixfsNode != null && unixfsNode.isHAMTShard) {
+        // A HAMT shard is a logical directory: enumerate leaf entries
+        // (hash-prefixed names stripped) and recurse per entry.
+        tar.addDirectory(name);
+        final entries = await hamtLeafEntries(_RpcBlockStore(this), unixfsNode);
+        for (final entry in entries) {
+          final child = await _rpcGetBlock(entry.cid.encode());
+          if (child == null) {
+            throw StateError(
+              'Missing linked block ${entry.cid.encode()} during TAR export',
             );
           }
-          return;
+          await _tarAddNode(
+            tar,
+            '$name/${_sanitizeTarName(entry.name)}',
+            child,
+            depth: depth + 1,
+            budget: budget,
+          );
         }
-        final pbNode = unixfsNode.pbNode;
-        if (pbNode.hasData()) {
-          final unixfsData = unixfs_pb.Data.fromBuffer(pbNode.data);
-          if (unixfsData.type == unixfs_pb.Data_DataType.Directory) {
-            tar.addDirectory(name);
-            for (final link in pbNode.links) {
-              final childCid = CID.fromBytes(Uint8List.fromList(link.hash));
-              final child = await _rpcGetBlock(childCid.encode());
-              if (child == null) {
-                throw StateError(
-                  'Missing linked block ${childCid.encode()} during TAR export',
-                );
-              }
-              await _tarAddNode(
-                tar,
-                '$name/${_sanitizeTarName(link.name)}',
-                child,
-                depth: depth + 1,
-                budget: budget,
-              );
-            }
-            return;
+        return;
+      }
+      if (isDirectory) {
+        final pbNode = unixfsNode!.pbNode;
+        tar.addDirectory(name);
+        for (final link in pbNode.links) {
+          final childCid = CID.fromBytes(Uint8List.fromList(link.hash));
+          final child = await _rpcGetBlock(childCid.encode());
+          if (child == null) {
+            throw StateError(
+              'Missing linked block ${childCid.encode()} during TAR export',
+            );
           }
+          await _tarAddNode(
+            tar,
+            '$name/${_sanitizeTarName(link.name)}',
+            child,
+            depth: depth + 1,
+            budget: budget,
+          );
         }
-      } catch (e) {
-        if (e is StateError ||
-            e is DenylistBlockedException ||
-            e is PathResolutionError ||
-            e is DAGCycleError) {
-          rethrow;
-        }
-        // Not a UnixFS directory: fall through and serve as a file entry.
+        return;
       }
     }
 
@@ -685,11 +684,17 @@ class RPCHandlers {
       defaultValue: true,
     );
 
+    // After normalization an empty target (e.g. `arg=/ipfs/`) is an error,
+    // and a bare `cid/` must resolve to the CID, not a trailing-slash name.
+    final lsSegments = normalized.split('/').where((s) => s.isNotEmpty);
+    if (lsSegments.isEmpty) {
+      return _errorResponse('Missing argument: path');
+    }
+
     try {
       // Resolve <cid>/<sub/path> through the shared UnixFS resolver so
       // sub-paths (including through HAMT shards) behave like `cat`/`get`.
-      var lsTarget = normalized;
-      final lsSegments = normalized.split('/').where((s) => s.isNotEmpty);
+      var lsTarget = lsSegments.first;
       if (lsSegments.length > 1) {
         final resolver = UnixFSPathResolver(store: _RpcBlockStore(this));
         try {
@@ -723,6 +728,8 @@ class RPCHandlers {
       };
 
       return _jsonResponse(response);
+    } on DenylistBlockedException {
+      return _denylistBlockedResponse();
     } catch (e, st) {
       _logger.error('Ls failed for path: $path', e, st);
       return _errorResponse('Ls failed');
@@ -1004,14 +1011,18 @@ class RPCHandlers {
     final root = CID.decode(rootCidStr);
     final writer = CarWriter(roots: [root]);
     final visited = <String>{};
-    await _exportBlock(root, writer, visited);
+    // CAR output is fully buffered, so bound payload bytes as well as
+    // block count — same budget as the gateway's trustless CAR handler.
+    final bytes = _ByteCounter(carExportDefaultMaxBytes);
+    await _exportBlock(root, writer, visited, bytes);
     return writer.close();
   }
 
   Future<void> _exportBlock(
     CID cid,
     CarWriter writer,
-    Set<String> visited, {
+    Set<String> visited,
+    _ByteCounter bytes, {
     int depth = 0,
   }) async {
     if (depth > _maxExportDepth) {
@@ -1030,7 +1041,7 @@ class RPCHandlers {
     // Mid-traversal denylist gate — a blocked child CID must not leak into
     // the exported archive.
     if (_checkDenylist(key) != null) {
-      throw const DenylistBlockedException();
+      throw DenylistBlockedException(key);
     }
 
     final response = await node.blockStore.getBlock(key);
@@ -1038,6 +1049,7 @@ class RPCHandlers {
       throw StateError('Block not found: $key');
     }
     final block = response.block.toBlock();
+    bytes.add(block.data.length);
     await writer.write(cid, block.data);
 
     // The CID codec is authoritative; the stored format hint is a fallback
@@ -1046,7 +1058,7 @@ class RPCHandlers {
       final pbNode = dag_pb.PBNode.fromBuffer(block.data);
       for (final link in pbNode.links) {
         final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
-        await _exportBlock(linkCid, writer, visited, depth: depth + 1);
+        await _exportBlock(linkCid, writer, visited, bytes, depth: depth + 1);
       }
     }
   }
@@ -1396,6 +1408,12 @@ class RPCHandlers {
       return _errorResponse('Missing argument: cid');
     }
 
+    // Denylist check: stat leaks existence and size of blocked content.
+    final blocked = _checkDenylist('/ipfs/$cid');
+    if (blocked != null) {
+      return blocked;
+    }
+
     try {
       final block = await node.blockStore.getBlock(cid);
       if (!block.found) {
@@ -1627,6 +1645,30 @@ String _sanitizeTarName(String name) {
   return cleaned.isEmpty ? 'unnamed' : cleaned;
 }
 
+/// Mutable byte budget for a buffered CAR export.
+///
+/// [CarWriter] accumulates the archive in memory, so a payload byte bound —
+/// in addition to the block-count and depth caps — keeps a large DAG from
+/// exhausting memory on a single `dag/export` request.
+class _ByteCounter {
+  _ByteCounter(this.maxBytes);
+
+  /// Maximum total payload bytes the export may buffer.
+  final int maxBytes;
+
+  /// Payload bytes written so far.
+  int bytes = 0;
+
+  /// Adds [n] payload bytes, throwing [StateError] once [maxBytes] is
+  /// exceeded.
+  void add(int n) {
+    bytes += n;
+    if (bytes > maxBytes) {
+      throw StateError('DAG export exceeded maximum byte budget $maxBytes');
+    }
+  }
+}
+
 /// Mutable traversal budget shared across an entire TAR export.
 ///
 /// The node and byte limits are global to the traversal: counts accumulate
@@ -1671,12 +1713,13 @@ class _TarWriter {
   final BytesBuilder _out = BytesBuilder();
 
   /// Adds a directory entry named [name] (a trailing slash is appended when
-  /// missing).
+  /// missing). Mode 0755 matches Kubo's directory entries.
   void addDirectory(String name) {
     _writeHeader(
       name.endsWith('/') ? name : '$name/',
       typeflag: 0x35, // '5'
       size: 0,
+      mode: 493, // 0755
     );
   }
 
@@ -1697,7 +1740,12 @@ class _TarWriter {
     return _out.takeBytes();
   }
 
-  void _writeHeader(String name, {required int typeflag, required int size}) {
+  void _writeHeader(
+    String name, {
+    required int typeflag,
+    required int size,
+    int mode = 420, // 0644
+  }) {
     final header = Uint8List(512);
     final nameBytes = utf8.encode(name);
 
@@ -1724,7 +1772,7 @@ class _TarWriter {
     }
 
     _writeStr(header, 0, nameField);
-    _writeOctal(header, 100, 420, 7); // mode 0644
+    _writeOctal(header, 100, mode, 7); // mode
     _writeOctal(header, 108, 0, 7); // uid
     _writeOctal(header, 116, 0, 7); // gid
     _writeOctal(header, 124, size, 11); // size

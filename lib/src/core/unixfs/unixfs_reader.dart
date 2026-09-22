@@ -32,6 +32,14 @@ const int unixfsReadDefaultMaxNodes = 10000;
 /// [unixfsReadFile.maxBytes] to enforce their own limit.
 const int unixfsReadDefaultMaxBytes = 512 * 1024 * 1024;
 
+/// Default ceiling on total payload bytes in a generated CAR archive.
+///
+/// CAR writers buffer the archive in memory, so a byte bound (not just a
+/// block-count or depth cap) keeps a large DAG from consuming unbounded
+/// memory per request. Shared by the gateway's trustless CAR handler and
+/// RPC `dag/export`; callers may pass a smaller limit.
+const int carExportDefaultMaxBytes = 1024 * 1024 * 1024;
+
 /// Prefix of the [StateError.message] thrown when a [unixfsReadFile] call
 /// exceeds its `maxBytes` budget.
 ///
