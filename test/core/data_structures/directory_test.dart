@@ -148,5 +148,43 @@ void main() {
       expect(node.links[1].name, equals('m_middle'));
       expect(node.links[2].name, equals('z_last'));
     });
+
+    test('build sorts entries by UTF-8 byte order, not UTF-16', () {
+      // Kubo/go sorts directory links by raw UTF-8 name bytes. UTF-16
+      // code-unit ordering (Dart's String.compareTo) disagrees for names
+      // containing supplementary-plane characters: U+10000 is encoded as a
+      // surrogate pair (0xD800..) which sorts *before* BMP characters in
+      // U+E000–U+FFFF under UTF-16, but its UTF-8 encoding (0xF0...) sorts
+      // *after* theirs (0xEE...).
+      const bmpPrivateUse = ''; // U+E000, UTF-8: EE 80 80
+      const supplementary = '𐀀'; // U+10000, UTF-8: F0 90 80 80
+
+      // Sanity check that the two orderings actually diverge for this pair.
+      expect(
+        bmpPrivateUse.compareTo(supplementary) > 0,
+        isTrue,
+        reason: 'UTF-16 sorts the surrogate pair first',
+      );
+
+      final utf8Order = ['b.txt', 'é.txt', bmpPrivateUse, supplementary];
+      final utf16Order = ['b.txt', 'é.txt', supplementary, bmpPrivateUse];
+
+      final manager = IPFSDirectoryManager();
+      // Add in reverse UTF-8 order to exercise the sort.
+      for (final name in utf8Order.reversed) {
+        manager.addEntry(
+          IPFSDirectoryEntry(
+            name: name,
+            hash: [1],
+            size: Int64(1),
+            isDirectory: false,
+          ),
+        );
+      }
+
+      final linkNames = manager.build().links.map((l) => l.name).toList();
+      expect(linkNames, equals(utf8Order));
+      expect(linkNames, isNot(equals(utf16Order)));
+    });
   });
 }

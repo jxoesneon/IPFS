@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../core/types/peer_id.dart';
 
 import 'dht_routing_table_interface.dart';
@@ -53,4 +55,44 @@ class XorDistanceMetric implements DistanceMetric {
 
     return result;
   }
+}
+
+/// Compares the XOR distances of [aKey] and [bKey] to [reference] without
+/// allocating any [BigInt]s.
+///
+/// XOR distance ordering is exactly the lexicographic ordering of the XOR'd
+/// bytes read most-significant-first: the first byte where
+/// `aKey ^ reference` differs from `bKey ^ reference` decides which key is
+/// closer. Inputs of different lengths are right-aligned (the shorter input
+/// is treated as padded with leading zero bytes), matching the big-endian
+/// semantics of [XorDistanceMetric.calculateDistance].
+///
+/// Returns a negative value when [aKey] is closer to [reference] than
+/// [bKey], zero when the distances are equal, and a positive value when
+/// [bKey] is closer. Use this in comparators and hot lookup paths; keep
+/// [XorDistanceMetric.calculateDistance] when the distance value itself is
+/// needed.
+int compareXorDistanceToKey(
+  List<int> aKey,
+  List<int> bKey,
+  List<int> reference,
+) {
+  final maxLength = math.max(
+    aKey.length,
+    math.max(bKey.length, reference.length),
+  );
+
+  for (int i = 0; i < maxLength; i++) {
+    final indexA = aKey.length - maxLength + i;
+    final indexB = bKey.length - maxLength + i;
+    final indexRef = reference.length - maxLength + i;
+    final refByte = indexRef >= 0 ? reference[indexRef] : 0;
+    final xoredA = (indexA >= 0 ? aKey[indexA] : 0) ^ refByte;
+    final xoredB = (indexB >= 0 ? bKey[indexB] : 0) ^ refByte;
+    if (xoredA != xoredB) {
+      return xoredA < xoredB ? -1 : 1;
+    }
+  }
+
+  return 0;
 }

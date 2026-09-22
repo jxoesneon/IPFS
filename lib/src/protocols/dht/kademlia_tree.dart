@@ -23,6 +23,7 @@ import 'kademlia_tree/value_store.dart';
 import 'provider_store.dart';
 import 'rate_limiter.dart';
 import 'red_black_tree.dart';
+import 'xor_distance_metric.dart';
 
 /// Kademlia DHT routing table implementation using a tree structure of k-buckets.
 class KademliaTree {
@@ -131,9 +132,13 @@ class KademliaTree {
       _buckets.add(
         RedBlackTree<PeerId, KademliaTreeNode>(
           compare: (PeerId a, PeerId b) {
-            final BigInt distanceA = helpers.xorDistance(_root!.peerId, a);
-            final BigInt distanceB = helpers.xorDistance(_root!.peerId, b);
-            final int distanceComparison = distanceA.compareTo(distanceB);
+            // Byte-wise XOR distance comparison: no BigInt allocation on the
+            // red-black tree hot path.
+            final int distanceComparison = compareXorDistanceToKey(
+              a.value,
+              b.value,
+              _root!.peerId.value,
+            );
             if (distanceComparison != 0) {
               return distanceComparison;
             }
@@ -236,9 +241,7 @@ class KademliaTree {
 
           final List<PeerId> allPeers = [...closestPeers, ...newPeers];
           allPeers.sort(
-            (a, b) => helpers
-                .xorDistance(target, a)
-                .compareTo(helpers.xorDistance(target, b)),
+            (a, b) => compareXorDistanceToKey(a.value, b.value, target.value),
           );
 
           closestPeers = allPeers.take(K).toList();

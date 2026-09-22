@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
@@ -300,6 +301,92 @@ void main() {
         expect(distanceA, equals(BigInt.from(0xFF) << 184));
         expect(distanceB, equals(BigInt.one << 248));
         expect(distanceA, lessThan(distanceB));
+      });
+    });
+
+    group('compareXorDistanceToKey', () {
+      int bigIntOrdering(List<int> a, List<int> b, List<int> ref) {
+        final distA = metric.calculateDistanceToKey(
+          PeerId(value: Uint8List.fromList(a)),
+          ref,
+        );
+        final distB = metric.calculateDistanceToKey(
+          PeerId(value: Uint8List.fromList(b)),
+          ref,
+        );
+        return distA.compareTo(distB);
+      }
+
+      int sign(int v) => v == 0 ? 0 : (v < 0 ? -1 : 1);
+
+      test('matches BigInt ordering for equal-length 32-byte peer IDs', () {
+        final random = Random(0xC0FFEE);
+        Uint8List randomId() =>
+            Uint8List.fromList(List.generate(32, (_) => random.nextInt(256)));
+
+        final reference = randomId();
+        final peers = List.generate(24, (_) => randomId());
+
+        for (final a in peers) {
+          for (final b in peers) {
+            expect(
+              sign(compareXorDistanceToKey(a, b, reference)),
+              equals(sign(bigIntOrdering(a, b, reference))),
+              reason: 'mismatch for a=$a b=$b ref=$reference',
+            );
+          }
+        }
+      });
+
+      test('matches BigInt ordering for different-length keys', () {
+        final reference = [0x0F, 0xF0, 0x55];
+        final cases = <List<int>>[
+          <int>[],
+          [0x00],
+          [0x0F, 0xF0, 0x55],
+          [0x00, 0x0F, 0xF0, 0x55],
+          [0xFF],
+          [0x10, 0xF0, 0x55],
+          [0x0F, 0xF0],
+        ];
+
+        for (final a in cases) {
+          for (final b in cases) {
+            expect(
+              sign(compareXorDistanceToKey(a, b, reference)),
+              equals(sign(bigIntOrdering(a, b, reference))),
+              reason: 'mismatch for a=$a b=$b ref=$reference',
+            );
+          }
+        }
+      });
+
+      test('orders known distances correctly', () {
+        final reference = List<int>.filled(32, 0);
+        final close = List<int>.filled(32, 0)..[31] = 0x01;
+        final mid = List<int>.filled(32, 0)..[31] = 0x0F;
+        final far = List<int>.filled(32, 0)..[30] = 0xFF;
+
+        expect(compareXorDistanceToKey(close, mid, reference), isNegative);
+        expect(compareXorDistanceToKey(mid, far, reference), isNegative);
+        expect(compareXorDistanceToKey(far, close, reference), isPositive);
+        expect(compareXorDistanceToKey(close, close, reference), isZero);
+      });
+
+      test('distance to reference itself is zero and minimal', () {
+        final reference = Uint8List.fromList(
+          List.generate(32, (i) => (i * 13) & 0xFF),
+        );
+        final other = Uint8List.fromList(reference)..[31] ^= 0x01;
+
+        expect(
+          compareXorDistanceToKey(reference, other, reference),
+          isNegative,
+        );
+        expect(
+          compareXorDistanceToKey(reference, reference, reference),
+          isZero,
+        );
       });
     });
   });

@@ -1,8 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
-import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart';
+import 'package:dart_ipfs/src/protocols/dht/xor_distance_metric.dart';
 
 /// Extension for finding closest peers in Kademlia tree.
 extension FindClosestPeers on KademliaTree {
@@ -13,10 +13,13 @@ extension FindClosestPeers on KademliaTree {
       KademliaTreeNode a,
       KademliaTreeNode b,
     ) {
-      return xorDistance(
-        target,
-        a.peerId,
-      ).compareTo(xorDistance(target, b.peerId));
+      // Byte-wise XOR distance comparison: no BigInt allocation per heap
+      // comparison.
+      return compareXorDistanceToKey(
+        a.peerId.value,
+        b.peerId.value,
+        target.value,
+      );
     });
 
     // Add all nodes from all buckets to the priority queue
