@@ -182,7 +182,7 @@ void main() {
       test('put throws when schema validation fails', () async {
         final mockSchema = MockIPLDSchema();
         when(mockSchema.name).thenReturn('test-schema');
-        when(mockSchema.validate(any, any)).thenAnswer((_) async => false);
+        when(mockSchema.validate(any, any, linkResolver: anyNamed('linkResolver'))).thenAnswer((_) async => false);
         handler.registerSchema(mockSchema);
 
         final data = {'val': 1};
@@ -480,7 +480,7 @@ void main() {
       test('registerSchema adds schema to registry', () async {
         final mockSchema = MockIPLDSchema();
         when(mockSchema.name).thenReturn('test-schema');
-        when(mockSchema.validate(any, any)).thenAnswer((_) async => true);
+        when(mockSchema.validate(any, any, linkResolver: anyNamed('linkResolver'))).thenAnswer((_) async => true);
         handler.registerSchema(mockSchema);
 
         final data = {'val': 1};
@@ -499,7 +499,7 @@ void main() {
 
         final mockSchema2 = MockIPLDSchema();
         when(mockSchema2.name).thenReturn('test-schema');
-        when(mockSchema2.validate(any, any)).thenAnswer((_) async => true);
+        when(mockSchema2.validate(any, any, linkResolver: anyNamed('linkResolver'))).thenAnswer((_) async => true);
         handler.registerSchema(mockSchema2);
 
         final data = {'val': 1};
@@ -607,7 +607,7 @@ void main() {
       test('put with schema validation failure throws', () async {
         final mockSchema = MockIPLDSchema();
         when(mockSchema.name).thenReturn('test-schema');
-        when(mockSchema.validate(any, any)).thenAnswer((_) async => false);
+        when(mockSchema.validate(any, any, linkResolver: anyNamed('linkResolver'))).thenAnswer((_) async => false);
         handler.registerSchema(mockSchema);
 
         final data = {'val': 1};
@@ -625,7 +625,7 @@ void main() {
         final mockSchema = MockIPLDSchema();
         when(mockSchema.name).thenReturn('test-schema');
         when(
-          mockSchema.validate(any, any),
+          mockSchema.validate(any, any, linkResolver: anyNamed('linkResolver')),
         ).thenThrow(Exception('Validation error'));
         handler.registerSchema(mockSchema);
 

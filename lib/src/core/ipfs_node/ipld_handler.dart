@@ -112,7 +112,11 @@ class IPLDHandler implements ILifecycle {
           throw IPLDSchemaError('Schema not found: $schemaType');
         }
 
-        final isValid = await schema.validate(schemaType, ipldNode);
+        final isValid = await schema.validate(
+          schemaType,
+          ipldNode,
+          linkResolver: IPLDSchema.linkResolverFromNodeLoader(getNode),
+        );
         if (!isValid) {
           throw IPLDSchemaError('Data does not match schema: $schemaType');
         }

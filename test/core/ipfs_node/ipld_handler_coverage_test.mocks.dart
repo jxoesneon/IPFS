@@ -4,18 +4,18 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
-import 'dart:async' as _i7;
-import 'dart:typed_data' as _i10;
+import 'dart:async' as _i8;
+import 'dart:typed_data' as _i11;
 
-import 'package:dart_ipfs/src/core/data_structures/block.dart' as _i8;
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart' as _i5;
+import 'package:dart_ipfs/src/core/data_structures/block.dart' as _i9;
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart' as _i6;
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart' as _i2;
-import 'package:dart_ipfs/src/core/ipld/codecs/ipld_codec.dart' as _i9;
-import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart' as _i11;
+import 'package:dart_ipfs/src/core/ipld/codecs/ipld_codec.dart' as _i10;
+import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart' as _i5;
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart' as _i3;
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i6;
+import 'package:mockito/src/dummies.dart' as _i7;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -61,10 +61,16 @@ class _FakeIPLDNode_4 extends _i1.SmartFake implements _i4.IPLDNode {
     : super(parent, parentInvocation);
 }
 
+class _FakeSchemaValidationResult_5 extends _i1.SmartFake
+    implements _i5.SchemaValidationResult {
+  _FakeSchemaValidationResult_5(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [BlockStore].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockBlockStore extends _i1.Mock implements _i5.BlockStore {
+class MockBlockStore extends _i1.Mock implements _i6.BlockStore {
   MockBlockStore() {
     _i1.throwOnMissingStub(this);
   }
@@ -73,7 +79,7 @@ class MockBlockStore extends _i1.Mock implements _i5.BlockStore {
   String get path =>
       (super.noSuchMethod(
             Invocation.getter(#path),
-            returnValue: _i6.dummyValue<String>(this, Invocation.getter(#path)),
+            returnValue: _i7.dummyValue<String>(this, Invocation.getter(#path)),
           )
           as String);
 
@@ -89,110 +95,110 @@ class MockBlockStore extends _i1.Mock implements _i5.BlockStore {
           as _i2.PinManager);
 
   @override
-  _i7.Future<void> start() =>
+  _i8.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i7.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i7.Future<void> stop() =>
+  _i8.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i7.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i7.Future<void> flush() =>
+  _i8.Future<void> flush() =>
       (super.noSuchMethod(
             Invocation.method(#flush, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i7.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i7.Future<_i3.GetBlockResponse> getBlock(String? cid) =>
+  _i8.Future<_i3.GetBlockResponse> getBlock(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#getBlock, [cid]),
-            returnValue: _i7.Future<_i3.GetBlockResponse>.value(
+            returnValue: _i8.Future<_i3.GetBlockResponse>.value(
               _FakeGetBlockResponse_1(
                 this,
                 Invocation.method(#getBlock, [cid]),
               ),
             ),
           )
-          as _i7.Future<_i3.GetBlockResponse>);
+          as _i8.Future<_i3.GetBlockResponse>);
 
   @override
-  _i7.Future<_i3.AddBlockResponse> putBlock(_i8.Block? block) =>
+  _i8.Future<_i3.AddBlockResponse> putBlock(_i9.Block? block) =>
       (super.noSuchMethod(
             Invocation.method(#putBlock, [block]),
-            returnValue: _i7.Future<_i3.AddBlockResponse>.value(
+            returnValue: _i8.Future<_i3.AddBlockResponse>.value(
               _FakeAddBlockResponse_2(
                 this,
                 Invocation.method(#putBlock, [block]),
               ),
             ),
           )
-          as _i7.Future<_i3.AddBlockResponse>);
+          as _i8.Future<_i3.AddBlockResponse>);
 
   @override
-  _i7.Future<_i3.RemoveBlockResponse> removeBlock(String? cid) =>
+  _i8.Future<_i3.RemoveBlockResponse> removeBlock(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#removeBlock, [cid]),
-            returnValue: _i7.Future<_i3.RemoveBlockResponse>.value(
+            returnValue: _i8.Future<_i3.RemoveBlockResponse>.value(
               _FakeRemoveBlockResponse_3(
                 this,
                 Invocation.method(#removeBlock, [cid]),
               ),
             ),
           )
-          as _i7.Future<_i3.RemoveBlockResponse>);
+          as _i8.Future<_i3.RemoveBlockResponse>);
 
   @override
-  _i7.Future<bool> hasBlock(String? cid) =>
+  _i8.Future<bool> hasBlock(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#hasBlock, [cid]),
-            returnValue: _i7.Future<bool>.value(false),
+            returnValue: _i8.Future<bool>.value(false),
           )
-          as _i7.Future<bool>);
+          as _i8.Future<bool>);
 
   @override
-  _i7.Future<List<_i8.Block>> getAllBlocks() =>
+  _i8.Future<List<_i9.Block>> getAllBlocks() =>
       (super.noSuchMethod(
             Invocation.method(#getAllBlocks, []),
-            returnValue: _i7.Future<List<_i8.Block>>.value(<_i8.Block>[]),
+            returnValue: _i8.Future<List<_i9.Block>>.value(<_i9.Block>[]),
           )
-          as _i7.Future<List<_i8.Block>>);
+          as _i8.Future<List<_i9.Block>>);
 
   @override
-  _i7.Future<Map<String, dynamic>> getStatus() =>
+  _i8.Future<Map<String, dynamic>> getStatus() =>
       (super.noSuchMethod(
             Invocation.method(#getStatus, []),
-            returnValue: _i7.Future<Map<String, dynamic>>.value(
+            returnValue: _i8.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
           )
-          as _i7.Future<Map<String, dynamic>>);
+          as _i8.Future<Map<String, dynamic>>);
 
   @override
-  _i7.Future<int> gc() =>
+  _i8.Future<int> gc() =>
       (super.noSuchMethod(
             Invocation.method(#gc, []),
-            returnValue: _i7.Future<int>.value(0),
+            returnValue: _i8.Future<int>.value(0),
           )
-          as _i7.Future<int>);
+          as _i8.Future<int>);
 }
 
 /// A class which mocks [IPLDCodec].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockIPLDCodec extends _i1.Mock implements _i9.IPLDCodec {
+class MockIPLDCodec extends _i1.Mock implements _i10.IPLDCodec {
   MockIPLDCodec() {
     _i1.throwOnMissingStub(this);
   }
@@ -201,7 +207,7 @@ class MockIPLDCodec extends _i1.Mock implements _i9.IPLDCodec {
   String get name =>
       (super.noSuchMethod(
             Invocation.getter(#name),
-            returnValue: _i6.dummyValue<String>(this, Invocation.getter(#name)),
+            returnValue: _i7.dummyValue<String>(this, Invocation.getter(#name)),
           )
           as String);
 
@@ -213,7 +219,7 @@ class MockIPLDCodec extends _i1.Mock implements _i9.IPLDCodec {
   String get identifier =>
       (super.noSuchMethod(
             Invocation.getter(#identifier),
-            returnValue: _i6.dummyValue<String>(
+            returnValue: _i7.dummyValue<String>(
               this,
               Invocation.getter(#identifier),
             ),
@@ -221,28 +227,28 @@ class MockIPLDCodec extends _i1.Mock implements _i9.IPLDCodec {
           as String);
 
   @override
-  _i7.Future<_i10.Uint8List> encode(_i4.IPLDNode? node) =>
+  _i8.Future<_i11.Uint8List> encode(_i4.IPLDNode? node) =>
       (super.noSuchMethod(
             Invocation.method(#encode, [node]),
-            returnValue: _i7.Future<_i10.Uint8List>.value(_i10.Uint8List(0)),
+            returnValue: _i8.Future<_i11.Uint8List>.value(_i11.Uint8List(0)),
           )
-          as _i7.Future<_i10.Uint8List>);
+          as _i8.Future<_i11.Uint8List>);
 
   @override
-  _i7.Future<_i4.IPLDNode> decode(_i10.Uint8List? data) =>
+  _i8.Future<_i4.IPLDNode> decode(_i11.Uint8List? data) =>
       (super.noSuchMethod(
             Invocation.method(#decode, [data]),
-            returnValue: _i7.Future<_i4.IPLDNode>.value(
+            returnValue: _i8.Future<_i4.IPLDNode>.value(
               _FakeIPLDNode_4(this, Invocation.method(#decode, [data])),
             ),
           )
-          as _i7.Future<_i4.IPLDNode>);
+          as _i8.Future<_i4.IPLDNode>);
 }
 
 /// A class which mocks [IPLDSchema].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockIPLDSchema extends _i1.Mock implements _i11.IPLDSchema {
+class MockIPLDSchema extends _i1.Mock implements _i5.IPLDSchema {
   MockIPLDSchema() {
     _i1.throwOnMissingStub(this);
   }
@@ -251,15 +257,83 @@ class MockIPLDSchema extends _i1.Mock implements _i11.IPLDSchema {
   String get name =>
       (super.noSuchMethod(
             Invocation.getter(#name),
-            returnValue: _i6.dummyValue<String>(this, Invocation.getter(#name)),
+            returnValue: _i7.dummyValue<String>(this, Invocation.getter(#name)),
           )
           as String);
 
   @override
-  _i7.Future<bool> validate(String? typeName, _i4.IPLDNode? node) =>
+  _i8.Future<bool> validate(
+    String? typeName,
+    _i4.IPLDNode? node, {
+    _i5.IPLDLinkResolver? linkResolver,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#validate, [typeName, node]),
-            returnValue: _i7.Future<bool>.value(false),
+            Invocation.method(
+              #validate,
+              [typeName, node],
+              {#linkResolver: linkResolver},
+            ),
+            returnValue: _i8.Future<bool>.value(false),
           )
-          as _i7.Future<bool>);
+          as _i8.Future<bool>);
+
+  @override
+  _i5.SchemaValidationResult check(String? typeName, _i4.IPLDNode? node) =>
+      (super.noSuchMethod(
+            Invocation.method(#check, [typeName, node]),
+            returnValue: _FakeSchemaValidationResult_5(
+              this,
+              Invocation.method(#check, [typeName, node]),
+            ),
+          )
+          as _i5.SchemaValidationResult);
+
+  @override
+  _i8.Future<_i5.SchemaValidationResult> checkAsync(
+    String? typeName,
+    _i4.IPLDNode? node, {
+    _i5.IPLDLinkResolver? linkResolver,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #checkAsync,
+              [typeName, node],
+              {#linkResolver: linkResolver},
+            ),
+            returnValue: _i8.Future<_i5.SchemaValidationResult>.value(
+              _FakeSchemaValidationResult_5(
+                this,
+                Invocation.method(
+                  #checkAsync,
+                  [typeName, node],
+                  {#linkResolver: linkResolver},
+                ),
+              ),
+            ),
+          )
+          as _i8.Future<_i5.SchemaValidationResult>);
+
+  @override
+  void validateOrThrow(String? typeName, _i4.IPLDNode? node) =>
+      super.noSuchMethod(
+        Invocation.method(#validateOrThrow, [typeName, node]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i8.Future<void> validateOrThrowAsync(
+    String? typeName,
+    _i4.IPLDNode? node, {
+    _i5.IPLDLinkResolver? linkResolver,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #validateOrThrowAsync,
+              [typeName, node],
+              {#linkResolver: linkResolver},
+            ),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
 }
