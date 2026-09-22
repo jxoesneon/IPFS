@@ -224,6 +224,20 @@ class BitswapHandler implements ILifecycle {
       final cidStr = entry.key;
       final wantEntry = entry.value;
 
+      // Denylist egress gate: a blocked CID is never served to a peer and
+      // is never advertised via HAVE. When the peer asked for DONT_HAVE we
+      // answer with it; otherwise the want is left unanswered.
+      if (_isDeniedForBitswap(cidStr)) {
+        if (wantEntry.sendDontHave) {
+          outgoingMessage.addBlockPresence(
+            cidStr,
+            message.BlockPresenceType.dontHave,
+          );
+          hasContent = true;
+        }
+        continue;
+      }
+
       // Track remote demand separately — the local wantlist holds only
       // blocks this node wants.
       _recordPeerWant(fromPeer, cidStr, wantEntry.priority);
@@ -390,6 +404,9 @@ class BitswapHandler implements ILifecycle {
     }
     if (interested.isEmpty) return;
 
+    // Denylist egress gate: never relay blocked content to interested peers.
+    if (_isDeniedForBitswap(cid)) return;
+
     final outgoing = message.Message()..addBlock(block);
     final bytes = outgoing.toBytes();
     for (final peerId in interested) {
@@ -411,6 +428,17 @@ class BitswapHandler implements ILifecycle {
       throw StateError('BitswapHandler is not running');
     }
 
+    // Denylist gate: denylisted CIDs are never requested from peers. Hits
+    // are recorded with the `bitswap` source; under a `log` default action
+    // the CID is still requested.
+    final allowedCids = <String>[
+      for (final cid in cids)
+        if (!_isDeniedForBitswap(cid)) cid,
+    ];
+    if (allowedCids.isEmpty) {
+      return <Block>[];
+    }
+
     if (_router.connectedPeers.isEmpty) {
       throw StateError('No connected peers available for Bitswap request');
     }
@@ -422,7 +450,7 @@ class BitswapHandler implements ILifecycle {
     }
 
     final completers = <String, Completer<Block>>{};
-    for (final cid in cids) {
+    for (final cid in allowedCids) {
       if (!_pendingBlocks.containsKey(cid)) {
         final completer = Completer<Block>();
         _pendingBlocks[cid] = completer;
@@ -583,6 +611,10 @@ class BitswapHandler implements ILifecycle {
   /// Handles an incoming want request for a CID.
   Future<void> handleWantRequest(String cidStr) async {
     try {
+      if (_isDeniedForBitswap(cidStr)) {
+        return;
+      }
+
       final customMessage = message.Message();
       customMessage.addWantlistEntry(
         cidStr,
@@ -627,19 +659,31 @@ class BitswapHandler implements ILifecycle {
     return _getBlock(cidStr, useHttpFallback: useHttpFallback);
   }
 
+  /// Returns `true` when [cidStr] is denylisted and must not be served to
+  /// or requested from peers.
+  ///
+  /// The hit is always recorded via [DenylistService.recordHit] with the
+  /// `bitswap` source. A `log` default action only records the event and
+  /// returns `false`, so the caller proceeds normally — the same semantics
+  /// as the previous inline [_getBlock] check.
+  bool _isDeniedForBitswap(String cidStr) {
+    final denylist = _denylistService;
+    if (denylist == null || !denylist.configuredEnabled) {
+      return false;
+    }
+    if (!denylist.isBlockedByCidString(cidStr)) {
+      return false;
+    }
+    return denylist.recordHit(cidStr, source: 'bitswap') == 'block';
+  }
+
   Future<Block?> _getBlock(
     String cidStr, {
     required bool useHttpFallback,
   }) async {
-    final denylist = _denylistService;
-    if (denylist != null &&
-        denylist.configuredEnabled &&
-        denylist.isBlockedByCidString(cidStr)) {
-      final action = denylist.recordHit(cidStr, source: 'rpc');
-      if (action == 'block') {
-        _logger.warning('Denylist: rejected Bitswap retrieval for $cidStr');
-        return null;
-      }
+    if (_isDeniedForBitswap(cidStr)) {
+      _logger.warning('Denylist: rejected Bitswap retrieval for $cidStr');
+      return null;
     }
 
     // 1. Try local blockstore.

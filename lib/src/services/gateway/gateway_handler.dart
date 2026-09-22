@@ -172,6 +172,17 @@ class _CarTraversal {
   int written = 0;
 }
 
+/// Thrown when a denylisted block is encountered while assembling a
+/// response body (CAR stream, directory traversal, or reassembled file).
+///
+/// Extends [CarException] so CAR traversal loops that rethrow CAR errors
+/// propagate it unchanged; handlers map it to a 451 response instead of
+/// serving a response that contains denylisted content.
+class _DenylistBlockedException extends CarException {
+  /// Creates a [_DenylistBlockedException] for the denylisted [cidStr].
+  _DenylistBlockedException(String cidStr) : super('Denylisted block: $cidStr');
+}
+
 /// Handles IPFS Gateway HTTP requests following the IPFS Gateway specs.
 /// See: https://specs.ipfs.tech/http-gateways/
 class GatewayHandler {
@@ -255,11 +266,37 @@ class GatewayHandler {
       return null;
     }
 
+    return _denylistBlockedResponse();
+  }
+
+  /// The shared 451 body for denylisted content.
+  Response _denylistBlockedResponse() {
     return Response(
       451,
       body: 'Content blocked by operator policy',
       headers: {'Content-Type': 'text/plain'},
     );
+  }
+
+  /// Throws a [_DenylistBlockedException] when [cidStr] is denylisted and
+  /// the configured default action is `block`.
+  ///
+  /// The hit is always recorded via [DenylistService.recordHit]; under the
+  /// `log` action this returns normally after logging, matching
+  /// [_checkDenylist] semantics. This gates blocks fetched mid-traversal —
+  /// CAR children, path-resolution steps, and UnixFS file chunks — whose
+  /// CIDs are not part of the request path checked by [_checkDenylist].
+  void _throwIfDenylisted(String cidStr) {
+    final service = denylistService;
+    if (service == null || !service.configuredEnabled) {
+      return;
+    }
+    if (!service.isBlockedByCidString(cidStr)) {
+      return;
+    }
+    if (service.recordHit(cidStr, source: 'gateway') == 'block') {
+      throw _DenylistBlockedException(cidStr);
+    }
   }
 
   /// Records a gateway request metric if a [MetricsCollector] is available.
@@ -346,6 +383,9 @@ class GatewayHandler {
       } on FormatException catch (e) {
         _logger.warning('Invalid CID in path: $cidStr ($e)');
         response = Response.badRequest(body: 'Invalid CID');
+      } on _DenylistBlockedException {
+        // A denylisted child block was reached while traversing the DAG.
+        response = _denylistBlockedResponse();
       } catch (e, stackTrace) {
         _logger.error('Error serving content for $cidStr', e, stackTrace);
         response = Response.internalServerError(body: 'Internal server error');
@@ -415,6 +455,9 @@ class GatewayHandler {
             }
           }
         }
+      } on _DenylistBlockedException {
+        // A denylisted child block was reached while traversing the DAG.
+        response = _denylistBlockedResponse();
       } catch (e) {
         _logger.warning('Failed to resolve IPNS name $name: $e');
         response = Response.notFound('IPNS name not found: $name');
@@ -748,6 +791,10 @@ class GatewayHandler {
           return await _serveFile(block, cidStr, request);
         }
       }
+    } on _DenylistBlockedException {
+      // A denylisted child block was reached during navigation or file
+      // reassembly — never fall back to serving the raw block.
+      rethrow;
     } catch (e) {
       // Not UnixFS, serve as raw block
     }
@@ -1166,6 +1213,10 @@ class GatewayHandler {
         contentLocation: _contentLocation(request, negotiation),
       );
       return Response.ok(carBytes, headers: headers);
+    } on _DenylistBlockedException {
+      // A denylisted child block was reached during CAR traversal; the
+      // archive must not be served at all rather than truncated.
+      return _denylistBlockedResponse();
     } on CarException catch (e) {
       _logger.warning('CAR generation failed for ${cid.encode()}: $e');
       return Response(416, body: 'CAR generation failed: $e');
@@ -2488,6 +2539,9 @@ class GatewayHandler {
     } on FormatException catch (e) {
       _logger.warning('Invalid CID in subdomain: ${sub.identifier} ($e)');
       response = _invalidCidResponse();
+    } on _DenylistBlockedException {
+      // A denylisted child block was reached while traversing the DAG.
+      response = _denylistBlockedResponse();
     } catch (e, stackTrace) {
       _logger.error(
         'Error serving content for subdomain ${sub.identifier}',
@@ -2688,6 +2742,10 @@ class GatewayHandler {
   /// [bitswapHandler] is available and running. When [localOnly] is true
   /// (a `Cache-Control: only-if-cached` request), Bitswap is skipped.
   Future<Block?> _getBlockByCid(String cidStr, {bool localOnly = false}) async {
+    // Denylist egress gate: a blocked CID is never served, whether it is the
+    // request target or a child block reached during DAG/file traversal.
+    _throwIfDenylisted(cidStr);
+
     try {
       final response = await blockStore.getBlock(cidStr);
       if (response.found) {
