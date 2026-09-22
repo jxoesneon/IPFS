@@ -688,13 +688,13 @@ class MockIPFSNode extends _i1.Mock implements _i14.IPFSNode {
           as _i11.Future<String>);
 
   @override
-  _i11.Future<String> addDirectory(Map<String, dynamic>? directoryContent) =>
+  _i11.Future<String> addDirectory(Map<String, dynamic>? directoryContent, {int? shardThreshold}) =>
       (super.noSuchMethod(
-            Invocation.method(#addDirectory, [directoryContent]),
+            Invocation.method(#addDirectory, [directoryContent], {#shardThreshold: shardThreshold}),
             returnValue: _i11.Future<String>.value(
               _i10.dummyValue<String>(
                 this,
-                Invocation.method(#addDirectory, [directoryContent]),
+                Invocation.method(#addDirectory, [directoryContent], {#shardThreshold: shardThreshold}),
               ),
             ),
           )

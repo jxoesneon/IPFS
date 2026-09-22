@@ -135,6 +135,10 @@ class Reprovider implements ILifecycle {
   DateTime? _nextRun;
   ReproviderResult? _lastResult;
   Future<ReproviderResult>? _currentRun;
+
+  /// Routing keys (`SHA256(multihash)`) are stable per CID; cache them per
+  /// sweep so sort and grouping each avoid a re-hash of the same CID.
+  final Map<String, PeerId> _routingKeyCache = {};
   bool _isPaused = false;
 
   /// Whether the reprovider has been paused (e.g. by mobile lifecycle management).
@@ -272,6 +276,7 @@ class Reprovider implements ILifecycle {
   Future<ReproviderResult> _runInternal() async {
     _logger.info('Reprovide run started: strategy=$_strategy');
     final stopwatch = Stopwatch()..start();
+    _routingKeyCache.clear();
 
     final errors = <String>[];
     Map<PeerId, List<CID>>? groupedCids;
@@ -495,9 +500,14 @@ class Reprovider implements ILifecycle {
   }
 
   PeerId _routingKey(CID cid) {
-    final multihashBytes = cid.multihash.toBytes();
-    final hashBytes = Uint8List.fromList(sha256.convert(multihashBytes).bytes);
-    return PeerId(value: hashBytes);
+    final key = cid.encode();
+    return _routingKeyCache.putIfAbsent(key, () {
+      final multihashBytes = cid.multihash.toBytes();
+      final hashBytes = Uint8List.fromList(
+        sha256.convert(multihashBytes).bytes,
+      );
+      return PeerId(value: hashBytes);
+    });
   }
 
   BigInt _xorDistance(PeerId a, PeerId b) {
