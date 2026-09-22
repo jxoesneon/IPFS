@@ -84,6 +84,7 @@ tmp/
 temp/
 .tmp/
 test_blocks/
+test_blocks_*/
 test_blocks_log/
 test_tmp/
 test_repo/
