@@ -76,7 +76,8 @@ jobs:
             dart test --enable-experiment=native-assets --preset interop --reporter expanded \
               test/interop/test/car_test.dart test/interop/test/bitswap_test.dart \
               test/interop/test/gateway_test.dart test/interop/test/connectivity_test.dart \
-              test/interop/test/pubsub_kubo_test.dart
+              test/interop/test/pubsub_kubo_test.dart \
+              test/interop/test/unixfs_dir_test.dart
 
       - name: Collect container logs on failure
         if: failure()

@@ -99,6 +99,18 @@ void main() {
     });
 
     test('addDirectory handles nested directories', () async {
+      // Directory building computes cumulative Tsize by reading back the
+      // child blocks it just stored, so the mock datastore must behave
+      // statefully for this test.
+      final stored = <String, Block>{};
+      when(mockDatastore.putBlock(any)).thenAnswer((inv) async {
+        final block = inv.positionalArguments[0] as Block;
+        stored[block.cid.toString()] = block;
+      });
+      when(mockDatastore.getBlock(any)).thenAnswer(
+        (inv) async => stored[inv.positionalArguments[0] as String],
+      );
+
       final directoryContent = {
         'file.txt': Uint8List.fromList([1, 2, 3]),
         'subdir': {

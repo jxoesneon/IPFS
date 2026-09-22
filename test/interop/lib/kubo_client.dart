@@ -263,6 +263,108 @@ class KuboClient with PubsubRpc {
     }
   }
 
+  /// Adds [files] (name → bytes) via `POST /api/v0/add?wrap-with-directory`
+  /// and returns the wrapping directory's `{Name, Hash, Size}` entry.
+  Future<Map<String, dynamic>> addWrapped(Map<String, List<int>> files) async {
+    final uri = Uri.http('$host:$port', '/api/v0/add', {
+      'wrap-with-directory': 'true',
+    });
+    final client = HttpClient();
+    try {
+      final request = await client.postUrl(uri);
+      final boundary = '----KuboAddDir${DateTime.now().millisecondsSinceEpoch}';
+      request.headers.contentType = ContentType(
+        'multipart',
+        'form-data',
+        charset: 'utf-8',
+        parameters: {'boundary': boundary},
+      );
+      final body = BytesBuilder();
+      for (final entry in files.entries) {
+        body
+          ..add(utf8.encode('--$boundary\r\n'))
+          ..add(
+            utf8.encode(
+              'Content-Disposition: form-data; name="file"; '
+              'filename="${entry.key}"\r\n',
+            ),
+          )
+          ..add(utf8.encode('Content-Type: application/octet-stream\r\n\r\n'))
+          ..add(entry.value)
+          ..add(utf8.encode('\r\n'));
+      }
+      body.add(utf8.encode('--$boundary--\r\n'));
+      request.add(body.toBytes());
+      final response = await request.close();
+      final bodyText = await response.transform(utf8.decoder).join();
+      if (response.statusCode != 200) {
+        throw HttpException(
+          'Kubo RPC add returned ${response.statusCode}: $bodyText',
+        );
+      }
+      return _lastNdjsonObject(bodyText, 'add');
+    } finally {
+      client.close();
+    }
+  }
+
+  /// Adds a directory tree via `POST /api/v0/add` using `dir/<path>`
+  /// filenames — the multipart convention for recursive adds — and returns
+  /// the root directory CID (the entry whose `Name` equals [rootName]).
+  Future<String> addDirRecursive(
+    String rootName,
+    Map<String, List<int>> files,
+  ) async {
+    final uri = Uri.http('$host:$port', '/api/v0/add');
+    final client = HttpClient();
+    try {
+      final request = await client.postUrl(uri);
+      final boundary =
+          '----KuboAddRecursive${DateTime.now().millisecondsSinceEpoch}';
+      request.headers.contentType = ContentType(
+        'multipart',
+        'form-data',
+        charset: 'utf-8',
+        parameters: {'boundary': boundary},
+      );
+      final body = BytesBuilder();
+      for (final entry in files.entries) {
+        body
+          ..add(utf8.encode('--$boundary\r\n'))
+          ..add(
+            utf8.encode(
+              'Content-Disposition: form-data; name="file"; '
+              'filename="$rootName/${entry.key}"\r\n',
+            ),
+          )
+          ..add(utf8.encode('Content-Type: application/octet-stream\r\n\r\n'))
+          ..add(entry.value)
+          ..add(utf8.encode('\r\n'));
+      }
+      body.add(utf8.encode('--$boundary--\r\n'));
+      request.add(body.toBytes());
+      final response = await request.close();
+      final bodyText = await response.transform(utf8.decoder).join();
+      if (response.statusCode != 200) {
+        throw HttpException(
+          'Kubo RPC add returned ${response.statusCode}: $bodyText',
+        );
+      }
+      // Kubo emits one NDJSON object per file plus one per directory; the
+      // root directory entry's Name is exactly [rootName].
+      for (final line in bodyText.split('\n')) {
+        if (line.trim().isEmpty) continue;
+        final obj = jsonDecode(line) as Map<String, dynamic>;
+        if (obj['Name'] == rootName) {
+          return obj['Hash'] as String;
+        }
+      }
+      throw StateError('Kubo add did not return a $rootName root entry');
+    } finally {
+      client.close();
+    }
+  }
+
   /// Returns the content addressed by [cid] via `POST /api/v0/cat`,
   /// resolving UnixFS DAGs to their file payload.
   Future<Uint8List> cat(String cid) async {

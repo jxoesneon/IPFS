@@ -2,8 +2,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:fixnum/fixnum.dart' as fixnum;
-
+import '../../proto/generated/core/blockstore.pb.dart';
 import '../../proto/generated/core/pin.pb.dart';
 import '../../protocols/bitswap/bitswap_handler.dart';
 import '../../transport/http_gateway_client.dart';
@@ -12,15 +11,16 @@ import '../cid.dart';
 import '../config/bitswap_config.dart';
 import '../data_structures/block.dart';
 import '../data_structures/blockstore.dart';
-import '../data_structures/directory.dart';
 import '../data_structures/link.dart';
 import '../data_structures/merkle_dag_node.dart';
 import '../data_structures/pin.dart';
 import '../errors/node_errors.dart';
+import '../interfaces/i_block_store.dart';
 import '../interfaces/i_lifecycle.dart';
 import '../security/denylist_service.dart';
 import '../storage/datastore.dart';
 import '../unixfs/unixfs_builder.dart';
+import '../unixfs/unixfs_directory.dart';
 import '../unixfs/unixfs_reader.dart';
 import 'datastore_handler.dart';
 import 'ipfs_node.dart';
@@ -135,9 +135,15 @@ class ContentManager implements ILifecycle {
   }
 
   /// Adds a directory to IPFS and returns its root CID.
+  ///
+  /// Directory nodes are built with Kubo-compatible semantics: entries are
+  /// sorted by UTF-8 name order and each link's `Tsize` is the cumulative
+  /// serialized size of the linked subtree, so the resulting root CID matches
+  /// `ipfs add -r` for the same contents.
   Future<String> addDirectory(Map<String, dynamic> directoryContent) async {
     try {
-      final directoryManager = IPFSDirectoryManager();
+      final store = _ContentBlockStore(this);
+      final entries = <UnixFSDirectoryEntry>[];
 
       for (final entry in directoryContent.entries) {
         final name = entry.key;
@@ -145,22 +151,17 @@ class ContentManager implements ILifecycle {
 
         if (value is Uint8List) {
           final cid = await addFile(value);
-          directoryManager.addEntry(
-            IPFSDirectoryEntry(
-              name: name,
-              hash: CID.decode(cid).toBytes(),
-              size: fixnum.Int64(value.length),
-              isDirectory: false,
-            ),
+          // tsize is recomputed by createDirectory from the stored subtree.
+          entries.add(
+            UnixFSDirectoryEntry(name: name, cid: CID.decode(cid), tsize: 0),
           );
         } else if (value is Map<String, dynamic>) {
           final subDirCid = await addDirectory(value);
-          directoryManager.addEntry(
-            IPFSDirectoryEntry(
+          entries.add(
+            UnixFSDirectoryEntry(
               name: name,
-              hash: CID.decode(subDirCid).toBytes(),
-              size: fixnum.Int64(0),
-              isDirectory: true,
+              cid: CID.decode(subDirCid),
+              tsize: 0,
             ),
           );
         } else {
@@ -170,16 +171,9 @@ class ContentManager implements ILifecycle {
         }
       }
 
-      final pbNode = directoryManager.build();
-      final block = await Block.fromData(
-        pbNode.writeToBuffer(),
-        format: 'dag-pb',
-      );
-
-      await _datastoreHandler.putBlock(block);
-      await _blockStore?.putBlock(block);
-      _logger.info('Added directory with CID: ${block.cid}');
-      return block.cid.toString();
+      final node = await createDirectory(store, entries);
+      _logger.info('Added directory with CID: ${node.cid}');
+      return node.cid.toString();
     } catch (e, stackTrace) {
       _logger.error('Error adding directory', e, stackTrace);
       rethrow;
@@ -488,4 +482,39 @@ class ContentManager implements ILifecycle {
       rethrow;
     }
   }
+}
+
+/// [IBlockStore] facade over [ContentManager]'s stores, used by the UnixFS
+/// directory builder to compute cumulative Tsizes and persist nodes. Reads go
+/// through the shared fetch path (datastore, block store, Bitswap); writes go
+/// to the datastore and shared block store like every other stored block.
+class _ContentBlockStore implements IBlockStore {
+  _ContentBlockStore(this._content);
+
+  final ContentManager _content;
+
+  @override
+  Future<GetBlockResponse> getBlock(String cid) async {
+    final block = await _content._fetchBlock(cid);
+    if (block == null) {
+      return GetBlockResponse(found: false);
+    }
+    return GetBlockResponse(block: block.toProto(), found: true);
+  }
+
+  @override
+  Future<AddBlockResponse> putBlock(Block block) async {
+    await _content._datastoreHandler.putBlock(block);
+    await _content._blockStore?.putBlock(block);
+    return AddBlockResponse(success: true);
+  }
+
+  @override
+  Future<void> start() async {}
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
