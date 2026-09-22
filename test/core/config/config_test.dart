@@ -23,6 +23,10 @@ void main() {
         'collectStorageMetrics': false,
         'enablePrometheusExport': true,
         'prometheusEndpoint': '/custom',
+        'enableOpenTelemetry': false,
+        'otlpEndpoint': 'http://localhost:4318/v1/metrics',
+        'otlpHeaders': <String, String>{},
+        'exportIntervalSeconds': 60,
       };
       final config = MetricsConfig.fromJson(json);
       expect(config.enabled, isFalse);
