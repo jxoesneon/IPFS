@@ -2,6 +2,7 @@ import 'package:fixnum/fixnum.dart';
 
 import '../../proto/generated/core/dag.pb.dart';
 import '../../proto/generated/unixfs/unixfs.pb.dart';
+import '../unixfs/unixfs_directory.dart' show compareEntryNamesUtf8;
 
 // lib/src/core/data_structures/directory.dart
 
@@ -97,8 +98,13 @@ class IPFSDirectoryManager {
     node.data = _unixFsData.writeToBuffer();
 
     // 4. Add Links
-    // IPFS requires links to be sorted by name for deterministic DAG generation.
-    _entries.sort((a, b) => a.name.compareTo(b.name));
+    // IPFS requires links to be sorted by name for deterministic DAG
+    // generation. Kubo sorts links by raw UTF-8 name bytes, so compare the
+    // UTF-8 encodings rather than UTF-16 code units — the orders diverge for
+    // names containing code points above U+FFFF (surrogate pairs) or, more
+    // subtly, for any name whose UTF-16 code-unit order disagrees with its
+    // UTF-8 byte order (e.g. 'é' U+00E9 vs. multi-byte UTF-8 sequences).
+    _entries.sort((a, b) => compareEntryNamesUtf8(a.name, b.name));
 
     for (final entry in _entries) {
       node.links.add(entry.toLink());

@@ -315,13 +315,18 @@ class KademliaRoutingTable {
   }
 
   /// Compares PeerIds for tree ordering based on XOR distance to local root.
+  ///
+  /// Uses [compareXorDistanceToKey], which performs the distance comparison
+  /// byte-wise without allocating [BigInt]s — this comparator runs on every
+  /// red-black tree insertion and lookup, so it must stay allocation-free.
   Comparator<PeerId> get _xorDistanceComparator => (PeerId a, PeerId b) {
     if (_peersEqual(a, b)) return 0;
 
-    final BigInt distA = calculateDistance(a, _tree.root!.peerId);
-    final BigInt distB = calculateDistance(b, _tree.root!.peerId);
-
-    final int distanceComparison = distA.compareTo(distB);
+    final int distanceComparison = compareXorDistanceToKey(
+      a.value,
+      b.value,
+      _tree.root!.peerId.value,
+    );
     if (distanceComparison != 0) {
       return distanceComparison;
     }
