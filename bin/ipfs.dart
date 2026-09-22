@@ -248,9 +248,15 @@ class DaemonCommand extends IpfsCommand {
 
 void _listenForSignal(ProcessSignal signal, Completer<void> completer) {
   try {
-    signal.watch().listen((_) {
-      if (!completer.isCompleted) completer.complete();
-    });
+    // On platforms where a signal is unsupported (e.g. SIGTERM on Windows),
+    // watch() may deliver a SignalException as a stream error event rather
+    // than a synchronous throw — both must be tolerated.
+    signal.watch().listen(
+      (_) {
+        if (!completer.isCompleted) completer.complete();
+      },
+      onError: (_) {},
+    );
   } catch (e) {
     // Signal may be unsupported on the current platform.
   }
