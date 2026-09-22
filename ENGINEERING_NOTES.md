@@ -56,6 +56,8 @@ Automated surfaces (do not hand-edit versions in these):
 
 Still manual on each publish: the CHANGELOG entry itself, README "What's New" narrative, ROADMAP prose, the git tag, the coverage gate above, and maintainer sign-off. Pushing a `v*` tag publishes to pub.dev and creates the GitHub Release with notes extracted from the tag's CHANGELOG section (`github-release` job in `publish.yml`); `core-v*`/`quic-v*` tags publish only their package, no release. Sub-packages (`dart_ipfs_core`, `dart_ipfs_quic`) are versioned independently — their tags only gate their own `pubspec.yaml` + `CHANGELOG.md`.
 
+**Publish ordering (verified 1.19.0):** pub.dev OIDC tag-pattern publishing restricts each package to its own tag prefix — a `v*` tag **cannot** publish `dart_ipfs_core` (token rejected: "Expected tag 'core-vX.Y.Z'"). When a release bumps a satellite version, tag order matters: push `core-v<ver>` (and `quic-v<ver>` if bumped) **first**, wait for the publish, then push `v<ver>` — the umbrella run's satellite publish jobs detect the already-published version and skip. Note the pub.dev `packages/<name>` API's `.versions[]` list lags `latest` by ~1–2 minutes after publish, so re-running a failed publish workflow too soon makes the version check miss the satellite and retry the forbidden publish; wait until `.versions[]` shows the new version before rerunning.
+
 ## Work-Package Boundaries
 
 When planning recovery or implementation work, scope each effort to one work-package and forbid broad import sweeps:
