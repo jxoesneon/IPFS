@@ -13,6 +13,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/mfs/mfs_manager.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
@@ -85,6 +86,17 @@ ServiceContainer _createContainer() {
   return container;
 }
 
+class _FakeMFSManager extends MFSManager {
+  _FakeMFSManager() : super(MockBlockStore(), MemoryDatastore());
+
+  @override
+  Future<List<MFSListEntry>> ls(
+    String path, {
+    bool long = false,
+    bool u = false,
+  }) async => [MFSListEntry(name: 'hello.txt', type: 0, size: 0, hash: '')];
+}
+
 class MockIPFSNode extends IPFSNode {
   MockIPFSNode() : super.fromContainer(_createContainer());
 
@@ -100,6 +112,9 @@ class MockIPFSNode extends IPFSNode {
 
   @override
   Future<List<String>> get connectedPeers async => ['QmPeer1', 'QmPeer2'];
+
+  @override
+  MFSManager get mfs => _FakeMFSManager();
 }
 
 void main() {
@@ -184,6 +199,25 @@ void main() {
         headers: {'X-API-Key': 'wrong-key'},
       );
       expect(response.statusCode, 403);
+    });
+
+    test('should expose the MFS /api/v0/files/* endpoints', () async {
+      final response = await http.post(
+        Uri.parse('http://localhost:$port/api/v0/files/ls?arg=/'),
+        headers: {'X-API-Key': 'secret-key'},
+      );
+      expect(response.statusCode, 200);
+      final body = jsonDecode(response.body);
+      expect(body['Entries'], isA<List<dynamic>>());
+      expect(body['Entries'][0]['Name'], 'hello.txt');
+
+      // An unknown files verb still 404s, proving the MFS routes — not a
+      // catch-all — produced the response above.
+      final unknown = await http.post(
+        Uri.parse('http://localhost:$port/api/v0/files/no-such-verb'),
+        headers: {'X-API-Key': 'secret-key'},
+      );
+      expect(unknown.statusCode, 404);
     });
 
     test('should expose /metrics as Prometheus text', () async {

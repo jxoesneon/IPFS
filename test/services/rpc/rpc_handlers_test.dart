@@ -13,6 +13,8 @@ import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
@@ -165,20 +167,22 @@ void main() {
       expect(response.statusCode, equals(200));
     });
 
-    test('handleCat normalizes ipfs/ prefixed paths without leading slash',
-        () async {
-      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
-      when(
-        mockNode.get(cid, path: 'a.txt'),
-      ).thenAnswer((_) async => Uint8List.fromList([8]));
+    test(
+      'handleCat normalizes ipfs/ prefixed paths without leading slash',
+      () async {
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        when(
+          mockNode.get(cid, path: 'a.txt'),
+        ).thenAnswer((_) async => Uint8List.fromList([8]));
 
-      final request = Request(
-        'POST',
-        Uri.parse('http://localhost/api/v0/cat?arg=ipfs/$cid/a.txt'),
-      );
-      final response = await handlers.handleCat(request);
-      expect(response.statusCode, equals(200));
-    });
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/cat?arg=ipfs/$cid/a.txt'),
+        );
+        final response = await handlers.handleCat(request);
+        expect(response.statusCode, equals(200));
+      },
+    );
 
     test('handleCat normalizes bare leading-slash paths', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
@@ -1667,49 +1671,339 @@ void main() {
       expect(utf8.decode(tar.sublist(512, 512 + 8)), equals('chunked!'));
     });
 
-    test('TAR traversal enforces depth and node-count bounds', () async {
-      final block = await Block.fromData(
-        Uint8List.fromList([1]),
-        format: 'raw',
-      );
+    /// Reflective handle to the private `_tarAddNode` method plus factories
+    /// for the private `_TarWriter`/`_TarTraversalBudget` types.
+    ({
+      mirrors.ClassMirror budgetClass,
+      mirrors.ClassMirror tarClass,
+      mirrors.InstanceMirror mirror,
+      Symbol tarAddSym,
+    })
+    tarMirror() {
       final mirror = mirrors.reflect(handlers);
       // Private members are library-scoped, so resolve them by their
       // readable names rather than Symbols minted in this library.
       final lib = mirror.type.owner! as mirrors.LibraryMirror;
-      final tarClass =
+      mirrors.ClassMirror classNamed(String name) =>
           lib.declarations.entries
                   .firstWhere(
-                    (e) => mirrors.MirrorSystem.getName(e.key) == '_TarWriter',
+                    (e) => mirrors.MirrorSystem.getName(e.key) == name,
                   )
                   .value
               as mirrors.ClassMirror;
-      final tar = tarClass.newInstance(const Symbol(''), []).reflectee;
-      final tarAddSym = mirror.type.declarations.keys.firstWhere(
-        (s) => mirrors.MirrorSystem.getName(s) == '_tarAddNode',
+      return (
+        mirror: mirror,
+        tarClass: classNamed('_TarWriter'),
+        budgetClass: classNamed('_TarTraversalBudget'),
+        tarAddSym: mirror.type.declarations.keys.firstWhere(
+          (s) => mirrors.MirrorSystem.getName(s) == '_tarAddNode',
+        ),
+      );
+    }
+
+    test('TAR traversal enforces depth, node-count, and byte bounds', () async {
+      final block = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
+      final m = tarMirror();
+      final tar = m.tarClass.newInstance(const Symbol(''), []).reflectee;
+
+      dynamic budget({int? maxNodes, int? maxBytes}) {
+        final b = m.budgetClass.newInstance(const Symbol(''), []).reflectee;
+        final bm = mirrors.reflect(b);
+        if (maxNodes != null) {
+          bm.setField(const Symbol('maxNodes'), maxNodes);
+        }
+        if (maxBytes != null) {
+          bm.setField(const Symbol('maxBytes'), maxBytes);
+        }
+        return b;
+      }
+
+      Future<void> addNode(int depth, dynamic b) =>
+          m.mirror
+                  .invoke(
+                    m.tarAddSym,
+                    [tar, 'n', block],
+                    {const Symbol('depth'): depth, const Symbol('budget'): b},
+                  )
+                  .reflectee
+              as Future<void>;
+
+      await expectLater(addNode(33, budget()), throwsStateError);
+      // A raw leaf still consumes one node of the shared budget.
+      await expectLater(addNode(0, budget(maxNodes: 0)), throwsStateError);
+      // A one-byte payload exceeds a zero-byte export budget.
+      await expectLater(addNode(0, budget(maxBytes: 0)), throwsStateError);
+    });
+
+    test('TAR node budget is shared across sibling branches', () async {
+      // root -> [dirA -> fileA, dirB -> fileB]: five nodes total. A shared
+      // budget capped at 4 must trip inside the second branch; the old
+      // per-frame counter restarted the count for every subtree.
+      Future<Block> dir(String name, Block child) => Block.fromData(
+        dag_pb.PBNode(
+          data: unixfs_pb.Data(
+            type: unixfs_pb.Data_DataType.Directory,
+          ).writeToBuffer(),
+          links: [dag_pb.PBLink(name: name, hash: child.cid.toBytes())],
+        ).writeToBuffer(),
+        format: 'dag-pb',
       );
 
+      final fileA = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
+      final fileB = await Block.fromData(
+        Uint8List.fromList([2]),
+        format: 'raw',
+      );
+      final dirA = await dir('a', fileA);
+      final dirB = await dir('b', fileB);
+      final root = await Block.fromData(
+        dag_pb.PBNode(
+          data: unixfs_pb.Data(
+            type: unixfs_pb.Data_DataType.Directory,
+          ).writeToBuffer(),
+          links: [
+            dag_pb.PBLink(name: 'dirA', hash: dirA.cid.toBytes()),
+            dag_pb.PBLink(name: 'dirB', hash: dirB.cid.toBytes()),
+          ],
+        ).writeToBuffer(),
+        format: 'dag-pb',
+      );
+      for (final b in [fileA, fileB, dirA, dirB, root]) {
+        storeBlock(b);
+      }
+      when(mockNode.bitswap).thenReturn(null);
+
+      final m = tarMirror();
+      final tar = m.tarClass.newInstance(const Symbol(''), []).reflectee;
+      final budget = m.budgetClass.newInstance(const Symbol(''), []).reflectee;
+      mirrors.reflect(budget).setField(const Symbol('maxNodes'), 4);
+
       await expectLater(
-        mirror
+        m.mirror
                 .invoke(
-                  tarAddSym,
-                  [tar, 'n', block],
-                  {const Symbol('depth'): 33, const Symbol('nodes'): 1},
+                  m.tarAddSym,
+                  [tar, 'root', root],
+                  {const Symbol('depth'): 0, const Symbol('budget'): budget},
                 )
                 .reflectee
             as Future<void>,
         throwsStateError,
       );
-      await expectLater(
-        mirror
-                .invoke(
-                  tarAddSym,
-                  [tar, 'n', block],
-                  {const Symbol('depth'): 0, const Symbol('nodes'): 10001},
-                )
-                .reflectee
-            as Future<void>,
-        throwsStateError,
+    });
+
+    group('denylist enforcement', () {
+      late DenylistService denylist;
+      late _MockMetricsCollector denylistMetrics;
+
+      setUp(() {
+        denylistMetrics = _MockMetricsCollector();
+        denylist = DenylistService(
+          const SecurityConfig(enableDenylist: true),
+          denylistMetrics,
+        );
+        when(mockNode.denylistService).thenReturn(denylist);
+        when(mockNode.bitswap).thenReturn(null);
+        addTearDown(denylist.stop);
+      });
+
+      /// Builds a UnixFS directory with one named link per entry and stores
+      /// every block in the mock blockstore.
+      Future<Block> storeDir(Map<String, Block> links) async {
+        final node = dag_pb.PBNode(
+          data: unixfs_pb.Data(
+            type: unixfs_pb.Data_DataType.Directory,
+          ).writeToBuffer(),
+          links: [
+            for (final entry in links.entries)
+              dag_pb.PBLink(name: entry.key, hash: entry.value.cid.toBytes()),
+          ],
+        );
+        final dir = await Block.fromData(
+          node.writeToBuffer(),
+          format: 'dag-pb',
+        );
+        storeBlock(dir);
+        return dir;
+      }
+
+      test('handleCat returns 451 for a path-scoped denylist rule', () async {
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        denylist.loadCompactBytes(utf8.encode('/ipfs/$cid/blocked.txt'));
+
+        final response = await handlers.handleCat(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/api/v0/cat?arg=$cid/blocked.txt'),
+          ),
+        );
+        expect(response.statusCode, equals(451));
+        final body = json.decode(await response.readAsString());
+        expect(body['Message'], contains('blocked by operator policy'));
+        verifyNever(mockNode.get(any, path: anyNamed('path')));
+      });
+
+      test(
+        'handleCat serves sibling paths under a partially blocked root',
+        () async {
+          final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+          denylist.loadCompactBytes(utf8.encode('/ipfs/$cid/blocked.txt'));
+          when(
+            mockNode.get(cid, path: 'open.txt'),
+          ).thenAnswer((_) async => Uint8List.fromList([1]));
+          when(
+            mockNode.get(cid, path: ''),
+          ).thenAnswer((_) async => Uint8List.fromList([2]));
+
+          for (final arg in ['$cid/open.txt', cid]) {
+            final response = await handlers.handleCat(
+              Request(
+                'POST',
+                Uri.parse('http://localhost/api/v0/cat?arg=$arg'),
+              ),
+            );
+            expect(response.statusCode, equals(200), reason: 'arg=$arg');
+          }
+        },
       );
+
+      test('handleCat still returns 451 for a CID-level rule', () async {
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        denylist.blockCidString(cid);
+
+        final response = await handlers.handleCat(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/api/v0/cat?arg=$cid/any.txt'),
+          ),
+        );
+        expect(response.statusCode, equals(451));
+        verifyNever(mockNode.get(any, path: anyNamed('path')));
+      });
+
+      test('handleGet returns 451 for a path-scoped denylist rule', () async {
+        final file = await Block.fromData(
+          Uint8List.fromList(utf8.encode('secret')),
+          format: 'raw',
+        );
+        storeBlock(file);
+        final dir = await storeDir({'secret.txt': file});
+        denylist.loadCompactBytes(
+          utf8.encode('/ipfs/${dir.cid.encode()}/secret.txt'),
+        );
+
+        final response = await handlers.handleGet(
+          Request(
+            'POST',
+            Uri.parse(
+              'http://localhost/api/v0/get?arg=${dir.cid.encode()}/secret.txt',
+            ),
+          ),
+        );
+        expect(response.statusCode, equals(451));
+
+        // The unblocked root itself still exports normally.
+        final allowed = await handlers.handleGet(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/api/v0/get?arg=${dir.cid.encode()}'),
+          ),
+        );
+        expect(allowed.statusCode, equals(200));
+      });
+
+      test(
+        'handleGet returns 451 when a sub-path resolves to a blocked CID',
+        () async {
+          final file = await Block.fromData(
+            Uint8List.fromList(utf8.encode('secret')),
+            format: 'raw',
+          );
+          storeBlock(file);
+          final dir = await storeDir({'secret.txt': file});
+          denylist.blockCidString(file.cid.encode());
+
+          final response = await handlers.handleGet(
+            Request(
+              'POST',
+              Uri.parse(
+                'http://localhost/api/v0/get?arg=${dir.cid.encode()}/secret.txt',
+              ),
+            ),
+          );
+          expect(response.statusCode, equals(451));
+          expect(denylistMetrics.securityEvents, contains('denylist_blocked'));
+        },
+      );
+
+      test(
+        'handleGet returns 451 when TAR traversal reaches a blocked child',
+        () async {
+          final file = await Block.fromData(
+            Uint8List.fromList(utf8.encode('secret')),
+            format: 'raw',
+          );
+          storeBlock(file);
+          final dir = await storeDir({'secret.txt': file});
+          denylist.blockCidString(file.cid.encode());
+
+          final response = await handlers.handleGet(
+            Request(
+              'POST',
+              Uri.parse('http://localhost/api/v0/get?arg=${dir.cid.encode()}'),
+            ),
+          );
+          expect(response.statusCode, equals(451));
+          expect(denylistMetrics.securityEvents, contains('denylist_blocked'));
+        },
+      );
+
+      test('handleLs returns 451 for a denylisted CID', () async {
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        denylist.blockCidString(cid);
+
+        final response = await handlers.handleLs(
+          Request('POST', Uri.parse('http://localhost/api/v0/ls?arg=$cid')),
+        );
+        expect(response.statusCode, equals(451));
+        verifyNever(mockNode.ls(any));
+      });
+
+      test('handleLs returns 451 for a path-scoped denylist rule', () async {
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        denylist.loadCompactBytes(utf8.encode('/ipfs/$cid/blocked'));
+
+        final response = await handlers.handleLs(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/api/v0/ls?arg=/ipfs/$cid/blocked'),
+          ),
+        );
+        expect(response.statusCode, equals(451));
+        verifyNever(mockNode.ls(any));
+      });
+
+      test('handleLs normalizes ipfs prefixes for unblocked paths', () async {
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        when(mockNode.ls(cid)).thenAnswer(
+          (_) async => [Link(name: 'file.txt', cid: CID.decode(cid), size: 3)],
+        );
+
+        for (final prefix in ['/ipfs/', 'ipfs/', '/', '']) {
+          final response = await handlers.handleLs(
+            Request(
+              'POST',
+              Uri.parse('http://localhost/api/v0/ls?arg=$prefix$cid'),
+            ),
+          );
+          expect(response.statusCode, equals(200), reason: 'prefix $prefix');
+        }
+      });
     });
 
     test(
@@ -2326,4 +2620,16 @@ class _FakeBitswapHandler extends Mock implements BitswapHandler {
   @override
   Future<Block?> wantBlock(String cid) async =>
       cid == _block.cid.encode() ? _block : null;
+}
+
+/// Minimal [MetricsCollector] stub that captures security events so tests
+/// can assert denylist audit behavior.
+class _MockMetricsCollector implements MetricsCollector {
+  final List<String> securityEvents = [];
+
+  @override
+  void recordSecurityEvent(String type) => securityEvents.add(type);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
