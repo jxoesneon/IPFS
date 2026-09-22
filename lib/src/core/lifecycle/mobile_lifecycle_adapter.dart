@@ -57,8 +57,8 @@ class ManualMobileLifecycleAdapter implements MobileLifecycleAdapter {
   ManualMobileLifecycleAdapter({
     NodeLifecycleState initialState = NodeLifecycleState.resumed,
     bool initialLowBattery = false,
-  })  : _currentState = initialState,
-        _isLowBattery = initialLowBattery;
+  }) : _currentState = initialState,
+       _isLowBattery = initialLowBattery;
 
   final StreamController<NodeLifecycleState> _lifecycleController =
       StreamController<NodeLifecycleState>.broadcast();

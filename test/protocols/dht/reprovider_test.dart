@@ -129,9 +129,7 @@ void main() {
   /// Replicates the reprovider's DHT routing key: SHA-256 of the multihash.
   PeerId routingKey(CID cid) {
     return PeerId(
-      value: Uint8List.fromList(
-        sha256.convert(cid.multihash.toBytes()).bytes,
-      ),
+      value: Uint8List.fromList(sha256.convert(cid.multihash.toBytes()).bytes),
     );
   }
 
@@ -372,12 +370,13 @@ void main() {
         // The provided order must match ascending XOR distance between each
         // CID's routing key and the local peer ID.
         final localPeerId = recordingHandler.dhtClient.peerId;
-        final expected = [...cids]..sort(
-          (a, b) => xorDistance(
-            routingKey(a),
-            localPeerId,
-          ).compareTo(xorDistance(routingKey(b), localPeerId)),
-        );
+        final expected = [...cids]
+          ..sort(
+            (a, b) => xorDistance(
+              routingKey(a),
+              localPeerId,
+            ).compareTo(xorDistance(routingKey(b), localPeerId)),
+          );
         expect(
           recordingHandler.providedOrder.map((c) => c.toString()).toList(),
           expected.map((c) => c.toString()).toList(),

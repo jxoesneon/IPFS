@@ -58,14 +58,13 @@ void main() {
     });
 
     test('empty directory matches the Kubo CIDv1 form', () async {
-      final dir = await UnixFSDirectoryBuilder(cidVersion: 1)
-          .build(store, const []);
+      final dir = await UnixFSDirectoryBuilder(
+        cidVersion: 1,
+      ).build(store, const []);
       expect(dir.cid.version, equals(1));
       expect(
         dir.cid.toString(),
-        equals(
-          'bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354',
-        ),
+        equals('bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354'),
       );
     });
 
@@ -147,60 +146,66 @@ void main() {
   });
 
   group('Kubo parity: cumulative Tsize', () {
-    test('link Tsize for a multi-chunk file covers the whole file DAG',
-        () async {
-      // > 256 KiB forces a multi-chunk dag-pb file root with leaf links.
-      final data = Uint8List(300 * 1024);
-      for (var i = 0; i < data.length; i++) {
-        data[i] = i & 0xff;
-      }
-      final fileRoot = await createFile(data);
-      final fileTsize = await computeTsize(store, fileRoot.cid);
-      expect(fileTsize, greaterThan(fileRoot.data.length));
+    test(
+      'link Tsize for a multi-chunk file covers the whole file DAG',
+      () async {
+        // > 256 KiB forces a multi-chunk dag-pb file root with leaf links.
+        final data = Uint8List(300 * 1024);
+        for (var i = 0; i < data.length; i++) {
+          data[i] = i & 0xff;
+        }
+        final fileRoot = await createFile(data);
+        final fileTsize = await computeTsize(store, fileRoot.cid);
+        expect(fileTsize, greaterThan(fileRoot.data.length));
 
-      final dir = await createDirectory(store, [
-        UnixFSDirectoryEntry(name: 'big.bin', cid: fileRoot.cid, tsize: 0),
-      ]);
+        final dir = await createDirectory(store, [
+          UnixFSDirectoryEntry(name: 'big.bin', cid: fileRoot.cid, tsize: 0),
+        ]);
 
-      expect(dir.pbNode.links.single.size.toInt(), equals(fileTsize));
-    });
+        expect(dir.pbNode.links.single.size.toInt(), equals(fileTsize));
+      },
+    );
 
-    test('link Tsize for a subdirectory is cumulative over descendants',
-        () async {
-      final file = await createFile('nested'.codeUnits);
-      final subdir = await createDirectory(store, [
-        UnixFSDirectoryEntry(name: 'file.txt', cid: file.cid, tsize: 0),
-      ]);
-      final root = await createDirectory(store, [
-        UnixFSDirectoryEntry(name: 'sub', cid: subdir.cid, tsize: 0),
-      ]);
+    test(
+      'link Tsize for a subdirectory is cumulative over descendants',
+      () async {
+        final file = await createFile('nested'.codeUnits);
+        final subdir = await createDirectory(store, [
+          UnixFSDirectoryEntry(name: 'file.txt', cid: file.cid, tsize: 0),
+        ]);
+        final root = await createDirectory(store, [
+          UnixFSDirectoryEntry(name: 'sub', cid: subdir.cid, tsize: 0),
+        ]);
 
-      final expectedSubdirTsize = subdir.data.length + file.data.length;
-      expect(
-        root.pbNode.links.single.size.toInt(),
-        equals(expectedSubdirTsize),
-      );
-      expect(
-        await computeTsize(store, root.cid),
-        equals(root.data.length + expectedSubdirTsize),
-      );
-    });
+        final expectedSubdirTsize = subdir.data.length + file.data.length;
+        expect(
+          root.pbNode.links.single.size.toInt(),
+          equals(expectedSubdirTsize),
+        );
+        expect(
+          await computeTsize(store, root.cid),
+          equals(root.data.length + expectedSubdirTsize),
+        );
+      },
+    );
 
-    test('computeTsize counts a shared child once per link (diamond DAG)',
-        () async {
-      // go-merkledag's cumulative size sums per-link Tsize, so a child
-      // reachable through two links contributes its size twice.
-      final file = await createFile('shared'.codeUnits);
-      final dir = await createDirectory(store, [
-        UnixFSDirectoryEntry(name: 'a', cid: file.cid, tsize: 0),
-        UnixFSDirectoryEntry(name: 'b', cid: file.cid, tsize: 0),
-      ]);
+    test(
+      'computeTsize counts a shared child once per link (diamond DAG)',
+      () async {
+        // go-merkledag's cumulative size sums per-link Tsize, so a child
+        // reachable through two links contributes its size twice.
+        final file = await createFile('shared'.codeUnits);
+        final dir = await createDirectory(store, [
+          UnixFSDirectoryEntry(name: 'a', cid: file.cid, tsize: 0),
+          UnixFSDirectoryEntry(name: 'b', cid: file.cid, tsize: 0),
+        ]);
 
-      expect(
-        await computeTsize(store, dir.cid),
-        equals(dir.data.length + 2 * file.data.length),
-      );
-    });
+        expect(
+          await computeTsize(store, dir.cid),
+          equals(dir.data.length + 2 * file.data.length),
+        );
+      },
+    );
 
     test('computeTsize throws when a linked block is missing', () async {
       final ghostCid = await CID.fromContent(
@@ -291,32 +296,36 @@ void main() {
       expect(await resolver.resolve(root.cid, '//'), equals(root.cid));
     });
 
-    test('resolves nested paths with or without leading/trailing slashes',
-        () async {
-      final root = await buildTree();
-      const deepContent = 'deep';
-      final deepCid = (await createFile(deepContent.codeUnits)).cid;
+    test(
+      'resolves nested paths with or without leading/trailing slashes',
+      () async {
+        final root = await buildTree();
+        const deepContent = 'deep';
+        final deepCid = (await createFile(deepContent.codeUnits)).cid;
 
-      for (final path in [
-        'a/b/deep.txt',
-        '/a/b/deep.txt',
-        'a/b/deep.txt/',
-        '/a/b/deep.txt/',
-      ]) {
-        expect(await resolver.resolve(root.cid, path), equals(deepCid));
-      }
-    });
+        for (final path in [
+          'a/b/deep.txt',
+          '/a/b/deep.txt',
+          'a/b/deep.txt/',
+          '/a/b/deep.txt/',
+        ]) {
+          expect(await resolver.resolve(root.cid, path), equals(deepCid));
+        }
+      },
+    );
 
-    test('resolveNode returns the directory node for a directory path',
-        () async {
-      final root = await buildTree();
-      final node = await resolver.resolveNode(root.cid, 'a/b/');
-      expect(node.isDirectory, isTrue);
-      expect(
-        node.pbNode.links.map((l) => l.name).toList(),
-        equals(['deep.txt']),
-      );
-    });
+    test(
+      'resolveNode returns the directory node for a directory path',
+      () async {
+        final root = await buildTree();
+        final node = await resolver.resolveNode(root.cid, 'a/b/');
+        expect(node.isDirectory, isTrue);
+        expect(
+          node.pbNode.links.map((l) => l.name).toList(),
+          equals(['deep.txt']),
+        );
+      },
+    );
 
     test('cannot traverse into a file', () async {
       final root = await buildTree();
@@ -357,8 +366,9 @@ void main() {
       // the encoder refuses to produce it.
       final file = await createFile('dup'.codeUnits);
       final dupNode = dag_pb.PBNode(
-        data: unixfs_pb.Data(type: unixfs_pb.Data_DataType.Directory)
-            .writeToBuffer(),
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
         links: [
           dag_pb.PBLink(
             hash: Uint8List.fromList(file.cid.toBytes()),
@@ -414,18 +424,14 @@ void main() {
         UnixFSDirectoryEntry(name: 'b', cid: fileB.cid, tsize: 0),
       ]);
 
-      final updated =
-          await addChildToDirectory(store, dir.cid, 'c', fileC.cid);
+      final updated = await addChildToDirectory(store, dir.cid, 'c', fileC.cid);
 
       expect(updated.isDirectory, isTrue);
       expect(
         updated.pbNode.links.map((l) => l.name).toList(),
         equals(['a', 'b', 'c']),
       );
-      expect(
-        updated.pbNode.links[2].size.toInt(),
-        equals(fileC.data.length),
-      );
+      expect(updated.pbNode.links[2].size.toInt(), equals(fileC.data.length));
       // The untouched siblings keep their original Tsize values.
       expect(updated.pbNode.links[0].size.toInt(), fileA.data.length);
       expect(updated.pbNode.links[1].size.toInt(), fileB.data.length);

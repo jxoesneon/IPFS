@@ -196,10 +196,7 @@ void main() {
         final far = peerOfByte(0, 0x01);
         // The leading byte lands in the first 8-byte chunk:
         // 0x01 << 56 = 72057594037927936.
-        expect(
-          metric.calculateDistance(zero, far),
-          equals(72057594037927936),
-        );
+        expect(metric.calculateDistance(zero, far), equals(72057594037927936));
       });
 
       test('orders 32-byte peers by XOR distance to a target', () {
@@ -225,10 +222,7 @@ void main() {
         expect(metric.calculateDistanceToKey(peer, key), equals(1));
 
         // Distance to a key equal to the peer ID is zero.
-        expect(
-          metric.calculateDistanceToKey(peer, peer.value),
-          equals(0),
-        );
+        expect(metric.calculateDistanceToKey(peer, peer.value), equals(0));
       });
     });
   });

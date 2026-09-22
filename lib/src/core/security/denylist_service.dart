@@ -887,10 +887,9 @@ class DenylistService implements ILifecycle {
       if (cid.version == 1) {
         return cid.encodeWithBase(Multibase.base32);
       }
-      return CID.v1(
-        cid.codec ?? 'dag-pb',
-        cid.multihash,
-      ).encodeWithBase(Multibase.base32);
+      return CID
+          .v1(cid.codec ?? 'dag-pb', cid.multihash)
+          .encodeWithBase(Multibase.base32);
     } catch (_) {
       return null;
     }
@@ -1002,8 +1001,7 @@ class DenylistService implements ILifecycle {
       normalized = '/ipns/${normalized.substring('ipns://'.length)}';
     }
 
-    final segments =
-        normalized.split('/').where((s) => s.isNotEmpty).toList();
+    final segments = normalized.split('/').where((s) => s.isNotEmpty).toList();
     for (var i = 0; i + 1 < segments.length; i++) {
       final namespace = segments[i].toLowerCase();
       if (namespace != 'ipfs' && namespace != 'ipns') continue;
@@ -1094,16 +1092,14 @@ class DenylistService implements ILifecycle {
   /// sha256 hex encoding.
   bool _matchesHashedCid(CID cid, String path) {
     final snapshot = _snapshot;
-    if (snapshot.hashedMultihashes.isEmpty && snapshot.legacyHashHexes.isEmpty) {
+    if (snapshot.hashedMultihashes.isEmpty &&
+        snapshot.legacyHashHexes.isEmpty) {
       return false;
     }
 
     if (snapshot.hashedMultihashes.isNotEmpty) {
       final b58 = _b58Multihash(cid.multihash);
-      for (final preimage in [
-        b58,
-        if (path.isNotEmpty) '$b58/$path',
-      ]) {
+      for (final preimage in [b58, if (path.isNotEmpty) '$b58/$path']) {
         if (snapshot.hashedMultihashes.contains(
           hex.encode(_sha256MultihashBytes(preimage)),
         )) {
@@ -1135,7 +1131,8 @@ class DenylistService implements ILifecycle {
   /// DNSLink anchors hash `NAME/` and `NAME/PATH`.
   bool _matchesHashedIpnsName(String name, String path) {
     final snapshot = _snapshot;
-    if (snapshot.hashedMultihashes.isEmpty && snapshot.legacyHashHexes.isEmpty) {
+    if (snapshot.hashedMultihashes.isEmpty &&
+        snapshot.legacyHashHexes.isEmpty) {
       return false;
     }
     final names = {name, name.toLowerCase()};

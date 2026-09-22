@@ -261,9 +261,7 @@ class IPLDSelector {
   static BigInt _decodeBigInt(Uint8List bytes) {
     if (bytes.isEmpty) return BigInt.zero;
     if (bytes[0] != 0 && bytes[0] != 1) {
-      throw IPLDDecodingError(
-        'Malformed big-integer sign byte: ${bytes[0]}',
-      );
+      throw IPLDDecodingError('Malformed big-integer sign byte: ${bytes[0]}');
     }
     var magnitude = BigInt.zero;
     for (var i = 1; i < bytes.length; i++) {
@@ -473,7 +471,10 @@ class IPLDSelector {
         return ExploreRecursive(
           limit: DepthRecursionLimit(maxDepth ?? defaultSelectorMaxDepth),
           sequence: ExploreUnion(
-            members: [sub, const ExploreAll(next: ExploreRecursiveEdge())],
+            members: [
+              sub,
+              const ExploreAll(next: ExploreRecursiveEdge()),
+            ],
           ),
         );
       case SelectorType.union:

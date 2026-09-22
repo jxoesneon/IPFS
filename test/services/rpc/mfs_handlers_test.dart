@@ -200,11 +200,7 @@ class FakeMFSManager extends Fake implements MFSManager {
   int? lastChmodMode;
 
   @override
-  Future<void> touch(
-    String path, {
-    int? mtimeSecs,
-    int? mtimeNsecs,
-  }) async {
+  Future<void> touch(String path, {int? mtimeSecs, int? mtimeNsecs}) async {
     lastTouchPath = path;
     lastTouchSecs = mtimeSecs;
     lastTouchNsecs = mtimeNsecs;
@@ -212,11 +208,7 @@ class FakeMFSManager extends Fake implements MFSManager {
   }
 
   @override
-  Future<void> mtime(
-    String path, {
-    int? mtimeSecs,
-    int? mtimeNsecs,
-  }) async {
+  Future<void> mtime(String path, {int? mtimeSecs, int? mtimeNsecs}) async {
     lastTouchPath = path;
     lastTouchSecs = mtimeSecs;
     lastTouchNsecs = mtimeNsecs;

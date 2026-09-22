@@ -470,7 +470,8 @@ class _SchemaValidator {
         fields[fieldName] = _Field(
           fieldName,
           value['type'],
-          optional: value['optional'] == true || optionalList.contains(fieldName),
+          optional:
+              value['optional'] == true || optionalList.contains(fieldName),
           nullable: value['nullable'] == true,
           specStyle: true,
         );
@@ -483,7 +484,8 @@ class _SchemaValidator {
         fields[fieldName] = _Field(
           fieldName,
           value,
-          optional: inlineOptional ||
+          optional:
+              inlineOptional ||
               optionalList.contains(fieldName) ||
               !required.contains(fieldName),
           nullable: inlineNullable,
@@ -551,8 +553,10 @@ class _SchemaValidator {
     final order = _stringList(cfg['fieldOrder']) ?? fields.keys.toList();
     final values = node.listValue.values;
     if (values.length > order.length) {
-      _fail('tuple has ${values.length} elements; at most '
-          '${order.length} allowed');
+      _fail(
+        'tuple has ${values.length} elements; at most '
+        '${order.length} allowed',
+      );
     }
     for (var i = 0; i < order.length; i++) {
       final field = fields[order[i]];
@@ -596,8 +600,10 @@ class _SchemaValidator {
     final order = _stringList(cfg['fieldOrder']) ?? fields.keys.toList();
     final parts = node.stringValue.split(join);
     if (parts.length != order.length) {
-      _fail('stringjoin expects ${order.length} fields joined by "$join"; '
-          'found ${parts.length} parts');
+      _fail(
+        'stringjoin expects ${order.length} fields joined by "$join"; '
+        'found ${parts.length} parts',
+      );
       return;
     }
     for (var i = 0; i < order.length; i++) {
@@ -783,7 +789,8 @@ class _SchemaValidator {
   // ---------------------------------------------------------------------
 
   void _validateMapType(IPLDNode node, Map<String, dynamic> def) {
-    final typed = def.containsKey('keyType') ||
+    final typed =
+        def.containsKey('keyType') ||
         def.containsKey('valueType') ||
         def.containsKey('valueNullable');
     final rep = _reprKind(def);
@@ -998,8 +1005,10 @@ class _SchemaValidator {
             .toSet();
         if (node.kind != Kind.INTEGER ||
             !allowed.contains(node.intValue.toInt())) {
-          _fail('expected enum int member, found ${_kindLabel(node.kind)}'
-              '${node.kind == Kind.INTEGER ? ' ${node.intValue}' : ''}');
+          _fail(
+            'expected enum int member, found ${_kindLabel(node.kind)}'
+            '${node.kind == Kind.INTEGER ? ' ${node.intValue}' : ''}',
+          );
         }
       default:
         throw IPLDSchemaError('Unknown enum representation: $rep');
@@ -1226,8 +1235,7 @@ class _SchemaValidator {
       );
       return;
     }
-    final table =
-        cfg.containsKey('table') ? _asMap(cfg['table']) : cfg;
+    final table = cfg.containsKey('table') ? _asMap(cfg['table']) : cfg;
     if (table.isEmpty) {
       throw IPLDSchemaError('bytesprefix union requires a table');
     }

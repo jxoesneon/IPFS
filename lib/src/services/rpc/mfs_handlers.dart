@@ -356,10 +356,7 @@ class MFSHandlers {
     final src = _contentOrMfsPath(args[0]);
     final dst = _mfsPath(args[1]);
     if (src == null || dst == null) {
-      return _errorResponse(
-        'paths must start with a leading slash',
-        code: 400,
-      );
+      return _errorResponse('paths must start with a leading slash', code: 400);
     }
 
     final force = _boolParam(request, 'force');
@@ -395,10 +392,7 @@ class MFSHandlers {
     final src = _mfsPath(args[0]);
     final dst = _mfsPath(args[1]);
     if (src == null || dst == null) {
-      return _errorResponse(
-        'paths must start with a leading slash',
-        code: 400,
-      );
+      return _errorResponse('paths must start with a leading slash', code: 400);
     }
 
     final blocked = _checkDenylistForPath(src);
@@ -443,9 +437,7 @@ class MFSHandlers {
     }
     if (errors.isNotEmpty) {
       _logger.error('files/rm failed: ${errors.join('; ')}');
-      return _errorResponse(
-        "can't remove some files: ${errors.join('; ')}",
-      );
+      return _errorResponse("can't remove some files: ${errors.join('; ')}");
     }
     return Response.ok('');
   }
@@ -524,11 +516,7 @@ class MFSHandlers {
     }
 
     try {
-      await node.mfs.touch(
-        path,
-        mtimeSecs: mtimeSecs,
-        mtimeNsecs: mtimeNsecs,
-      );
+      await node.mfs.touch(path, mtimeSecs: mtimeSecs, mtimeNsecs: mtimeNsecs);
       return Response.ok('');
     } catch (e, st) {
       _logger.error('files/touch failed for path: $path', e, st);

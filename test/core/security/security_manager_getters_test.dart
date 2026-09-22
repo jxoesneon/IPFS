@@ -52,10 +52,15 @@ void main() {
     });
 
     test('getters return stable instances', () {
-      expect(identical(securityManager.keystore, securityManager.keystore),
-          isTrue);
       expect(
-        identical(securityManager.secureKeystore, securityManager.secureKeystore),
+        identical(securityManager.keystore, securityManager.keystore),
+        isTrue,
+      );
+      expect(
+        identical(
+          securityManager.secureKeystore,
+          securityManager.secureKeystore,
+        ),
         isTrue,
       );
       expect(

@@ -160,10 +160,7 @@ void main() {
     test('block data storage is bounded per ledger', () {
       final ledger = BitLedger('peer1');
       for (int i = 0; i < BitLedger.maxBlockDataEntries + 5; i++) {
-        ledger.storeBlockData(
-          'cid-$i',
-          Uint8List.fromList([i & 0xff]),
-        );
+        ledger.storeBlockData('cid-$i', Uint8List.fromList([i & 0xff]));
       }
       // The first entry was evicted once the bound was exceeded.
       expect(ledger.hasBlock('cid-0'), isFalse);

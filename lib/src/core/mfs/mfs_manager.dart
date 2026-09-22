@@ -309,8 +309,7 @@ class MFSManager implements ILifecycle {
         (currentCid) async {
           if (currentCid != null) {
             final existingType = await _unixfsType(currentCid);
-            if (createMissing &&
-                existingType == Data_DataType.Directory) {
+            if (createMissing && existingType == Data_DataType.Directory) {
               // Directory already exists: `mkdir -p` is idempotent.
               return currentCid;
             }
@@ -328,7 +327,8 @@ class MFSManager implements ILifecycle {
           }
           final node = dirManager.build();
           if (mtimeNsecs != null) {
-            final unixData = Data.fromBuffer(node.data)..mtimeNsecs = mtimeNsecs;
+            final unixData = Data.fromBuffer(node.data)
+              ..mtimeNsecs = mtimeNsecs;
             node.data = unixData.writeToBuffer();
           }
           final data = node.writeToBuffer();
@@ -389,25 +389,21 @@ class MFSManager implements ILifecycle {
     }
 
     await _mutationLock.synchronized(() async {
-      await _modifyPath(
-        destParts,
-        (currentCid) async {
-          if (currentCid != null) {
-            if (!force) {
-              throw Exception('file already exists: $dst');
-            }
-            final existingType = await _unixfsType(currentCid);
-            if (existingType == Data_DataType.Directory ||
-                existingType == Data_DataType.HAMTShard) {
-              throw Exception(
-                'cp: cannot overwrite directory with --force: $dst',
-              );
-            }
+      await _modifyPath(destParts, (currentCid) async {
+        if (currentCid != null) {
+          if (!force) {
+            throw Exception('file already exists: $dst');
           }
-          return srcCid;
-        },
-        recursive: parents,
-      );
+          final existingType = await _unixfsType(currentCid);
+          if (existingType == Data_DataType.Directory ||
+              existingType == Data_DataType.HAMTShard) {
+            throw Exception(
+              'cp: cannot overwrite directory with --force: $dst',
+            );
+          }
+        }
+        return srcCid;
+      }, recursive: parents);
     });
   }
 
@@ -566,8 +562,7 @@ class MFSManager implements ILifecycle {
     if (!block.found) throw Exception('Block not found for CID: $cid');
 
     final type = await _unixfsType(cid);
-    if (type != Data_DataType.Directory &&
-        type != Data_DataType.HAMTShard) {
+    if (type != Data_DataType.Directory && type != Data_DataType.HAMTShard) {
       // Kubo lists the file itself when the target is not a directory.
       if (!long) {
         return [
@@ -862,8 +857,7 @@ class MFSManager implements ILifecycle {
 
     if (cid.codec != 'raw') {
       final type = await _unixfsType(cid);
-      if (type == Data_DataType.Directory ||
-          type == Data_DataType.HAMTShard) {
+      if (type == Data_DataType.Directory || type == Data_DataType.HAMTShard) {
         throw Exception('Path is a directory: $path');
       }
     }
@@ -930,11 +924,7 @@ class MFSManager implements ILifecycle {
   /// a directory ("can only update directories"). With neither [cidVersion]
   /// nor [hash] given the call is a no-op. Supplying [hash] without
   /// [cidVersion] upgrades to CIDv1, matching Kubo's `getPrefix`.
-  Future<void> chcid(
-    String path, {
-    int? cidVersion,
-    String? hash,
-  }) async {
+  Future<void> chcid(String path, {int? cidVersion, String? hash}) async {
     final parts = _splitPath(path);
     if (parts.isEmpty) {
       throw Exception('Cannot change CID of MFS root');
@@ -961,8 +951,7 @@ class MFSManager implements ILifecycle {
         throw Exception('Path not found: $path');
       }
       final type = await _unixfsType(currentCid);
-      if (type != Data_DataType.Directory &&
-          type != Data_DataType.HAMTShard) {
+      if (type != Data_DataType.Directory && type != Data_DataType.HAMTShard) {
         throw Exception('can only update directories');
       }
       final newCid = await _rehashNode(currentCid, hashType, targetVersion);
@@ -978,28 +967,17 @@ class MFSManager implements ILifecycle {
   ///
   /// When [mtimeSecs] is null the current time is used. [mtimeNsecs] supplies
   /// the optional nanosecond fraction.
-  Future<void> touch(
-    String path, {
-    int? mtimeSecs,
-    int? mtimeNsecs,
-  }) async {
+  Future<void> touch(String path, {int? mtimeSecs, int? mtimeNsecs}) async {
     final secs =
         mtimeSecs ?? DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
     await _mutationLock.synchronized(() async {
-      await _setMetadata(
-        path,
-        mtimeSecs: secs,
-        mtimeNsecs: mtimeNsecs,
-      );
+      await _setMetadata(path, mtimeSecs: secs, mtimeNsecs: mtimeNsecs);
     });
   }
 
   /// Alias for [touch] — sets the mtime of the node at [path].
-  Future<void> mtime(
-    String path, {
-    int? mtimeSecs,
-    int? mtimeNsecs,
-  }) => touch(path, mtimeSecs: mtimeSecs, mtimeNsecs: mtimeNsecs);
+  Future<void> mtime(String path, {int? mtimeSecs, int? mtimeNsecs}) =>
+      touch(path, mtimeSecs: mtimeSecs, mtimeNsecs: mtimeNsecs);
 
   /// Sets the POSIX mode on the node at [path] (`files chmod`).
   Future<void> chmod(String path, int mode) async {
@@ -1031,10 +1009,7 @@ class MFSManager implements ILifecycle {
 
   /// Resolves an `/ipfs/<cid>[/sub/path]` reference through the block store.
   Future<CID?> _resolveIpfsPath(String normalized) async {
-    final segments = normalized
-        .split('/')
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final segments = normalized.split('/').where((s) => s.isNotEmpty).toList();
     // segments[0] == 'ipfs'
     if (segments.length < 2) return null;
     CID cid;

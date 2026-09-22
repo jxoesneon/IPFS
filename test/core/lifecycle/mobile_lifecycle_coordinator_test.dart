@@ -95,11 +95,14 @@ void main() {
       adapter.setLifecycleState(NodeLifecycleState.resumed);
 
       await pumpEventQueue();
-      expect(events, equals([
-        NodeLifecycleState.inactive,
-        NodeLifecycleState.paused,
-        NodeLifecycleState.resumed,
-      ]));
+      expect(
+        events,
+        equals([
+          NodeLifecycleState.inactive,
+          NodeLifecycleState.paused,
+          NodeLifecycleState.resumed,
+        ]),
+      );
       expect(adapter.currentState, equals(NodeLifecycleState.resumed));
 
       await sub.cancel();
@@ -122,15 +125,18 @@ void main() {
       await adapter.dispose();
     });
 
-    test('requestBackgroundExtension returns true while active, false when disposed', () async {
-      final adapter = ManualMobileLifecycleAdapter();
-      final granted = await adapter.requestBackgroundExtension();
-      expect(granted, isTrue);
+    test(
+      'requestBackgroundExtension returns true while active, false when disposed',
+      () async {
+        final adapter = ManualMobileLifecycleAdapter();
+        final granted = await adapter.requestBackgroundExtension();
+        expect(granted, isTrue);
 
-      await adapter.dispose();
-      final grantedAfterDispose = await adapter.requestBackgroundExtension();
-      expect(grantedAfterDispose, isFalse);
-    });
+        await adapter.dispose();
+        final grantedAfterDispose = await adapter.requestBackgroundExtension();
+        expect(grantedAfterDispose, isFalse);
+      },
+    );
   });
 
   group('MobileLifecycleCoordinator', () {
@@ -183,24 +189,33 @@ void main() {
       expect(coordinator.isRunning, isFalse);
     });
 
-    test('transitions to suspendedMesh on app paused and trims connections', () async {
-      await coordinator.start();
-      final modeChanges = <IpfsPowerMode>[];
-      final sub = coordinator.onPowerModeChanged.listen(modeChanges.add);
+    test(
+      'transitions to suspendedMesh on app paused and trims connections',
+      () async {
+        await coordinator.start();
+        final modeChanges = <IpfsPowerMode>[];
+        final sub = coordinator.onPowerModeChanged.listen(modeChanges.add);
 
-      adapter.setLifecycleState(NodeLifecycleState.paused);
-      await pumpEventQueue();
+        adapter.setLifecycleState(NodeLifecycleState.paused);
+        await pumpEventQueue();
 
-      expect(coordinator.currentPowerMode, equals(IpfsPowerMode.suspendedMesh));
-      expect(coordinator.currentLifecycleState, equals(NodeLifecycleState.paused));
-      expect(reprovider.pauseCalled, isTrue);
-      expect(blockStore.flushCalled, isTrue);
-      expect(networkManager.trimCallCount, equals(1));
-      expect(networkManager.lastTrimMaxConnections, equals(3));
-      expect(modeChanges, equals([IpfsPowerMode.suspendedMesh]));
+        expect(
+          coordinator.currentPowerMode,
+          equals(IpfsPowerMode.suspendedMesh),
+        );
+        expect(
+          coordinator.currentLifecycleState,
+          equals(NodeLifecycleState.paused),
+        );
+        expect(reprovider.pauseCalled, isTrue);
+        expect(blockStore.flushCalled, isTrue);
+        expect(networkManager.trimCallCount, equals(1));
+        expect(networkManager.lastTrimMaxConnections, equals(3));
+        expect(modeChanges, equals([IpfsPowerMode.suspendedMesh]));
 
-      await sub.cancel();
-    });
+        await sub.cancel();
+      },
+    );
 
     test('resumes from paused to fullActive when battery is healthy', () async {
       await coordinator.start();
@@ -216,37 +231,46 @@ void main() {
       expect(reprovider.resumeCalled, isTrue);
     });
 
-    test('resumes from paused to lowPower when device is low on battery', () async {
-      await coordinator.start();
+    test(
+      'resumes from paused to lowPower when device is low on battery',
+      () async {
+        await coordinator.start();
 
-      adapter.setLifecycleState(NodeLifecycleState.paused);
-      await pumpEventQueue();
+        adapter.setLifecycleState(NodeLifecycleState.paused);
+        await pumpEventQueue();
 
-      adapter.setLowBattery(true);
-      await pumpEventQueue();
-      // Low battery during paused does not prematurely wake node from suspendedMesh
-      expect(coordinator.currentPowerMode, equals(IpfsPowerMode.suspendedMesh));
+        adapter.setLowBattery(true);
+        await pumpEventQueue();
+        // Low battery during paused does not prematurely wake node from suspendedMesh
+        expect(
+          coordinator.currentPowerMode,
+          equals(IpfsPowerMode.suspendedMesh),
+        );
 
-      adapter.setLifecycleState(NodeLifecycleState.resumed);
-      await pumpEventQueue();
+        adapter.setLifecycleState(NodeLifecycleState.resumed);
+        await pumpEventQueue();
 
-      expect(coordinator.currentPowerMode, equals(IpfsPowerMode.lowPower));
-      expect(networkManager.lastTrimMaxConnections, equals(12));
-    });
+        expect(coordinator.currentPowerMode, equals(IpfsPowerMode.lowPower));
+        expect(networkManager.lastTrimMaxConnections, equals(12));
+      },
+    );
 
-    test('transitions between fullActive and lowPower when battery state toggles in foreground', () async {
-      await coordinator.start();
+    test(
+      'transitions between fullActive and lowPower when battery state toggles in foreground',
+      () async {
+        await coordinator.start();
 
-      adapter.setLowBattery(true);
-      await pumpEventQueue();
-      expect(coordinator.currentPowerMode, equals(IpfsPowerMode.lowPower));
-      expect(networkManager.lastTrimMaxConnections, equals(12));
+        adapter.setLowBattery(true);
+        await pumpEventQueue();
+        expect(coordinator.currentPowerMode, equals(IpfsPowerMode.lowPower));
+        expect(networkManager.lastTrimMaxConnections, equals(12));
 
-      adapter.setLowBattery(false);
-      await pumpEventQueue();
-      expect(coordinator.currentPowerMode, equals(IpfsPowerMode.fullActive));
-      expect(reprovider.resumeCalled, isTrue);
-    });
+        adapter.setLowBattery(false);
+        await pumpEventQueue();
+        expect(coordinator.currentPowerMode, equals(IpfsPowerMode.fullActive));
+        expect(reprovider.resumeCalled, isTrue);
+      },
+    );
 
     test('maintains power mode on inactive state', () async {
       await coordinator.start();
@@ -254,7 +278,10 @@ void main() {
       adapter.setLifecycleState(NodeLifecycleState.inactive);
       await pumpEventQueue();
       expect(coordinator.currentPowerMode, equals(IpfsPowerMode.fullActive));
-      expect(coordinator.currentLifecycleState, equals(NodeLifecycleState.inactive));
+      expect(
+        coordinator.currentLifecycleState,
+        equals(NodeLifecycleState.inactive),
+      );
     });
 
     test('executes onDetached callback on detached state', () async {
@@ -271,55 +298,71 @@ void main() {
       await pumpEventQueue();
 
       expect(detachedCalled, isTrue);
-      expect(customCoordinator.currentPowerMode, equals(IpfsPowerMode.suspendedMesh));
+      expect(
+        customCoordinator.currentPowerMode,
+        equals(IpfsPowerMode.suspendedMesh),
+      );
       await customCoordinator.stop();
     });
 
-    test('handles component exceptions gracefully without wedging state transitions', () async {
-      networkManager.shouldThrowOnTrim = true;
-      blockStore.shouldThrowOnFlush = true;
+    test(
+      'handles component exceptions gracefully without wedging state transitions',
+      () async {
+        networkManager.shouldThrowOnTrim = true;
+        blockStore.shouldThrowOnFlush = true;
 
-      await coordinator.start();
+        await coordinator.start();
 
-      // Even if networkManager and blockStore throw, coordinator completes transition safely
-      adapter.setLifecycleState(NodeLifecycleState.paused);
-      await pumpEventQueue();
+        // Even if networkManager and blockStore throw, coordinator completes transition safely
+        adapter.setLifecycleState(NodeLifecycleState.paused);
+        await pumpEventQueue();
 
-      expect(coordinator.currentPowerMode, equals(IpfsPowerMode.suspendedMesh));
+        expect(
+          coordinator.currentPowerMode,
+          equals(IpfsPowerMode.suspendedMesh),
+        );
 
-      adapter.setLifecycleState(NodeLifecycleState.resumed);
-      await pumpEventQueue();
+        adapter.setLifecycleState(NodeLifecycleState.resumed);
+        await pumpEventQueue();
 
-      expect(coordinator.currentPowerMode, equals(IpfsPowerMode.fullActive));
-    });
+        expect(coordinator.currentPowerMode, equals(IpfsPowerMode.fullActive));
+      },
+    );
 
-    test('rapid concurrent state transitions execute sequentially without deadlock', () async {
-      await coordinator.start();
+    test(
+      'rapid concurrent state transitions execute sequentially without deadlock',
+      () async {
+        await coordinator.start();
 
-      // Rapidly toggle state
-      adapter.setLifecycleState(NodeLifecycleState.paused);
-      adapter.setLifecycleState(NodeLifecycleState.resumed);
-      adapter.setLifecycleState(NodeLifecycleState.paused);
-      adapter.setLifecycleState(NodeLifecycleState.resumed);
+        // Rapidly toggle state
+        adapter.setLifecycleState(NodeLifecycleState.paused);
+        adapter.setLifecycleState(NodeLifecycleState.resumed);
+        adapter.setLifecycleState(NodeLifecycleState.paused);
+        adapter.setLifecycleState(NodeLifecycleState.resumed);
 
-      await pumpEventQueue();
-      expect(coordinator.currentPowerMode, equals(IpfsPowerMode.fullActive));
-    });
+        await pumpEventQueue();
+        expect(coordinator.currentPowerMode, equals(IpfsPowerMode.fullActive));
+      },
+    );
 
     test('works cleanly with all null optional components', () async {
-      final minimalCoordinator = MobileLifecycleCoordinator(
-        adapter: adapter,
-      );
+      final minimalCoordinator = MobileLifecycleCoordinator(adapter: adapter);
 
       await minimalCoordinator.start();
 
       adapter.setLifecycleState(NodeLifecycleState.paused);
       await pumpEventQueue();
-      expect(minimalCoordinator.currentPowerMode, equals(IpfsPowerMode.suspendedMesh));
+      expect(
+        minimalCoordinator.currentPowerMode,
+        equals(IpfsPowerMode.suspendedMesh),
+      );
 
       adapter.setLifecycleState(NodeLifecycleState.resumed);
       await pumpEventQueue();
-      expect(minimalCoordinator.currentPowerMode, equals(IpfsPowerMode.fullActive));
+      expect(
+        minimalCoordinator.currentPowerMode,
+        equals(IpfsPowerMode.fullActive),
+      );
 
       await minimalCoordinator.stop();
     });

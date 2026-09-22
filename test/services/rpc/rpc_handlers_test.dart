@@ -207,9 +207,7 @@ void main() {
         final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
         final request = Request(
           'POST',
-          Uri.parse(
-            'http://localhost/api/v0/dht/provide?arg=$cid&queue=true',
-          ),
+          Uri.parse('http://localhost/api/v0/dht/provide?arg=$cid&queue=true'),
         );
         final response = await handlers.handleDhtProvide(request);
         expect(response.statusCode, equals(202));
@@ -224,9 +222,7 @@ void main() {
         final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
         final request = Request(
           'POST',
-          Uri.parse(
-            'http://localhost/api/v0/dht/provide?arg=$cid&once=false',
-          ),
+          Uri.parse('http://localhost/api/v0/dht/provide?arg=$cid&once=false'),
         );
         final response = await handlers.handleDhtProvide(request);
         expect(response.statusCode, equals(202));
@@ -244,19 +240,14 @@ void main() {
         final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
         final request = Request(
           'POST',
-          Uri.parse(
-            'http://localhost/api/v0/dht/provide?arg=$cid&timeout=0s',
-          ),
+          Uri.parse('http://localhost/api/v0/dht/provide?arg=$cid&timeout=0s'),
         );
         final response = await handlers.handleDhtProvide(request);
         expect(response.statusCode, equals(200));
 
         final body = json.decode(await response.readAsString());
         expect(body['Attempts'], equals(0));
-        expect(
-          (body['Errors'] as List).join(' '),
-          contains('timeout'),
-        );
+        expect((body['Errors'] as List).join(' '), contains('timeout'));
       });
 
       test('recursive provides all local DAG blocks', () async {
@@ -277,9 +268,7 @@ void main() {
         });
         when(mockNode.blockStore).thenReturn(realBlockStore);
 
-        final childBlock = await Block.fromData(
-          Uint8List.fromList([9, 8, 7]),
-        );
+        final childBlock = await Block.fromData(Uint8List.fromList([9, 8, 7]));
         await realBlockStore.putBlock(childBlock);
         final pbNode = dag_pb.PBNode(
           links: [

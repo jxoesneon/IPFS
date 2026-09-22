@@ -111,28 +111,31 @@ void main() {
         );
       });
 
-      test('Accept q-values prefer the highest-weight supported type', () async {
-        final block = makeBlock();
-        when(
-          mockBlockStore.getBlock(cidStr),
-        ).thenAnswer((_) async => foundResponse(block));
+      test(
+        'Accept q-values prefer the highest-weight supported type',
+        () async {
+          final block = makeBlock();
+          when(
+            mockBlockStore.getBlock(cidStr),
+          ).thenAnswer((_) async => foundResponse(block));
 
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/ipfs/$cidStr'),
-          headers: {
-            'accept':
-                'application/vnd.ipld.dag-json;q=0.5, '
-                'application/vnd.ipld.raw;q=1.0',
-          },
-        );
-        final response = await handler.handlePath(request);
-        expect(response.statusCode, equals(200));
-        expect(
-          response.headers['content-type'],
-          equals('application/vnd.ipld.raw'),
-        );
-      });
+          final request = Request(
+            'GET',
+            Uri.parse('http://localhost/ipfs/$cidStr'),
+            headers: {
+              'accept':
+                  'application/vnd.ipld.dag-json;q=0.5, '
+                  'application/vnd.ipld.raw;q=1.0',
+            },
+          );
+          final response = await handler.handlePath(request);
+          expect(response.statusCode, equals(200));
+          expect(
+            response.headers['content-type'],
+            equals('application/vnd.ipld.raw'),
+          );
+        },
+      );
 
       test('?format accepts full media type values', () async {
         final block = makeBlock();
@@ -237,20 +240,23 @@ void main() {
         );
       });
 
-      test('Cache-Control: only-if-cached returns 412 without Bitswap', () async {
-        when(
-          mockBlockStore.getBlock(cidStr),
-        ).thenAnswer((_) async => notFoundResponse());
+      test(
+        'Cache-Control: only-if-cached returns 412 without Bitswap',
+        () async {
+          when(
+            mockBlockStore.getBlock(cidStr),
+          ).thenAnswer((_) async => notFoundResponse());
 
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/ipfs/$cidStr?format=raw'),
-          headers: {'cache-control': 'only-if-cached'},
-        );
-        final response = await handler.handlePath(request);
-        expect(response.statusCode, equals(412));
-        verifyNever(mockBitswap.wantBlock(any));
-      });
+          final request = Request(
+            'GET',
+            Uri.parse('http://localhost/ipfs/$cidStr?format=raw'),
+            headers: {'cache-control': 'only-if-cached'},
+          );
+          final response = await handler.handlePath(request);
+          expect(response.statusCode, equals(412));
+          verifyNever(mockBitswap.wantBlock(any));
+        },
+      );
 
       test('identity CID bafkqaaa returns an empty raw block', () async {
         final request = Request(
@@ -509,10 +515,7 @@ void main() {
 
         final base = 'http://localhost/ipfs/${dirCid.encode()}?format=car';
         final deduped = await carSectionCids('$base&car-dups=n');
-        expect(
-          deduped.where((c) => c == childCid.encode()).length,
-          equals(1),
-        );
+        expect(deduped.where((c) => c == childCid.encode()).length, equals(1));
 
         final duplicated = await carSectionCids('$base&car-dups=y');
         expect(
@@ -523,10 +526,7 @@ void main() {
         final response = await handler.handlePath(
           Request('GET', Uri.parse('$base&car-dups=y')),
         );
-        expect(
-          response.headers['content-type'],
-          contains('dups=y'),
-        );
+        expect(response.headers['content-type'], contains('dups=y'));
       });
 
       test('dag-scope=block returns only path and terminal blocks', () async {
@@ -646,17 +646,11 @@ void main() {
 
         // Bytes 0-2 are covered entirely by chunk1.
         final first = await sectionsFor('0:2');
-        expect(
-          first,
-          unorderedEquals([fileCid.encode(), chunk1Cid.encode()]),
-        );
+        expect(first, unorderedEquals([fileCid.encode(), chunk1Cid.encode()]));
 
         // Bytes 3-* are covered entirely by chunk2.
         final last = await sectionsFor('3:*');
-        expect(
-          last,
-          unorderedEquals([fileCid.encode(), chunk2Cid.encode()]),
-        );
+        expect(last, unorderedEquals([fileCid.encode(), chunk2Cid.encode()]));
       });
 
       test('entity-bytes outside the entity returns 400', () async {
@@ -685,37 +679,40 @@ void main() {
         expect(response.statusCode, equals(400));
       });
 
-      test('identity CID bafkqaaa returns a CAR with no data sections', () async {
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/ipfs/bafkqaaa?format=car'),
-        );
-        final response = await handler.handlePath(request);
-        expect(response.statusCode, equals(200));
-        expect(
-          response.headers['content-type'],
-          contains('application/vnd.ipld.car'),
-        );
-        final body = await response.read().expand((i) => i).toList();
-        // The CAR is a single varint-prefixed dag-cbor header
-        // {roots: [bafkqaaa], version: 1} with an empty data section.
-        // CarReader/DagCborCodec cannot decode the zero-length identity
-        // multihash, so the header bytes are checked directly.
-        // bafkqaaa bytes: CIDv1 | raw codec (0x55) | identity mh | size 0.
-        const cidBytes = [0x01, 0x55, 0x00, 0x00];
-        final taggedCid = <int>[0x00, ...cidBytes];
-        final expectedHeader = <int>[
-          0xa2, // map(2)
-          0x65, ...'roots'.codeUnits,
-          0x81, // array(1)
-          0xd8, 0x2a, // tag 42 (CID link)
-          0x40 + taggedCid.length, ...taggedCid,
-          0x67, ...'version'.codeUnits,
-          0x01,
-        ];
-        expect(body, equals([expectedHeader.length, ...expectedHeader]));
-        verifyNever(mockBlockStore.getBlock(any));
-      });
+      test(
+        'identity CID bafkqaaa returns a CAR with no data sections',
+        () async {
+          final request = Request(
+            'GET',
+            Uri.parse('http://localhost/ipfs/bafkqaaa?format=car'),
+          );
+          final response = await handler.handlePath(request);
+          expect(response.statusCode, equals(200));
+          expect(
+            response.headers['content-type'],
+            contains('application/vnd.ipld.car'),
+          );
+          final body = await response.read().expand((i) => i).toList();
+          // The CAR is a single varint-prefixed dag-cbor header
+          // {roots: [bafkqaaa], version: 1} with an empty data section.
+          // CarReader/DagCborCodec cannot decode the zero-length identity
+          // multihash, so the header bytes are checked directly.
+          // bafkqaaa bytes: CIDv1 | raw codec (0x55) | identity mh | size 0.
+          const cidBytes = [0x01, 0x55, 0x00, 0x00];
+          final taggedCid = <int>[0x00, ...cidBytes];
+          final expectedHeader = <int>[
+            0xa2, // map(2)
+            0x65, ...'roots'.codeUnits,
+            0x81, // array(1)
+            0xd8, 0x2a, // tag 42 (CID link)
+            0x40 + taggedCid.length, ...taggedCid,
+            0x67, ...'version'.codeUnits,
+            0x01,
+          ];
+          expect(body, equals([expectedHeader.length, ...expectedHeader]));
+          verifyNever(mockBlockStore.getBlock(any));
+        },
+      );
     });
 
     group('?format=dag-json', () {
@@ -736,30 +733,39 @@ void main() {
           response.headers['content-type'],
           equals('application/vnd.ipld.dag-json'),
         );
-        expect(response.headers['etag'], equals('"${rawCid.encode()}.dag.json"'));
+        expect(
+          response.headers['etag'],
+          equals('"${rawCid.encode()}.dag.json"'),
+        );
         final body = await response.readAsString();
         expect(body, contains('"bytes"'));
       });
 
-      test('returns dag-json block bytes verbatim when codec matches', () async {
-        final jsonBytes = Uint8List.fromList('{"a":1}'.codeUnits);
-        final jsonCid = await CID.computeForData(jsonBytes, format: 'dag-json');
-        final block = makeBlock(cid: jsonCid.encode(), data: jsonBytes);
-        when(
-          mockBlockStore.getBlock(jsonCid.encode()),
-        ).thenAnswer((_) async => foundResponse(block));
+      test(
+        'returns dag-json block bytes verbatim when codec matches',
+        () async {
+          final jsonBytes = Uint8List.fromList('{"a":1}'.codeUnits);
+          final jsonCid = await CID.computeForData(
+            jsonBytes,
+            format: 'dag-json',
+          );
+          final block = makeBlock(cid: jsonCid.encode(), data: jsonBytes);
+          when(
+            mockBlockStore.getBlock(jsonCid.encode()),
+          ).thenAnswer((_) async => foundResponse(block));
 
-        final request = Request(
-          'GET',
-          Uri.parse(
-            'http://localhost/ipfs/${jsonCid.encode()}?format=dag-json',
-          ),
-        );
-        final response = await handler.handlePath(request);
-        expect(response.statusCode, equals(200));
-        final body = await response.read().expand((i) => i).toList();
-        expect(body, equals(jsonBytes));
-      });
+          final request = Request(
+            'GET',
+            Uri.parse(
+              'http://localhost/ipfs/${jsonCid.encode()}?format=dag-json',
+            ),
+          );
+          final response = await handler.handlePath(request);
+          expect(response.statusCode, equals(200));
+          final body = await response.read().expand((i) => i).toList();
+          expect(body, equals(jsonBytes));
+        },
+      );
     });
 
     group('?format=dag-cbor', () {
@@ -784,29 +790,35 @@ void main() {
         expect(body, isNotEmpty);
       });
 
-      test('returns dag-cbor block bytes verbatim when codec matches', () async {
-        final cborBytes = Uint8List.fromList([0xa1, 0x61, 0x61, 0x01]);
-        final cborCid = await CID.computeForData(cborBytes, format: 'dag-cbor');
-        final block = makeBlock(cid: cborCid.encode(), data: cborBytes);
-        when(
-          mockBlockStore.getBlock(cborCid.encode()),
-        ).thenAnswer((_) async => foundResponse(block));
+      test(
+        'returns dag-cbor block bytes verbatim when codec matches',
+        () async {
+          final cborBytes = Uint8List.fromList([0xa1, 0x61, 0x61, 0x01]);
+          final cborCid = await CID.computeForData(
+            cborBytes,
+            format: 'dag-cbor',
+          );
+          final block = makeBlock(cid: cborCid.encode(), data: cborBytes);
+          when(
+            mockBlockStore.getBlock(cborCid.encode()),
+          ).thenAnswer((_) async => foundResponse(block));
 
-        final request = Request(
-          'GET',
-          Uri.parse(
-            'http://localhost/ipfs/${cborCid.encode()}?format=dag-cbor',
-          ),
-        );
-        final response = await handler.handlePath(request);
-        expect(response.statusCode, equals(200));
-        expect(
-          response.headers['content-disposition'],
-          equals('attachment; filename="${cborCid.encode()}.cbor"'),
-        );
-        final body = await response.read().expand((i) => i).toList();
-        expect(body, equals(cborBytes));
-      });
+          final request = Request(
+            'GET',
+            Uri.parse(
+              'http://localhost/ipfs/${cborCid.encode()}?format=dag-cbor',
+            ),
+          );
+          final response = await handler.handlePath(request);
+          expect(response.statusCode, equals(200));
+          expect(
+            response.headers['content-disposition'],
+            equals('attachment; filename="${cborCid.encode()}.cbor"'),
+          );
+          final body = await response.read().expand((i) => i).toList();
+          expect(body, equals(cborBytes));
+        },
+      );
     });
 
     group('?format=ipns-record', () {

@@ -81,12 +81,15 @@ void main() {
       expect(await ipfs.pinnedCids, contains(cid));
     });
 
-    test('bandwidth counters and DHT peer count report zeros offline', () async {
-      await ipfs.start();
-      expect(ipfs.bandwidthIn, equals(0));
-      expect(ipfs.bandwidthOut, equals(0));
-      expect(ipfs.dhtPeerCount, equals(0));
-    });
+    test(
+      'bandwidth counters and DHT peer count report zeros offline',
+      () async {
+        await ipfs.start();
+        expect(ipfs.bandwidthIn, equals(0));
+        expect(ipfs.bandwidthOut, equals(0));
+        expect(ipfs.dhtPeerCount, equals(0));
+      },
+    );
 
     test('bandwidthMetrics exposes a metrics stream', () async {
       await ipfs.start();

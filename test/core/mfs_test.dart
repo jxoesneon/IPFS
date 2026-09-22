@@ -78,7 +78,11 @@ void main() {
     });
 
     test('cp copies content', () async {
-      await mfs.write('/original.txt', Stream.value(utf8.encode('data')), create: true);
+      await mfs.write(
+        '/original.txt',
+        Stream.value(utf8.encode('data')),
+        create: true,
+      );
       await mfs.cp('/original.txt', '/copy.txt');
 
       final contents = await mfs.ls('/');
@@ -90,7 +94,11 @@ void main() {
     });
 
     test('mv moves content', () async {
-      await mfs.write('/source.txt', Stream.value(utf8.encode('move me')), create: true);
+      await mfs.write(
+        '/source.txt',
+        Stream.value(utf8.encode('move me')),
+        create: true,
+      );
       await mfs.mv('/source.txt', '/dest.txt');
 
       final rootContents = await mfs.ls('/');
@@ -136,7 +144,11 @@ void main() {
       });
 
       test('truncate true zeros leading bytes and writes at offset', () async {
-        await mfs.write('/trunc.txt', Stream.value(utf8.encode('initial')), create: true);
+        await mfs.write(
+          '/trunc.txt',
+          Stream.value(utf8.encode('initial')),
+          create: true,
+        );
         await mfs.write(
           '/trunc.txt',
           Stream.value(utf8.encode('abc')),
@@ -197,7 +209,11 @@ void main() {
     });
 
     test('read stream terminates on read error', () async {
-      await mfs.write('/broken.txt', Stream.value(utf8.encode('data')), create: true);
+      await mfs.write(
+        '/broken.txt',
+        Stream.value(utf8.encode('data')),
+        create: true,
+      );
       final stat = await mfs.stat('/broken.txt');
 
       // Remove the file's block so the recursive read fails mid-stream.
@@ -213,7 +229,11 @@ void main() {
     });
 
     test('write with offset surfaces read errors instead of hanging', () async {
-      await mfs.write('/fragile.txt', Stream.value(utf8.encode('data')), create: true);
+      await mfs.write(
+        '/fragile.txt',
+        Stream.value(utf8.encode('data')),
+        create: true,
+      );
       final stat = await mfs.stat('/fragile.txt');
       await blockStore.removeBlock(stat.hash);
 
@@ -259,11 +279,7 @@ void main() {
       });
 
       test('mkdir over an existing file fails even with parents', () async {
-        await mfs.write(
-          '/afile',
-          Stream.value(utf8.encode('x')),
-          create: true,
-        );
+        await mfs.write('/afile', Stream.value(utf8.encode('x')), create: true);
         await expectLater(
           mfs.mkdir('/afile', parents: true),
           throwsA(anything),
@@ -289,20 +305,13 @@ void main() {
         );
         // Non-truncating write replaces the prefix and keeps the tail.
         await mfs.write('/keep.txt', Stream.value(utf8.encode('HELLO')));
-        expect(
-          await readAll('/keep.txt'),
-          equals(utf8.encode('HELLO world')),
-        );
+        expect(await readAll('/keep.txt'), equals(utf8.encode('HELLO world')));
       });
 
       test('write to a directory path fails', () async {
         await mfs.mkdir('/somedir');
         await expectLater(
-          mfs.write(
-            '/somedir',
-            Stream.value(utf8.encode('x')),
-            create: true,
-          ),
+          mfs.write('/somedir', Stream.value(utf8.encode('x')), create: true),
           throwsA(anything),
         );
       });
@@ -359,11 +368,7 @@ void main() {
       });
 
       test('touch sets mtime and chmod sets mode', () async {
-        await mfs.write(
-          '/t.txt',
-          Stream.value(utf8.encode('t')),
-          create: true,
-        );
+        await mfs.write('/t.txt', Stream.value(utf8.encode('t')), create: true);
         await mfs.touch('/t.txt', mtimeSecs: 1600000000, mtimeNsecs: 7);
         await mfs.chmod('/t.txt', 0x1ED); // 0755
         final stat = await mfs.stat('/t.txt');
@@ -415,65 +420,43 @@ void main() {
       });
 
       test('cp into a directory requires a trailing slash', () async {
-        await mfs.write(
-          '/f.txt',
-          Stream.value(utf8.encode('c')),
-          create: true,
-        );
+        await mfs.write('/f.txt', Stream.value(utf8.encode('c')), create: true);
         await mfs.mkdir('/target');
         // Kubo: `cp /f.txt /target/` copies inside the directory.
         await mfs.cp('/f.txt', '/target/');
         expect(await readAll('/target/f.txt'), equals(utf8.encode('c')));
       });
 
-      test('cp onto an existing directory without trailing slash fails',
-          () async {
-        await mfs.write(
-          '/f.txt',
-          Stream.value(utf8.encode('c')),
-          create: true,
-        );
-        await mfs.mkdir('/target');
-        // Kubo PutNode errors with "already exists" — the destination is
-        // not treated as a container without a trailing slash.
-        await expectLater(mfs.cp('/f.txt', '/target'), throwsA(anything));
-      });
+      test(
+        'cp onto an existing directory without trailing slash fails',
+        () async {
+          await mfs.write(
+            '/f.txt',
+            Stream.value(utf8.encode('c')),
+            create: true,
+          );
+          await mfs.mkdir('/target');
+          // Kubo PutNode errors with "already exists" — the destination is
+          // not treated as a container without a trailing slash.
+          await expectLater(mfs.cp('/f.txt', '/target'), throwsA(anything));
+        },
+      );
 
       test('cp onto an existing path fails without force', () async {
-        await mfs.write(
-          '/a.txt',
-          Stream.value(utf8.encode('a')),
-          create: true,
-        );
-        await mfs.write(
-          '/b.txt',
-          Stream.value(utf8.encode('b')),
-          create: true,
-        );
+        await mfs.write('/a.txt', Stream.value(utf8.encode('a')), create: true);
+        await mfs.write('/b.txt', Stream.value(utf8.encode('b')), create: true);
         await expectLater(mfs.cp('/a.txt', '/b.txt'), throwsA(anything));
       });
 
       test('cp with force overwrites an existing path', () async {
-        await mfs.write(
-          '/a.txt',
-          Stream.value(utf8.encode('a')),
-          create: true,
-        );
-        await mfs.write(
-          '/b.txt',
-          Stream.value(utf8.encode('b')),
-          create: true,
-        );
+        await mfs.write('/a.txt', Stream.value(utf8.encode('a')), create: true);
+        await mfs.write('/b.txt', Stream.value(utf8.encode('b')), create: true);
         await mfs.cp('/a.txt', '/b.txt', force: true);
         expect(await readAll('/b.txt'), equals(utf8.encode('a')));
       });
 
       test('cp with force refuses to overwrite a directory', () async {
-        await mfs.write(
-          '/a.txt',
-          Stream.value(utf8.encode('a')),
-          create: true,
-        );
+        await mfs.write('/a.txt', Stream.value(utf8.encode('a')), create: true);
         await mfs.mkdir('/adir');
         await expectLater(
           mfs.cp('/a.txt', '/adir', force: true),
@@ -482,11 +465,7 @@ void main() {
       });
 
       test('cp with parents creates intermediate directories', () async {
-        await mfs.write(
-          '/s.txt',
-          Stream.value(utf8.encode('s')),
-          create: true,
-        );
+        await mfs.write('/s.txt', Stream.value(utf8.encode('s')), create: true);
         await mfs.cp('/s.txt', '/x/y/z.txt', parents: true);
         expect(await readAll('/x/y/z.txt'), equals(utf8.encode('s')));
       });
@@ -532,11 +511,7 @@ void main() {
       });
 
       test('mv onto a name colliding inside the target dir fails', () async {
-        await mfs.write(
-          '/c.txt',
-          Stream.value(utf8.encode('c')),
-          create: true,
-        );
+        await mfs.write('/c.txt', Stream.value(utf8.encode('c')), create: true);
         await mfs.mkdir('/holder');
         await mfs.write(
           '/holder/c.txt',
@@ -563,13 +538,15 @@ void main() {
         await expectLater(mfs.mv('/ghost', '/dst'), throwsA(anything));
       });
 
-      test('rm without recursive on a directory fails; force removes it',
-          () async {
-        await mfs.mkdir('/doomed');
-        await expectLater(mfs.rm('/doomed'), throwsA(anything));
-        await mfs.rm('/doomed', force: true);
-        expect((await mfs.ls('/')).any((e) => e.name == 'doomed'), isFalse);
-      });
+      test(
+        'rm without recursive on a directory fails; force removes it',
+        () async {
+          await mfs.mkdir('/doomed');
+          await expectLater(mfs.rm('/doomed'), throwsA(anything));
+          await mfs.rm('/doomed', force: true);
+          expect((await mfs.ls('/')).any((e) => e.name == 'doomed'), isFalse);
+        },
+      );
 
       test('rm missing path fails without force; force ignores it', () async {
         await expectLater(mfs.rm('/ghost'), throwsA(anything));
@@ -658,11 +635,7 @@ void main() {
       });
 
       test('read offset beyond EOF returns empty', () async {
-        await mfs.write(
-          '/e.txt',
-          Stream.value(utf8.encode('e')),
-          create: true,
-        );
+        await mfs.write('/e.txt', Stream.value(utf8.encode('e')), create: true);
         expect(await readAll('/e.txt', offset: 99), isEmpty);
       });
 
@@ -706,11 +679,7 @@ void main() {
       });
 
       test('sync persists the root for restart durability', () async {
-        await mfs.write(
-          '/s.txt',
-          Stream.value(utf8.encode('s')),
-          create: true,
-        );
+        await mfs.write('/s.txt', Stream.value(utf8.encode('s')), create: true);
         await mfs.sync();
         final mfs2 = MFSManager(blockStore, datastore);
         await mfs2.init();
@@ -776,11 +745,7 @@ void main() {
       });
 
       test('stat returns the full Kubo shape', () async {
-        await mfs.write(
-          '/h.txt',
-          Stream.value(utf8.encode('h')),
-          create: true,
-        );
+        await mfs.write('/h.txt', Stream.value(utf8.encode('h')), create: true);
         final stat = await mfs.stat('/h.txt');
         final json = stat.toJson();
         for (final key in [
@@ -833,10 +798,7 @@ void main() {
           offset: 5,
         );
         final bytes = await readAll('/sparse.txt');
-        expect(
-          bytes,
-          equals(Uint8List.fromList([97, 98, 0, 0, 0, 122])),
-        );
+        expect(bytes, equals(Uint8List.fromList([97, 98, 0, 0, 0, 122])));
       });
 
       test('write with offset beyond EOF on a new file zero-fills', () async {

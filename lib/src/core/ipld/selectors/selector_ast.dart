@@ -120,10 +120,8 @@ class IsLinkCondition extends Condition {
   const IsLinkCondition({this.target});
 
   @override
-  IPLDNode toNode() => _singleKeyMap(
-    '/',
-    target == null ? _nullNode() : _linkNode(target!),
-  );
+  IPLDNode toNode() =>
+      _singleKeyMap('/', target == null ? _nullNode() : _linkNode(target!));
 
   @override
   bool matches(IPLDNode node) {
@@ -383,10 +381,8 @@ class ExploreIndex extends Selector {
   const ExploreIndex({required this.index, required this.next});
 
   @override
-  IPLDNode toNode() => _singleKeyMap(
-    'i',
-    _mapNode({'i': _intNode(index), '>': next.toNode()}),
-  );
+  IPLDNode toNode() =>
+      _singleKeyMap('i', _mapNode({'i': _intNode(index), '>': next.toNode()}));
 
   @override
   bool operator ==(Object other) =>
@@ -411,11 +407,7 @@ class ExploreRange extends Selector {
   @override
   IPLDNode toNode() => _singleKeyMap(
     'r',
-    _mapNode({
-      '^': _intNode(start),
-      '\$': _intNode(end),
-      '>': next.toNode(),
-    }),
+    _mapNode({'^': _intNode(start), '\$': _intNode(end), '>': next.toNode()}),
   );
 
   @override
@@ -563,8 +555,10 @@ class ExploreInterpretAs extends Selector {
   const ExploreInterpretAs({required this.adl, required this.next});
 
   @override
-  IPLDNode toNode() =>
-      _singleKeyMap('~', _mapNode({'as': _stringNode(adl), '>': next.toNode()}));
+  IPLDNode toNode() => _singleKeyMap(
+    '~',
+    _mapNode({'as': _stringNode(adl), '>': next.toNode()}),
+  );
 
   @override
   bool operator ==(Object other) =>

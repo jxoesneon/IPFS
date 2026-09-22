@@ -81,8 +81,18 @@ void main() {
         'a1'
         '6152'
         'a2'
-        '616c' 'a1' '656465707468' '1820'
-        '623a3e' 'a1' '6161' 'a1' '613e' 'a1' '6140' 'a0',
+        '616c'
+        'a1'
+        '656465707468'
+        '1820'
+        '623a3e'
+        'a1'
+        '6161'
+        'a1'
+        '613e'
+        'a1'
+        '6140'
+        'a0',
       );
     });
 
@@ -168,10 +178,7 @@ void main() {
           'Data': const ipld.Matcher(),
         },
       ),
-      'exploreIndex': ipld.ExploreIndex(
-        index: 3,
-        next: const ipld.Matcher(),
-      ),
+      'exploreIndex': ipld.ExploreIndex(index: 3, next: const ipld.Matcher()),
       'exploreRange': ipld.ExploreRange(
         start: 1,
         end: 4,
@@ -284,10 +291,7 @@ void main() {
     IPLDNode mapWithField() => mapNode({'x': intNode(1)});
 
     test('hasField / hasKind / isLink evaluate correctly', () {
-      expect(
-        const ipld.HasFieldCondition('x').matches(mapWithField()),
-        isTrue,
-      );
+      expect(const ipld.HasFieldCondition('x').matches(mapWithField()), isTrue);
       expect(
         const ipld.HasFieldCondition('y').matches(mapWithField()),
         isFalse,
@@ -300,10 +304,7 @@ void main() {
         const ipld.HasKindCondition('list').matches(mapWithField()),
         isFalse,
       );
-      expect(
-        const ipld.IsLinkCondition().matches(mapWithField()),
-        isFalse,
-      );
+      expect(const ipld.IsLinkCondition().matches(mapWithField()), isFalse);
     });
 
     test('hasValue / greaterThan / lessThan / and / or', () {
@@ -406,32 +407,34 @@ void main() {
       expect(results.first.index, 1);
     });
 
-    test('exploreRecursive stopAt excludes matching node and children',
-        () async {
-      final poison = await putBlock({'poison': true});
-      final child = await putBlock({'next': poison, 'ok': 1});
-      final root = await putBlock({'next': child});
+    test(
+      'exploreRecursive stopAt excludes matching node and children',
+      () async {
+        final poison = await putBlock({'poison': true});
+        final child = await putBlock({'next': poison, 'ok': 1});
+        final root = await putBlock({'next': child});
 
-      final selector = ipld.ExploreRecursive(
-        limit: const ipld.DepthRecursionLimit(10),
-        stopAt: const ipld.HasFieldCondition('poison'),
-        sequence: ipld.ExploreUnion(
-          members: [
-            const ipld.Matcher(),
-            ipld.ExploreAll(next: const ipld.ExploreRecursiveEdge()),
-          ],
-        ),
-      );
+        final selector = ipld.ExploreRecursive(
+          limit: const ipld.DepthRecursionLimit(10),
+          stopAt: const ipld.HasFieldCondition('poison'),
+          sequence: ipld.ExploreUnion(
+            members: [
+              const ipld.Matcher(),
+              ipld.ExploreAll(next: const ipld.ExploreRecursiveEdge()),
+            ],
+          ),
+        );
 
-      final results = await handler
-          .executeSelectorStream(root, selector, includePath: true)
-          .toList();
-      final paths = results.map((r) => r.path).toSet();
-      expect(paths, containsAll(['', 'next', 'next/ok']));
-      // The poisoned node (and anything below it) is not visited.
-      expect(paths, isNot(contains('next/next')));
-      expect(paths, isNot(contains('next/next/poison')));
-    });
+        final results = await handler
+            .executeSelectorStream(root, selector, includePath: true)
+            .toList();
+        final paths = results.map((r) => r.path).toSet();
+        expect(paths, containsAll(['', 'next', 'next/ok']));
+        // The poisoned node (and anything below it) is not visited.
+        expect(paths, isNot(contains('next/next')));
+        expect(paths, isNot(contains('next/next/poison')));
+      },
+    );
 
     test('RecursionLimitNone traverses until the executor budget', () async {
       final leaf = await putBlock({'leaf': true});

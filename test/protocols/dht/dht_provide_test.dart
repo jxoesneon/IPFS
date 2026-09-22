@@ -132,10 +132,7 @@ void main() {
       expect(result.failures, equals(0));
       expect(result.success, isTrue);
       // The self provider record is tracked locally.
-      expect(
-        handler.getLocalProvidersForCid(cid.toString()),
-        isNotEmpty,
-      );
+      expect(handler.getLocalProvidersForCid(cid.toString()), isNotEmpty);
     });
 
     test('reports failures without throwing', () async {
@@ -184,33 +181,21 @@ void main() {
 
       expect(result.cidsAnnounced, equals(2));
       expect(result.success, isTrue);
-      expect(
-        handler.getLocalProvidersForCid(root.toString()),
-        isNotEmpty,
-      );
-      expect(
-        handler.getLocalProvidersForCid(child.toString()),
-        isNotEmpty,
-      );
+      expect(handler.getLocalProvidersForCid(root.toString()), isNotEmpty);
+      expect(handler.getLocalProvidersForCid(child.toString()), isNotEmpty);
     });
 
-    test(
-      'recursive without a blockstore announces only the root',
-      () async {
-        final handler = makeHandler(FakeRouter());
-        addTearDown(handler.stop);
-        await handler.dhtClient.initialize();
+    test('recursive without a blockstore announces only the root', () async {
+      final handler = makeHandler(FakeRouter());
+      addTearDown(handler.stop);
+      await handler.dhtClient.initialize();
 
-        final cid = await addBlock(Uint8List.fromList([13, 14, 15]));
-        final result = await handler.provideDetailed(cid, recursive: true);
+      final cid = await addBlock(Uint8List.fromList([13, 14, 15]));
+      final result = await handler.provideDetailed(cid, recursive: true);
 
-        expect(result.cidsAnnounced, equals(1));
-        expect(
-          result.errors,
-          contains(contains('without blockstore')),
-        );
-      },
-    );
+      expect(result.cidsAnnounced, equals(1));
+      expect(result.errors, contains(contains('without blockstore')));
+    });
 
     test('timeout aborts remaining attempts with partial results', () async {
       final handler = makeHandler(FakeRouter());
@@ -219,10 +204,7 @@ void main() {
       await seedPeer(handler, 1);
 
       final cid = await addBlock(Uint8List.fromList([16, 17, 18]));
-      final result = await handler.provideDetailed(
-        cid,
-        timeout: Duration.zero,
-      );
+      final result = await handler.provideDetailed(cid, timeout: Duration.zero);
 
       expect(result.attempts, equals(0));
       expect(result.errors, contains(contains('timeout')));
@@ -255,17 +237,13 @@ void main() {
 
       // Wait for the queue to drain.
       final deadline = DateTime.now().add(const Duration(seconds: 5));
-      while (handler.provideQueueLength > 0 ||
-          handler.provideQueueProcessing) {
+      while (handler.provideQueueLength > 0 || handler.provideQueueProcessing) {
         if (DateTime.now().isAfter(deadline)) {
           fail('provide queue did not drain');
         }
         await Future<void>.delayed(const Duration(milliseconds: 10));
       }
-      expect(
-        handler.getLocalProvidersForCid(cid.toString()),
-        isNotEmpty,
-      );
+      expect(handler.getLocalProvidersForCid(cid.toString()), isNotEmpty);
     });
 
     test('enqueueProvideAndWait completes with the result', () async {

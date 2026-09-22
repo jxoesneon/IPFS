@@ -53,8 +53,10 @@ SecurityConfig _denylistConfig({
 /// Returns the base58btc (no multibase prefix) form of a multihash, matching
 /// the modern `//` double-hash preimage convention.
 String _b58Multihash(CID cid) {
-  return multibaseEncode(Multibase.base58btc, cid.multihash.toBytes())
-      .substring(1);
+  return multibaseEncode(
+    Multibase.base58btc,
+    cid.multihash.toBytes(),
+  ).substring(1);
 }
 
 /// Builds a modern `//` double-hash denylist entry for [preimage] using
@@ -267,7 +269,8 @@ void main() {
 
     test('parses an optional YAML header and skips it', () {
       final service = DenylistService(_denylistConfig(), metrics);
-      final text = 'version: 1\n'
+      final text =
+          'version: 1\n'
           'name: Test list\n'
           'description: fixture\n'
           'hints:\n'
@@ -315,8 +318,9 @@ void main() {
 
     test('matches // double-hash entries for CID+path', () {
       final service = DenylistService(_denylistConfig(), metrics);
-      final entry =
-          _modernDoubleHashEntry('${_b58Multihash(blockedCid)}/secret');
+      final entry = _modernDoubleHashEntry(
+        '${_b58Multihash(blockedCid)}/secret',
+      );
       service.loadCompactBytes(utf8.encode('//$entry'));
       expect(service.isBlockedPath('/ipfs/$blockedCidStr/secret'), isTrue);
       expect(service.isBlockedPath('/ipfs/$blockedCidStr/other'), isFalse);
@@ -368,14 +372,8 @@ void main() {
         '!/ipfs/$blockedCidStr/blockednot',
       ];
       service.loadCompactBytes(utf8.encode(lines.join('\n')));
-      expect(
-        service.isBlockedPath('/ipfs/$blockedCidStr/blocked/1'),
-        isTrue,
-      );
-      expect(
-        service.isBlockedPath('/ipfs/$blockedCidStr/blockednot'),
-        isFalse,
-      );
+      expect(service.isBlockedPath('/ipfs/$blockedCidStr/blocked/1'), isTrue);
+      expect(service.isBlockedPath('/ipfs/$blockedCidStr/blockednot'), isFalse);
     });
 
     test('!/ipfs/CID unblocks a previously denied CID', () {
@@ -399,18 +397,12 @@ void main() {
       final service = DenylistService(_denylistConfig(), metrics);
       service.loadCompactBytes(utf8.encode('ipfs://$blockedCidStr'));
       expect(service.isBlocked(blockedCid), isTrue);
-      expect(
-        service.isBlockedPath('ipfs://$blockedCidStr/some/path'),
-        isTrue,
-      );
+      expect(service.isBlockedPath('ipfs://$blockedCidStr/some/path'), isTrue);
     });
 
     test('supports /ipns/NAME items with path rules', () {
       final service = DenylistService(_denylistConfig(), metrics);
-      final lines = [
-        '/ipns/bad.example',
-        '/ipns/other.example/evil*',
-      ];
+      final lines = ['/ipns/bad.example', '/ipns/other.example/evil*'];
       service.loadCompactBytes(utf8.encode(lines.join('\n')));
       expect(service.isBlockedPath('/ipns/bad.example'), isTrue);
       // DNSLink domains are case-insensitive.
@@ -457,10 +449,7 @@ void main() {
       final service = DenylistService(_denylistConfig(), metrics);
       service.loadCompactBytes(utf8.encode(blockedCidStr));
       // Uppercase base32 (multibase 'B' prefix) decodes to the same CID.
-      expect(
-        service.isBlockedByCidString(blockedCidStr.toUpperCase()),
-        isTrue,
-      );
+      expect(service.isBlockedByCidString(blockedCidStr.toUpperCase()), isTrue);
     });
 
     test('isBlockedPath is inert when the service is disabled', () {
@@ -472,7 +461,8 @@ void main() {
 
     test('audit events carry operator-provided reason metadata', () {
       final service = DenylistService(_denylistConfig(), metrics);
-      final text = '# {"reason": "CSAM report", "cid": "$blockedCidStr"}\n'
+      final text =
+          '# {"reason": "CSAM report", "cid": "$blockedCidStr"}\n'
           '$blockedCidStr';
       service.loadCompactBytes(utf8.encode(text));
       service.recordHit(blockedCidStr, source: 'gateway');
@@ -548,9 +538,7 @@ void main() {
         _denylistConfig(),
         _MockMetricsCollector(),
       );
-      service.loadCompactBytes(
-        utf8.encode('/ipfs/$cidStr/private*'),
-      );
+      service.loadCompactBytes(utf8.encode('/ipfs/$cidStr/private*'));
 
       final handler = GatewayHandler(blockStore, denylistService: service);
 

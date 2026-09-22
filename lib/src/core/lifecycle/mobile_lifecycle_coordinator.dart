@@ -139,10 +139,14 @@ class MobileLifecycleCoordinator implements ILifecycle {
 
     switch (state) {
       case NodeLifecycleState.resumed:
-        final target = _isLowBattery ? IpfsPowerMode.lowPower : IpfsPowerMode.fullActive;
+        final target = _isLowBattery
+            ? IpfsPowerMode.lowPower
+            : IpfsPowerMode.fullActive;
         await transitionTo(target);
       case NodeLifecycleState.inactive:
-        _logger.debug('Application inactive; maintaining mode $_currentPowerMode');
+        _logger.debug(
+          'Application inactive; maintaining mode $_currentPowerMode',
+        );
       case NodeLifecycleState.paused:
         if (requestBackgroundExtensionOnPause) {
           try {
@@ -150,7 +154,9 @@ class MobileLifecycleCoordinator implements ILifecycle {
               duration: backgroundExtensionDuration,
             );
           } catch (e) {
-            _logger.warning('Failed to request background execution extension: $e');
+            _logger.warning(
+              'Failed to request background execution extension: $e',
+            );
           }
         }
         await transitionTo(IpfsPowerMode.suspendedMesh);
@@ -192,7 +198,9 @@ class MobileLifecycleCoordinator implements ILifecycle {
 
     _transitionLock = Completer<void>();
     try {
-      _logger.info('Transitioning power mode: $_currentPowerMode -> $targetMode');
+      _logger.info(
+        'Transitioning power mode: $_currentPowerMode -> $targetMode',
+      );
 
       switch (targetMode) {
         case IpfsPowerMode.fullActive:
@@ -206,7 +214,9 @@ class MobileLifecycleCoordinator implements ILifecycle {
                 maxConnections: maxLowPowerConnections,
               );
             } catch (e) {
-              _logger.warning('Failed to trim connections in lowPower mode: $e');
+              _logger.warning(
+                'Failed to trim connections in lowPower mode: $e',
+              );
             }
           }
           break;
@@ -228,7 +238,9 @@ class MobileLifecycleCoordinator implements ILifecycle {
                 maxConnections: maxBackgroundConnections,
               );
             } catch (e) {
-              _logger.warning('Failed to trim connections in suspendedMesh mode: $e');
+              _logger.warning(
+                'Failed to trim connections in suspendedMesh mode: $e',
+              );
             }
           }
           break;

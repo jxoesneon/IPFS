@@ -207,10 +207,7 @@ class SelectorExecutor {
         for (final member in members) {
           yield* _apply(node, cid, member, path, depth, recursion);
         }
-      case ExploreRecursive(
-        sequence: final sequence,
-        stopAt: final stopAt,
-      ):
+      case ExploreRecursive(sequence: final sequence, stopAt: final stopAt):
         // stopAt: a matching node is not matched and its children are not
         // explored — the traversal stops descending at this point.
         if (stopAt != null && stopAt.matches(node)) {

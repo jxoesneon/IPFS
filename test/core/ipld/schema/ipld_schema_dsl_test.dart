@@ -76,10 +76,7 @@ void main() {
     });
 
     test('rejects non-nullable field set to null', () {
-      final result = schema.check(
-        'Person',
-        mapNode({'name': nullNode()}),
-      );
+      final result = schema.check('Person', mapNode({'name': nullNode()}));
       expect(result.isValid, isFalse);
       expect(result.errors.single.path, 'field "name"');
       expect(result.errors.single.message, contains('not nullable'));
@@ -158,11 +155,7 @@ void main() {
 
   group('map kind', () {
     final schema = IPLDSchema('maps', {
-      'Scores': {
-        'kind': 'map',
-        'keyType': 'String',
-        'valueType': 'Int',
-      },
+      'Scores': {'kind': 'map', 'keyType': 'String', 'valueType': 'Int'},
       'NullableMap': {
         'kind': 'map',
         'keyType': 'String',
@@ -195,10 +188,7 @@ void main() {
         isTrue,
       );
       expect(
-        await schema.validate(
-          'Scores',
-          mapNode({'a': strNode('x')}),
-        ),
+        await schema.validate('Scores', mapNode({'a': strNode('x')})),
         isFalse,
       );
     });
@@ -215,8 +205,10 @@ void main() {
     });
 
     test('bare map kind accepts any map and rejects non-maps', () async {
-      expect(await schema.validate('AnyMap', mapNode({'a': strNode('x')})),
-          isTrue);
+      expect(
+        await schema.validate('AnyMap', mapNode({'a': strNode('x')})),
+        isTrue,
+      );
       expect(await schema.validate('AnyMap', listNode([])), isFalse);
     });
 
@@ -253,11 +245,7 @@ void main() {
   group('list kind', () {
     final schema = IPLDSchema('lists', {
       'Ints': {'kind': 'list', 'valueType': 'Int'},
-      'MaybeInts': {
-        'kind': 'list',
-        'valueType': 'Int',
-        'valueNullable': true,
-      },
+      'MaybeInts': {'kind': 'list', 'valueType': 'Int', 'valueNullable': true},
       'AnyList': {'kind': 'list'},
     });
 
@@ -266,10 +254,7 @@ void main() {
         await schema.validate('Ints', listNode([intNode(1), intNode(2)])),
         isTrue,
       );
-      final bad = schema.check(
-        'Ints',
-        listNode([intNode(1), strNode('x')]),
-      );
+      final bad = schema.check('Ints', listNode([intNode(1), strNode('x')]));
       expect(bad.isValid, isFalse);
       expect(bad.errors.single.path, 'field [1]');
     });
@@ -279,15 +264,14 @@ void main() {
         await schema.validate('MaybeInts', listNode([intNode(1), nullNode()])),
         isTrue,
       );
-      expect(
-        await schema.validate('Ints', listNode([nullNode()])),
-        isFalse,
-      );
+      expect(await schema.validate('Ints', listNode([nullNode()])), isFalse);
     });
 
     test('bare list accepts any list', () async {
-      expect(await schema.validate('AnyList', listNode([strNode('x')])),
-          isTrue);
+      expect(
+        await schema.validate('AnyList', listNode([strNode('x')])),
+        isTrue,
+      );
       expect(await schema.validate('AnyList', strNode('x')), isFalse);
     });
   });
@@ -325,7 +309,9 @@ void main() {
     final schema = IPLDSchema('unions', {
       'Small': {
         'kind': 'struct',
-        'fields': {'x': {'type': 'Int'}},
+        'fields': {
+          'x': {'type': 'Int'},
+        },
       },
       'Keyed': {
         'kind': 'union',
@@ -363,11 +349,15 @@ void main() {
       },
       'Circle': {
         'kind': 'struct',
-        'fields': {'radius': {'type': 'Float'}},
+        'fields': {
+          'radius': {'type': 'Float'},
+        },
       },
       'Square': {
         'kind': 'struct',
-        'fields': {'side': {'type': 'Float'}},
+        'fields': {
+          'side': {'type': 'Float'},
+        },
       },
       'HexName': {
         'kind': 'enum',
@@ -396,12 +386,18 @@ void main() {
     });
 
     test('keyed union dispatches on the single map key', () async {
-      expect(await schema.validate('Keyed', mapNode({'i': intNode(4)})),
-          isTrue);
-      expect(await schema.validate('Keyed', mapNode({'s': strNode('x')})),
-          isTrue);
-      expect(await schema.validate('Keyed', mapNode({'s': intNode(1)})),
-          isFalse);
+      expect(
+        await schema.validate('Keyed', mapNode({'i': intNode(4)})),
+        isTrue,
+      );
+      expect(
+        await schema.validate('Keyed', mapNode({'s': strNode('x')})),
+        isTrue,
+      );
+      expect(
+        await schema.validate('Keyed', mapNode({'s': intNode(1)})),
+        isFalse,
+      );
       expect(
         await schema.validate(
           'Keyed',
@@ -409,8 +405,10 @@ void main() {
         ),
         isFalse,
       );
-      expect(await schema.validate('Keyed', mapNode({'z': intNode(1)})),
-          isFalse);
+      expect(
+        await schema.validate('Keyed', mapNode({'z': intNode(1)})),
+        isFalse,
+      );
       expect(await schema.validate('Keyed', strNode('x')), isFalse);
     });
 
@@ -457,11 +455,7 @@ void main() {
       expect(
         await schema.validate(
           'Enveloped',
-          mapNode({
-            'tag': strNode('i'),
-            'i': intNode(1),
-            'extra': intNode(2),
-          }),
+          mapNode({'tag': strNode('i'), 'i': intNode(1), 'extra': intNode(2)}),
         ),
         isFalse,
       );
@@ -511,10 +505,7 @@ void main() {
         await schema.validate('BytePrefixed', bytesNode([0, 1, 2])),
         isTrue,
       );
-      expect(
-        await schema.validate('BytePrefixed', bytesNode([7, 1])),
-        isFalse,
-      );
+      expect(await schema.validate('BytePrefixed', bytesNode([7, 1])), isFalse);
       expect(await schema.validate('BytePrefixed', bytesNode([])), isFalse);
       expect(await schema.validate('BytePrefixed', strNode('x')), isFalse);
     });
@@ -584,10 +575,7 @@ void main() {
       expect(await schema.validate('Tuple', listNode([intNode(1)])), isFalse);
       // Wrong element type.
       expect(
-        await schema.validate(
-          'Tuple',
-          listNode([intNode(1), strNode('x')]),
-        ),
+        await schema.validate('Tuple', listNode([intNode(1), strNode('x')])),
         isFalse,
       );
       // Too many elements.
@@ -607,8 +595,10 @@ void main() {
 
     test('stringjoin representation parses joined scalars', () async {
       expect(await schema.validate('Joined', strNode('host:8080')), isTrue);
-      expect(await schema.validate('Joined', strNode('host:notanint')),
-          isFalse);
+      expect(
+        await schema.validate('Joined', strNode('host:notanint')),
+        isFalse,
+      );
       expect(await schema.validate('Joined', strNode('a:b:c')), isFalse);
       expect(await schema.validate('Joined', intNode(1)), isFalse);
     });
@@ -642,21 +632,27 @@ void main() {
       expect(
         await schema.validate(
           'Listed',
-          listNode([pairNode('name', strNode('ada')), pairNode('age',
-              intNode(3))]),
+          listNode([
+            pairNode('name', strNode('ada')),
+            pairNode('age', intNode(3)),
+          ]),
         ),
         isTrue,
       );
       // Required field missing.
       expect(
-        await schema.validate('Listed', listNode([pairNode('age',
-            intNode(3))])),
+        await schema.validate(
+          'Listed',
+          listNode([pairNode('age', intNode(3))]),
+        ),
         isFalse,
       );
       // Unknown key.
       expect(
-        await schema.validate('Listed', listNode([pairNode('zz',
-            strNode('1'))])),
+        await schema.validate(
+          'Listed',
+          listNode([pairNode('zz', strNode('1'))]),
+        ),
         isFalse,
       );
     });
@@ -706,17 +702,11 @@ void main() {
         isTrue,
       );
       expect(
-        await schema.validate(
-          'NullableFloat',
-          mapNode({'v': floatNode(1.25)}),
-        ),
+        await schema.validate('NullableFloat', mapNode({'v': floatNode(1.25)})),
         isTrue,
       );
       // non-optional nullable field still required
-      expect(
-        await schema.validate('NullableFloat', mapNode({})),
-        isFalse,
-      );
+      expect(await schema.validate('NullableFloat', mapNode({})), isFalse);
     });
   });
 
@@ -853,15 +843,9 @@ void main() {
           'strict': true,
         },
       });
+      expect(await s.validate('S', mapNode({'a': intNode(1)})), isTrue);
       expect(
-        await s.validate('S', mapNode({'a': intNode(1)})),
-        isTrue,
-      );
-      expect(
-        await s.validate(
-          'S',
-          mapNode({'a': intNode(1), 'b': intNode(2)}),
-        ),
+        await s.validate('S', mapNode({'a': intNode(1), 'b': intNode(2)})),
         isFalse,
       );
     });

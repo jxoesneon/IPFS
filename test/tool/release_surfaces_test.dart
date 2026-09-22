@@ -22,8 +22,9 @@ void main() {
     });
 
     test('check fails on a drifted surface', () {
-      File('${root.path}/docker-compose.yml')
-          .writeAsStringSync('image: x/dart-ipfs:0.0.1\n');
+      File(
+        '${root.path}/docker-compose.yml',
+      ).writeAsStringSync('image: x/dart-ipfs:0.0.1\n');
       expect(run(['--check', '--root', root.path]), 1);
     });
 
@@ -33,9 +34,9 @@ void main() {
     });
 
     test('check fails on hardcoded version literals in lib/', () {
-      File('${root.path}/lib/src/evil.dart').writeAsStringSync(
-        "const s = 'dart_ipfs/0.0.1';\n",
-      );
+      File(
+        '${root.path}/lib/src/evil.dart',
+      ).writeAsStringSync("const s = 'dart_ipfs/0.0.1';\n");
       expect(run(['--check', '--root', root.path]), 1);
     });
 
@@ -55,14 +56,8 @@ void main() {
     test('tag matching verifies umbrella and sub-package pubspecs', () {
       expect(run(['--check', '--root', root.path, '--tag', 'v9.9.9']), 0);
       expect(run(['--check', '--root', root.path, '--tag', 'v9.9.8']), 1);
-      expect(
-        run(['--check', '--root', root.path, '--tag', 'core-v0.0.1']),
-        0,
-      );
-      expect(
-        run(['--check', '--root', root.path, '--tag', 'quic-v9.9.9']),
-        1,
-      );
+      expect(run(['--check', '--root', root.path, '--tag', 'core-v0.0.1']), 0);
+      expect(run(['--check', '--root', root.path, '--tag', 'quic-v9.9.9']), 1);
     });
   });
 }

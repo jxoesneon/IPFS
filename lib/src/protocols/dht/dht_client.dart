@@ -469,9 +469,7 @@ class DHTClient {
         if (results[j]) {
           succeeded++;
         } else if (errors.length < ProvideResult.maxErrors) {
-          errors.add(
-            'send failed: peer ${Base58().encode(batch[j].value)}',
-          );
+          errors.add('send failed: peer ${Base58().encode(batch[j].value)}');
         }
       }
     }

@@ -90,18 +90,20 @@ void main() {
       expect(list, isEmpty);
     });
 
-    test('writeStringRestricted writes content with owner-only permissions',
-        () async {
-      final filePath = '${tempDir.path}/secret.key';
-      await platform.writeStringRestricted(filePath, 'secret-material');
+    test(
+      'writeStringRestricted writes content with owner-only permissions',
+      () async {
+        final filePath = '${tempDir.path}/secret.key';
+        await platform.writeStringRestricted(filePath, 'secret-material');
 
-      expect(await File(filePath).readAsString(), equals('secret-material'));
-      if (!Platform.isWindows) {
-        final stat = await FileStat.stat(filePath);
-        // Owner-only: no group/other permission bits may be set.
-        expect(stat.mode & 0x3F, equals(0));
-      }
-    });
+        expect(await File(filePath).readAsString(), equals('secret-material'));
+        if (!Platform.isWindows) {
+          final stat = await FileStat.stat(filePath);
+          // Owner-only: no group/other permission bits may be set.
+          expect(stat.mode & 0x3F, equals(0));
+        }
+      },
+    );
 
     test('getPlatform helper', () {
       final p = getPlatform();

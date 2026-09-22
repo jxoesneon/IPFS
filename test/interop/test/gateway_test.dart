@@ -124,10 +124,7 @@ void main() {
         equals('application/vnd.ipld.raw'),
       );
       // Spec: negotiated responses identify the selected representation.
-      expect(
-        result.headers.value('content-location'),
-        contains('format=raw'),
-      );
+      expect(result.headers.value('content-location'), contains('format=raw'));
       expect(result.body, equals(testData));
     });
 
@@ -197,9 +194,7 @@ void main() {
       final published = await dartIpfs.namePublish('/ipfs/$cid');
       final name = (published['Name'] ?? published['name']) as String;
 
-      final result = await _gatewayRequest(
-        '/ipns/$name?format=ipns-record',
-      );
+      final result = await _gatewayRequest('/ipns/$name?format=ipns-record');
 
       expect(result.statusCode, equals(200));
       expect(
