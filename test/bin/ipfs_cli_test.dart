@@ -497,8 +497,12 @@ void main() {
       // The CLI must not bind --gateway-addr on top of the
       // config-started gateway.
       expect(stdout, isNot(contains('Gateway running at:')));
-      expect(stdout, contains('Daemon stopped.'));
-      expect(result.exitCode, equals(0));
+      // Graceful SIGTERM shutdown is POSIX-only: on Windows, kill() hard-
+      // terminates the process so the shutdown banner never prints.
+      if (!Platform.isWindows) {
+        expect(stdout, contains('Daemon stopped.'));
+        expect(result.exitCode, equals(0));
+      }
     }, timeout: const Timeout(Duration(minutes: 4)));
 
     test(
@@ -519,8 +523,11 @@ void main() {
           contains('Gateway running at: http://127.0.0.1:$cliGatewayPort'),
         );
         expect(stdout, isNot(contains('Gateway already running')));
-        expect(stdout, contains('Daemon stopped.'));
-        expect(result.exitCode, equals(0));
+        // Graceful SIGTERM shutdown is POSIX-only (see above).
+        if (!Platform.isWindows) {
+          expect(stdout, contains('Daemon stopped.'));
+          expect(result.exitCode, equals(0));
+        }
       },
       timeout: const Timeout(Duration(minutes: 4)),
     );
