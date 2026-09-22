@@ -159,6 +159,8 @@ export 'src/core/errors/transport_errors.dart';
 export 'src/core/ipfs_node/ipfs_node.dart';
 export 'src/core/ipfs_node/ipfs_web_node.dart';
 export 'src/core/ipld/schema/ipld_schema.dart';
+export 'src/core/ipld/selectors/ipld_selector.dart';
+export 'src/core/ipld/selectors/selector_ast.dart';
 export 'src/core/ipld/selectors/selector_executor.dart';
 export 'src/core/lifecycle/mobile_lifecycle_adapter.dart';
 export 'src/core/lifecycle/mobile_lifecycle_coordinator.dart';

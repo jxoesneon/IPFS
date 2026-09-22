@@ -220,6 +220,19 @@ void main() {
       expect(unknown.statusCode, 404);
     });
 
+    test('should alias Kubo /api/v0/routing/provide to dht/provide', () async {
+      // Without arg the handler rejects with its own "Missing argument"
+      // error — proving the route is registered. An unregistered path
+      // would fall through to shelf's 404.
+      final response = await http.post(
+        Uri.parse('http://localhost:$port/api/v0/routing/provide'),
+        headers: {'X-API-Key': 'secret-key'},
+      );
+      expect(response.statusCode, isNot(404));
+      final body = jsonDecode(response.body);
+      expect(body['Message'], contains('Missing argument'));
+    });
+
     test('should expose /metrics as Prometheus text', () async {
       // Make a request so the metrics middleware records something.
       await http.post(Uri.parse('http://localhost:$port/api/v0/version'));

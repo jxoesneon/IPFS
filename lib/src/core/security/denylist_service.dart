@@ -16,6 +16,27 @@ import '../config/security_config.dart';
 import '../interfaces/i_lifecycle.dart';
 import '../metrics/metrics_collector.dart';
 
+/// Thrown when content cannot be served because a CID (or path) matched the
+/// operator denylist.
+///
+/// This is the single typed signal shared by the content manager, RPC
+/// handlers, and gateway handler so that mid-traversal policy blocks can be
+/// distinguished from generic retrieval failures — handlers map it to the
+/// HTTP 451 ("unavailable for legal reasons") response instead of a 500 or a
+/// silent empty result.
+class DenylistBlockedException implements Exception {
+  /// Creates a new [DenylistBlockedException] for the blocked [cid] or path.
+  const DenylistBlockedException([this.cid]);
+
+  /// The CID or path string that matched the denylist, when known.
+  final String? cid;
+
+  @override
+  String toString() => cid == null
+      ? 'DenylistBlockedException: content blocked by operator policy'
+      : 'DenylistBlockedException: content blocked by operator policy ($cid)';
+}
+
 /// Statistics describing the current state of a denylist refresh.
 class DenylistStats {
   /// Creates a new [DenylistStats].

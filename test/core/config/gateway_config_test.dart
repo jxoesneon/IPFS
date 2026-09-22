@@ -88,5 +88,18 @@ void main() {
       expect(parsed.maxFileResponseBytes, equals(4096));
       expect(parsed.toJson()['maxFileResponseBytes'], equals(4096));
     });
+
+    test('maxCarResponseBytes defaults to 1 GiB and round-trips', () {
+      const config = GatewayConfig();
+      expect(config.maxCarResponseBytes, equals(1024 * 1024 * 1024));
+      expect(
+        config.toJson()['maxCarResponseBytes'],
+        equals(1024 * 1024 * 1024),
+      );
+
+      final parsed = GatewayConfig.fromJson({'maxCarResponseBytes': 4096});
+      expect(parsed.maxCarResponseBytes, equals(4096));
+      expect(parsed.toJson()['maxCarResponseBytes'], equals(4096));
+    });
   });
 }

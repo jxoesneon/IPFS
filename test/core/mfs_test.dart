@@ -55,6 +55,29 @@ void main() {
       expect(contents.any((l) => l.name == 'test'), isTrue);
     });
 
+    test('ls sorts entries by UTF-8 byte order like Kubo', () async {
+      // U+E000 encodes as EE 80 80 in UTF-8 but U+10000 encodes as
+      // F0 90 80 80; UTF-8 order puts U+E000 first while UTF-16 code-unit
+      // order puts U+10000 (lead surrogate D800) first.
+      await mfs.write(
+        '/\u{10000}.txt',
+        Stream.value(utf8.encode('a')),
+        create: true,
+      );
+      await mfs.write(
+        '/\uE000.txt',
+        Stream.value(utf8.encode('b')),
+        create: true,
+      );
+
+      final names = (await mfs.ls('/')).map((e) => e.name).toList();
+      final e000 = names.indexOf('\uE000.txt');
+      final astral = names.indexOf('\u{10000}.txt');
+      expect(e000, isNonNegative);
+      expect(astral, isNonNegative);
+      expect(e000, lessThan(astral));
+    });
+
     test('mkdir recursive', () async {
       await mfs.mkdir('/a/b/c', recursive: true);
       final aContents = await mfs.ls('/a');

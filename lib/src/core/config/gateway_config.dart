@@ -37,6 +37,7 @@ class GatewayConfig {
     this.autoTlsRenewalThresholdDays = 30,
     this.trustForwardedHeaders = false,
     this.maxFileResponseBytes = unixfsReadDefaultMaxBytes,
+    this.maxCarResponseBytes = 1024 * 1024 * 1024,
   });
 
   /// Creates a [GatewayConfig] from a JSON map.
@@ -80,6 +81,8 @@ class GatewayConfig {
       trustForwardedHeaders: json['trustForwardedHeaders'] as bool? ?? false,
       maxFileResponseBytes:
           json['maxFileResponseBytes'] as int? ?? unixfsReadDefaultMaxBytes,
+      maxCarResponseBytes:
+          json['maxCarResponseBytes'] as int? ?? 1024 * 1024 * 1024,
     );
   }
 
@@ -196,6 +199,10 @@ class GatewayConfig {
   /// responses that would exceed the budget are answered with HTTP 413.
   final int maxFileResponseBytes;
 
+  /// Maximum total payload bytes a generated CAR archive may contain.
+  /// Defaults to 1 GiB; exceeding it fails the request with HTTP 416.
+  final int maxCarResponseBytes;
+
   /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
     'enabled': enabled,
@@ -227,5 +234,6 @@ class GatewayConfig {
     'autoTlsRenewalThresholdDays': autoTlsRenewalThresholdDays,
     'trustForwardedHeaders': trustForwardedHeaders,
     'maxFileResponseBytes': maxFileResponseBytes,
+    'maxCarResponseBytes': maxCarResponseBytes,
   };
 }

@@ -17,6 +17,8 @@ import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
@@ -233,6 +235,29 @@ void main() {
       );
       final response = await handlers.handleCat(request);
       expect(response.statusCode, equals(404));
+    });
+
+    test('handleCat maps mid-traversal denylist blocks to 451', () async {
+      // A CID-level denylist rule is checked before node.get is invoked, so
+      // reaching this catch means traversal itself hit a blocked child.
+      final denylistMetrics = _MockMetricsCollector();
+      final denylist = DenylistService(
+        const SecurityConfig(enableDenylist: true),
+        denylistMetrics,
+      );
+      addTearDown(denylist.stop);
+      when(mockNode.denylistService).thenReturn(denylist);
+      const cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(
+        mockNode.get(cid, path: ''),
+      ).thenThrow(const DenylistBlockedException(cid));
+
+      final response = await handlers.handleCat(
+        Request('POST', Uri.parse('http://localhost/api/v0/cat?arg=$cid')),
+      );
+      expect(response.statusCode, equals(451));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('blocked by operator policy'));
     });
 
     test('handleSwarmPeers', () async {
@@ -1669,6 +1694,187 @@ void main() {
       final tar = await response.read().expand((i) => i).toList();
       // The reassembled payload follows the 512-byte ustar header.
       expect(utf8.decode(tar.sublist(512, 512 + 8)), equals('chunked!'));
+    });
+
+    test('handleGet exports a HAMT-sharded directory as TAR', () async {
+      // A real blockstore backs the HAMT builder so shard blocks persist and
+      // the RPC block-store adapter resolves them end to end.
+      final tempDir = await Directory.systemTemp.createTemp('rpc_get_hamt_');
+      final realBlockStore = BlockStore(path: tempDir.path);
+      await realBlockStore.start();
+      addTearDown(() async {
+        await realBlockStore.stop();
+        await tempDir.delete(recursive: true);
+      });
+      when(mockNode.blockStore).thenReturn(realBlockStore);
+      when(mockNode.bitswap).thenReturn(null);
+
+      final leaf = await Block.fromData(
+        Uint8List.fromList(utf8.encode('hamt-leaf')),
+        format: 'raw',
+      );
+      await realBlockStore.putBlock(leaf);
+      final shard =
+          await UnixFSHAMTBuilder(
+            fanout: 256,
+            shardThreshold: 0,
+            maxBucketSize: 1,
+          ).build(realBlockStore, [
+            UnixFSDirectoryEntry(
+              name: 'inside.txt',
+              cid: leaf.cid,
+              tsize: leaf.data.length,
+            ),
+          ]);
+      expect(shard.isHAMTShard, isTrue);
+      final shardBlock = Block(
+        cid: shard.cid,
+        data: shard.data,
+        format: 'dag-pb',
+      );
+      await realBlockStore.putBlock(shardBlock);
+
+      final response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/get?arg=${shard.cid.encode()}'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final tar = await response.read().expand((i) => i).toList();
+      // The shard root emits a directory header; the file entry carries the
+      // logical entry name, not a hash-prefixed shard link name.
+      var fileEntries = 0;
+      for (var off = 0; off + 1024 <= tar.length; off += 512) {
+        if (tar[off + 156] != 0x30) continue;
+        fileEntries++;
+        // ustar splits long names into prefix(345)/name(0) fields; read both.
+        final nameField = utf8
+            .decode(tar.sublist(off, off + 100))
+            .replaceAll(RegExp(r'\x00.*$'), '');
+        final prefixField = utf8
+            .decode(tar.sublist(off + 345, off + 500))
+            .replaceAll(RegExp(r'\x00.*$'), '');
+        final fullName = prefixField.isEmpty
+            ? nameField
+            : '$prefixField/$nameField';
+        expect(fullName, '${shard.cid.encode()}/inside.txt');
+        expect(utf8.decode(tar.sublist(off + 512, off + 512 + 9)), 'hamt-leaf');
+      }
+      expect(fileEntries, 1);
+    });
+
+    test('handleGet sanitizes tar-slip entry names', () async {
+      // A hostile link name must not escape the archive root or carry
+      // absolute paths/NULs into the ustar header.
+      final file = await Block.fromData(
+        Uint8List.fromList(utf8.encode('evil')),
+        format: 'raw',
+      );
+      storeBlock(file);
+      final dirNode = dag_pb.PBNode(
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+        links: [
+          dag_pb.PBLink(name: '../escape', hash: file.cid.toBytes()),
+          dag_pb.PBLink(name: '/abs\x00name', hash: file.cid.toBytes()),
+        ],
+      );
+      final dir = await Block.fromData(
+        dirNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      storeBlock(dir);
+      when(mockNode.bitswap).thenReturn(null);
+
+      final response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/get?arg=${dir.cid.encode()}'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final tar = await response.read().expand((i) => i).toList();
+      var fileEntries = 0;
+      for (var off = 0; off + 512 <= tar.length; off += 512) {
+        if (tar[off + 156] != 0x30) continue;
+        fileEntries++;
+        final name = utf8
+            .decode(tar.sublist(off, off + 100))
+            .replaceAll(RegExp(r'\x00.*$'), '');
+        expect(name, isNot(contains('..')));
+        expect(name, isNot(startsWith('/')));
+        expect(name, isNot(contains('\x00')));
+      }
+      expect(fileEntries, greaterThanOrEqualTo(2));
+    });
+
+    test('handleLs resolves a cid/sub-path through the resolver', () async {
+      // cid/sub resolution must traverse named links (and HAMT shards) via
+      // UnixFSPathResolver rather than passing the raw string to node.ls.
+      final file = await Block.fromData(
+        Uint8List.fromList(utf8.encode('sub-file')),
+        format: 'raw',
+      );
+      storeBlock(file);
+      final dirNode = dag_pb.PBNode(
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+        links: [dag_pb.PBLink(name: 'sub', hash: file.cid.toBytes())],
+      );
+      final dir = await Block.fromData(
+        dirNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      storeBlock(dir);
+      when(mockNode.bitswap).thenReturn(null);
+      when(mockNode.ls(file.cid.encode())).thenAnswer(
+        (_) async => [
+          Link(name: 'leaf', cid: file.cid, size: file.data.length),
+        ],
+      );
+
+      final response = await handlers.handleLs(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/ls?arg=${dir.cid.encode()}/sub'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      verify(mockNode.ls(file.cid.encode())).called(1);
+    });
+
+    test('handleLs returns 404 when a sub-path link is missing', () async {
+      final missing = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
+      final dirNode = dag_pb.PBNode(
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+        links: [dag_pb.PBLink(name: 'other', hash: missing.cid.toBytes())],
+      );
+      final dir = await Block.fromData(
+        dirNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      storeBlock(dir);
+      when(
+        mockBlockStore.getBlock(missing.cid.encode()),
+      ).thenAnswer((_) async => GetBlockResponse()..found = false);
+      when(mockNode.bitswap).thenReturn(null);
+
+      final response = await handlers.handleLs(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/ls?arg=${dir.cid.encode()}/nope'),
+        ),
+      );
+      expect(response.statusCode, equals(404));
+      verifyNever(mockNode.ls(any));
     });
 
     /// Reflective handle to the private `_tarAddNode` method plus factories

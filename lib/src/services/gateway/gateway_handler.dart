@@ -171,6 +171,9 @@ class _CarTraversal {
 
   /// Total blocks written so far, regardless of dedup.
   int written = 0;
+
+  /// Total payload bytes written so far, regardless of dedup.
+  int bytesWritten = 0;
 }
 
 /// Thrown when a denylisted block is encountered while assembling a
@@ -179,9 +182,13 @@ class _CarTraversal {
 /// Extends [CarException] so CAR traversal loops that rethrow CAR errors
 /// propagate it unchanged; handlers map it to a 451 response instead of
 /// serving a response that contains denylisted content.
-class _DenylistBlockedException extends CarException {
+class _DenylistBlockedException extends CarException
+    implements DenylistBlockedException {
   /// Creates a [_DenylistBlockedException] for the denylisted [cidStr].
-  _DenylistBlockedException(String cidStr) : super('Denylisted block: $cidStr');
+  _DenylistBlockedException(this.cid) : super('Denylisted block: $cid');
+
+  @override
+  final String? cid;
 }
 
 /// Handles IPFS Gateway HTTP requests following the IPFS Gateway specs.
@@ -202,6 +209,7 @@ class GatewayHandler {
     this.dnsLinkResolver,
     this.trustForwardedHeaders = false,
     this.maxFileResponseBytes = unixfsReadDefaultMaxBytes,
+    this.maxCarResponseBytes = _defaultMaxCarBytes,
   });
 
   /// The block store for retrieving content.
@@ -256,6 +264,13 @@ class GatewayHandler {
   /// HTTP 413.
   final int maxFileResponseBytes;
 
+  /// Maximum total payload bytes a generated CAR archive may contain.
+  ///
+  /// The CAR writer buffers the archive in memory, so a byte bound (not just
+  /// a block count) is required to keep a large DAG from consuming
+  /// unbounded memory per request. Exceeding it fails the request with 416.
+  final int maxCarResponseBytes;
+
   final _logger = Logger('GatewayHandler');
 
   /// Maximum number of `index.html` indirections followed while serving a
@@ -267,6 +282,7 @@ class GatewayHandler {
   /// Default limits for CAR traversal to prevent unbounded resource use.
   static const int _defaultMaxCarDepth = 32;
   static const int _defaultMaxCarBlocks = 10000;
+  static const int _defaultMaxCarBytes = 1024 * 1024 * 1024;
 
   /// Default TTL for IPNS record Cache-Control when no record TTL is available.
   static const int _defaultIpnsTtlSeconds = 60;
@@ -1378,6 +1394,12 @@ class GatewayHandler {
     if (state.written > _defaultMaxCarBlocks) {
       throw CarException(
         'CAR traversal exceeded maximum block count $_defaultMaxCarBlocks',
+      );
+    }
+    state.bytesWritten += block.data.length;
+    if (state.bytesWritten > maxCarResponseBytes) {
+      throw CarException(
+        'CAR traversal exceeded maximum byte budget $maxCarResponseBytes',
       );
     }
     await writer.write(cid, block.data);
@@ -2982,6 +3004,9 @@ class GatewayHandler {
   /// digest, so they are synthesized without touching the store or network.
   /// Otherwise delegates to [_getBlockByCid].
   Future<Block?> _getBlock(CID cid, {bool localOnly = false}) async {
+    // Identity CIDs are synthesized without touching the store, but they are
+    // still subject to the egress denylist when reached mid-traversal.
+    _throwIfDenylisted(cid.encode());
     if (cid.multihash.code == 0x00) {
       return Block(
         cid: cid,

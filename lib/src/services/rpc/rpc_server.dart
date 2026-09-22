@@ -134,6 +134,9 @@ class RPCServer implements ILifecycle {
     _router.post('/api/v0/dht/findprovs', _handlers.handleDhtFindProviders);
     _router.post('/api/v0/dht/findpeer', _handlers.handleDhtFindPeer);
     _router.post('/api/v0/dht/provide', _handlers.handleDhtProvide);
+    // Kubo exposes the same operation under /api/v0/routing/provide; the
+    // interop harness and Kubo-shaped clients use the canonical name.
+    _router.post('/api/v0/routing/provide', _handlers.handleDhtProvide);
 
     // Name (IPNS) endpoints
     _router.post('/api/v0/name/publish', _handlers.handleNamePublish);

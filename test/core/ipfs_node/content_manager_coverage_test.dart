@@ -102,7 +102,7 @@ void main() {
       await contentController.close();
     });
 
-    test('get throws StateError for blocked CID', () async {
+    test('get throws DenylistBlockedException for blocked CID', () async {
       final cid = (await CID.fromContent(
         Uint8List.fromList([9, 9, 9]),
         codec: 'raw',
@@ -117,13 +117,7 @@ void main() {
 
       await expectLater(
         manager.get(cid),
-        throwsA(
-          isA<StateError>().having(
-            (e) => e.message,
-            'message',
-            'Content blocked by operator policy',
-          ),
-        ),
+        throwsA(isA<DenylistBlockedException>()),
       );
       expect(metrics.securityEvents, contains('denylist_blocked'));
     });
@@ -324,13 +318,7 @@ void main() {
 
         await expectLater(
           manager.get(root.cid.encode(), path: 'bad.txt'),
-          throwsA(
-            isA<StateError>().having(
-              (e) => e.message,
-              'message',
-              'Content blocked by operator policy',
-            ),
-          ),
+          throwsA(isA<DenylistBlockedException>()),
         );
       },
     );

@@ -473,6 +473,27 @@ void main() {
         expect(response.statusCode, equals(400));
       });
 
+      test('returns 416 when CAR byte budget is exceeded', () async {
+        // maxCarResponseBytes bounds the buffered archive payload, not just
+        // the block count: one block larger than the budget must fail.
+        handler = GatewayHandler(
+          mockBlockStore,
+          bitswapHandler: mockBitswap,
+          maxCarResponseBytes: 4,
+        );
+        final block = makeBlock();
+        when(
+          mockBlockStore.getBlock(cidStr),
+        ).thenAnswer((_) async => foundResponse(block));
+
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/$cidStr?format=car'),
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(416));
+      });
+
       test('rejects malformed entity-bytes with 400', () async {
         final request = Request(
           'GET',
@@ -1005,6 +1026,25 @@ void main() {
         final request = Request(
           'GET',
           Uri.parse('http://localhost/ipns/blocked.local?format=ipns-record'),
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(451));
+      });
+
+      test('returns 451 for a denylisted identity CID', () async {
+        // Identity CIDs are synthesized inline without touching the store,
+        // but the egress denylist must still gate them.
+        final denylist = DenylistService(
+          const SecurityConfig(enableDenylist: true),
+          _MockMetrics(),
+        );
+        denylist.blockCidString('bafkqaaa');
+
+        handler = GatewayHandler(mockBlockStore, denylistService: denylist);
+
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/bafkqaaa?format=raw'),
         );
         final response = await handler.handlePath(request);
         expect(response.statusCode, equals(451));

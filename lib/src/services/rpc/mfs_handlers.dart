@@ -588,13 +588,17 @@ class MFSHandlers {
   }
 
   /// Validates an argument that may be an MFS path or a content path, like
-  /// Kubo's `checkContentOrMfsPath`: `/ipfs/...` (and `ipfs://`/`ipns://`
-  /// URIs, rewritten to canonical path form) alongside absolute MFS paths.
+  /// Kubo's `checkContentOrMfsPath`: `/ipfs/...` (and `ipfs://` URIs,
+  /// rewritten to canonical path form) alongside absolute MFS paths.
   /// Returns null when the argument is not an acceptable path.
+  ///
+  /// `/ipns/` references are rejected: `MFSManager` has no IPNS resolver, so
+  /// admitting them would silently misroute them as MFS paths and fail with
+  /// a misleading "not found".
   String? _contentOrMfsPath(String? arg) {
     if (arg == null || arg.isEmpty) return null;
     if (arg.startsWith('ipfs://')) return '/ipfs/${arg.substring(7)}';
-    if (arg.startsWith('ipns://')) return '/ipns/${arg.substring(7)}';
+    if (arg.startsWith('ipns://') || arg.startsWith('/ipns/')) return null;
     if (!arg.startsWith('/')) return null;
     return arg;
   }

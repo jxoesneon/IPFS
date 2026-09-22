@@ -145,25 +145,6 @@ class UnixFSPathResolver {
       final segment = remaining[0];
       final nextRemaining = remaining.sublist(1);
 
-      if (node.isDirectory) {
-        _checkDuplicateLinkNames(node);
-        final link = findLinkByName(node.pbNode.links, segment);
-        if (link == null) {
-          throw PathResolutionError('Path not found: $segment');
-        }
-        return _resolve(
-          root,
-          CID.fromBytes(Uint8List.fromList(link.hash)),
-          <String>[...currentPath, segment],
-          nextRemaining,
-          pathCids,
-          symlinkCids,
-          depth + 1,
-          nodeCount + 1,
-          0,
-        );
-      }
-
       if (node.isHAMTShard) {
         final link = resolveHAMTSegment(node, segment, hamtLevel);
         if (link == null) {
@@ -195,8 +176,29 @@ class UnixFSPathResolver {
         );
       }
 
-      throw PathResolutionError(
-        'Path not found: cannot traverse non-directory node',
+      // A UnixFS directory must not carry duplicate link names.
+      if (node.isDirectory) {
+        _checkDuplicateLinkNames(node);
+      }
+
+      // Named-link traversal applies to any link-bearing DAG-PB node —
+      // plain directories and untyped PBNodes alike — matching Kubo's
+      // generic dag-pb path resolution. File chunk links are unnamed and
+      // simply fail to match.
+      final link = findLinkByName(node.pbNode.links, segment);
+      if (link == null) {
+        throw PathResolutionError('Path not found: $segment');
+      }
+      return _resolve(
+        root,
+        CID.fromBytes(Uint8List.fromList(link.hash)),
+        <String>[...currentPath, segment],
+        nextRemaining,
+        pathCids,
+        symlinkCids,
+        depth + 1,
+        nodeCount + 1,
+        0,
       );
     } finally {
       pathCids.remove(currentCid);

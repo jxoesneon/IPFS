@@ -6,14 +6,21 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_errors.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_resolver.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/proto/dag_marshal.dart';
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
@@ -379,7 +386,7 @@ class RPCHandlers {
   }
 
   /// The 451 "blocked by operator policy" response shared by request-time
-  /// denylist checks and traversal-time [_DenylistBlockedException]
+  /// denylist checks and traversal-time [DenylistBlockedException]
   /// rejections.
   static Response _denylistBlockedResponse() {
     return Response(
@@ -434,6 +441,8 @@ class RPCHandlers {
         return _errorResponse('Path not found: $arg', code: 404);
       }
       return Response.ok(content);
+    } on DenylistBlockedException {
+      return _denylistBlockedResponse();
     } catch (e, st) {
       _logger.error('Cat failed for cid: $arg', e, st);
       return _errorResponse('Cat failed');
@@ -478,13 +487,24 @@ class RPCHandlers {
         return _errorResponse('Block not found: ${segments[0]}', code: 404);
       }
 
-      // Resolve any sub-path through named DAG-PB directory links.
-      for (final segment in segments.sublist(1)) {
-        final childCid = _findNamedLink(block!, segment);
-        if (childCid == null) {
+      // Resolve any sub-path through the shared UnixFS resolver so HAMT
+      // shards, symlinks, and nested directories behave the same as `cat`.
+      if (segments.length > 1) {
+        final resolver = UnixFSPathResolver(store: _RpcBlockStore(this));
+        CID resolvedCid;
+        try {
+          resolvedCid = await resolver.resolve(
+            CID.decode(segments[0]),
+            segments.sublist(1).join('/'),
+          );
+        } on DenylistBlockedException {
+          rethrow;
+        } catch (_) {
+          // Missing links, unparseable nodes, cycles, and budget overflows
+          // all mean the requested path cannot be resolved.
           return _errorResponse('Path not found: $arg', code: 404);
         }
-        block = await _rpcGetBlock(childCid.encode());
+        block = await _rpcGetBlock(resolvedCid.encode());
         if (block == null) {
           return _errorResponse('Block not found: $arg', code: 404);
         }
@@ -493,8 +513,8 @@ class RPCHandlers {
       final tar = _TarWriter();
       await _tarAddNode(
         tar,
-        segments.last,
-        block!,
+        _sanitizeTarName(segments.last),
+        block,
         depth: 0,
         budget: _TarTraversalBudget(),
       );
@@ -508,7 +528,7 @@ class RPCHandlers {
           'X-Stream-Output': '1',
         },
       );
-    } on _DenylistBlockedException {
+    } on DenylistBlockedException {
       // A block fetched mid-traversal matched the denylist.
       return _denylistBlockedResponse();
     } catch (e, st) {
@@ -521,11 +541,11 @@ class RPCHandlers {
   ///
   /// Every fetched CID is gated through the denylist so path-scoped and
   /// child-CID rules cannot be bypassed mid-traversal/export; a blocked
-  /// fetch throws [_DenylistBlockedException], which the calling handler
+  /// fetch throws [DenylistBlockedException], which the calling handler
   /// translates into the 451 response.
   Future<Block?> _rpcGetBlock(String cid) async {
     if (_checkDenylist(cid) != null) {
-      throw const _DenylistBlockedException();
+      throw const DenylistBlockedException();
     }
     final response = await node.blockStore.getBlock(cid);
     if (response.found) {
@@ -538,22 +558,6 @@ class RPCHandlers {
         await node.blockStore.putBlock(networkBlock);
         return networkBlock;
       }
-    }
-    return null;
-  }
-
-  /// Returns the CID of the link named [name] in a DAG-PB [block], or null.
-  CID? _findNamedLink(Block block, String name) {
-    if (block.cid.codec != 'dag-pb') return null;
-    try {
-      final pbNode = dag_pb.PBNode.fromBuffer(block.data);
-      for (final link in pbNode.links) {
-        if (link.name == name) {
-          return CID.fromBytes(Uint8List.fromList(link.hash));
-        }
-      }
-    } catch (_) {
-      // Not parseable as DAG-PB.
     }
     return null;
   }
@@ -581,7 +585,33 @@ class RPCHandlers {
 
     if (block.cid.codec == 'dag-pb') {
       try {
-        final pbNode = dag_pb.PBNode.fromBuffer(block.data);
+        final unixfsNode = UnixFSNode.fromBlock(block);
+        if (unixfsNode.isHAMTShard) {
+          // A HAMT shard is a logical directory: enumerate leaf entries
+          // (hash-prefixed names stripped) and recurse per entry.
+          tar.addDirectory(name);
+          final entries = await hamtLeafEntries(
+            _RpcBlockStore(this),
+            unixfsNode,
+          );
+          for (final entry in entries) {
+            final child = await _rpcGetBlock(entry.cid.encode());
+            if (child == null) {
+              throw StateError(
+                'Missing linked block ${entry.cid.encode()} during TAR export',
+              );
+            }
+            await _tarAddNode(
+              tar,
+              '$name/${_sanitizeTarName(entry.name)}',
+              child,
+              depth: depth + 1,
+              budget: budget,
+            );
+          }
+          return;
+        }
+        final pbNode = unixfsNode.pbNode;
         if (pbNode.hasData()) {
           final unixfsData = unixfs_pb.Data.fromBuffer(pbNode.data);
           if (unixfsData.type == unixfs_pb.Data_DataType.Directory) {
@@ -596,7 +626,7 @@ class RPCHandlers {
               }
               await _tarAddNode(
                 tar,
-                link.name,
+                '$name/${_sanitizeTarName(link.name)}',
                 child,
                 depth: depth + 1,
                 budget: budget,
@@ -606,7 +636,12 @@ class RPCHandlers {
           }
         }
       } catch (e) {
-        if (e is StateError || e is _DenylistBlockedException) rethrow;
+        if (e is StateError ||
+            e is DenylistBlockedException ||
+            e is PathResolutionError ||
+            e is DAGCycleError) {
+          rethrow;
+        }
         // Not a UnixFS directory: fall through and serve as a file entry.
       }
     }
@@ -651,7 +686,26 @@ class RPCHandlers {
     );
 
     try {
-      final entries = await node.ls(normalized);
+      // Resolve <cid>/<sub/path> through the shared UnixFS resolver so
+      // sub-paths (including through HAMT shards) behave like `cat`/`get`.
+      var lsTarget = normalized;
+      final lsSegments = normalized.split('/').where((s) => s.isNotEmpty);
+      if (lsSegments.length > 1) {
+        final resolver = UnixFSPathResolver(store: _RpcBlockStore(this));
+        try {
+          final resolved = await resolver.resolve(
+            CID.decode(lsSegments.first),
+            lsSegments.skip(1).join('/'),
+          );
+          lsTarget = resolved.encode();
+        } on DenylistBlockedException {
+          return _denylistBlockedResponse();
+        } catch (_) {
+          return _errorResponse('Path not found: $path', code: 404);
+        }
+      }
+
+      final entries = await node.ls(lsTarget);
       final objects = <Map<String, dynamic>>[];
       for (final e in entries) {
         objects.add({
@@ -868,7 +922,7 @@ class RPCHandlers {
           'Content-Length': carData.length.toString(),
         },
       );
-    } on _DenylistBlockedException {
+    } on DenylistBlockedException {
       return _denylistBlockedResponse();
     } catch (e, st) {
       _logger.error('DAG export failed for cid: $cid', e, st);
@@ -976,7 +1030,7 @@ class RPCHandlers {
     // Mid-traversal denylist gate — a blocked child CID must not leak into
     // the exported archive.
     if (_checkDenylist(key) != null) {
-      throw const _DenylistBlockedException();
+      throw const DenylistBlockedException();
     }
 
     final response = await node.blockStore.getBlock(key);
@@ -1535,12 +1589,42 @@ class RPCHandlers {
   }
 }
 
-/// Thrown when a block fetched mid-traversal (sub-path resolution, TAR
-/// export, or chunked-file reassembly) matches the denylist. Handlers
-/// translate it into the shared 451 response.
-class _DenylistBlockedException implements Exception {
-  /// Creates a new [_DenylistBlockedException].
-  const _DenylistBlockedException();
+/// [IBlockStore] adapter that routes reads through [RPCHandlers._rpcGetBlock]
+/// so denylist gating and Bitswap fallback apply to resolver-driven fetches.
+class _RpcBlockStore implements IBlockStore {
+  _RpcBlockStore(this._handlers);
+
+  final RPCHandlers _handlers;
+
+  @override
+  Future<GetBlockResponse> getBlock(String cid) async {
+    final block = await _handlers._rpcGetBlock(cid);
+    if (block == null) {
+      return GetBlockResponse(found: false);
+    }
+    return GetBlockResponse(block: block.toProto(), found: true);
+  }
+
+  @override
+  Future<AddBlockResponse> putBlock(Block block) async {
+    await _handlers.node.blockStore.putBlock(block);
+    return AddBlockResponse(success: true);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Strips path components that could escape the TAR root when extracted:
+/// `.`/`..` segments, NUL bytes, and leading slashes/backslashes.
+String _sanitizeTarName(String name) {
+  final cleaned = name
+      .replaceAll('\x00', '')
+      .replaceAll('\\', '/')
+      .split('/')
+      .where((s) => s.isNotEmpty && s != '.' && s != '..')
+      .join('/');
+  return cleaned.isEmpty ? 'unnamed' : cleaned;
 }
 
 /// Mutable traversal budget shared across an entire TAR export.

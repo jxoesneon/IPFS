@@ -63,6 +63,7 @@ class GatewayServer implements ILifecycle {
       dnsLinkResolver: dnsLinkResolver,
       trustForwardedHeaders: gatewayConfig.trustForwardedHeaders,
       maxFileResponseBytes: gatewayConfig.maxFileResponseBytes,
+      maxCarResponseBytes: gatewayConfig.maxCarResponseBytes,
     );
     if (node != null) {
       _healthCheckService = HealthCheckService(node!);

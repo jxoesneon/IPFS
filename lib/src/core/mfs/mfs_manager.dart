@@ -9,6 +9,7 @@ import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
 import 'package:dart_ipfs/src/proto/dag_marshal.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
@@ -588,7 +589,7 @@ class MFSManager implements ILifecycle {
     final node = PBNode.fromBuffer(block.block.data);
     var entries = node.links.toList();
     if (!u) {
-      entries.sort((a, b) => a.name.compareTo(b.name));
+      entries.sort((a, b) => compareEntryNamesUtf8(a.name, b.name));
     }
 
     if (!long) {
@@ -1451,7 +1452,7 @@ class MFSManager implements ILifecycle {
 
     final newLinks = node.links.where((l) => l.name != name).toList();
     newLinks.add(newLink);
-    newLinks.sort((a, b) => a.name.compareTo(b.name));
+    newLinks.sort((a, b) => compareEntryNamesUtf8(a.name, b.name));
 
     node.links.clear();
     node.links.addAll(newLinks);

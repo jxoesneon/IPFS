@@ -1042,6 +1042,28 @@ void main() {
       expect(response.statusCode, equals(200));
     });
 
+    test('handleFilesRead rejects ipns:// URIs', () async {
+      // MFSManager has no IPNS resolver; admitting /ipns/ would silently
+      // misroute it as an MFS path and fail with a misleading not-found.
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/read?arg=ipns://k51name'),
+      );
+      final response = await handlers.handleFilesRead(request);
+      expect(response.statusCode, equals(400));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('leading slash'));
+    });
+
+    test('handleFilesRead rejects /ipns/ content paths', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/read?arg=/ipns/k51name'),
+      );
+      final response = await handlers.handleFilesRead(request);
+      expect(response.statusCode, equals(400));
+    });
+
     test('handleFilesMkdir invalid mtime-nsecs', () async {
       final request = Request(
         'POST',

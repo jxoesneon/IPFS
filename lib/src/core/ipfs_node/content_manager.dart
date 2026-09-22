@@ -205,13 +205,13 @@ class ContentManager implements ILifecycle {
     GatewayMode gatewayMode = GatewayMode.internal,
     String customGatewayUrl = '',
   }) async {
-    // Policy blocks must propagate; a swallowed StateError would be
+    // Policy blocks must propagate; a swallowed error would be
     // indistinguishable from "content not found".
     final denylist = _denylistService;
     if (denylist != null && denylist.isBlockedByCidString(cid)) {
       final action = denylist.recordHit(cid, source: 'rpc');
       if (action == 'block') {
-        throw StateError('Content blocked by operator policy');
+        throw DenylistBlockedException(cid);
       }
     }
 
@@ -226,10 +226,11 @@ class ContentManager implements ILifecycle {
       }
 
       return await _getViaHttpFallback(cid);
-    } on StateError catch (e) {
+    } on DenylistBlockedException {
       // Policy blocks thrown by the denylist gate in [_fetchBlock] must
       // propagate — same contract as the root-CID check above.
-      if (e.message == 'Content blocked by operator policy') rethrow;
+      rethrow;
+    } on StateError catch (e) {
       _logger.error('Error retrieving content for CID $cid', e);
       return null;
     } catch (e, stackTrace) {
@@ -333,7 +334,7 @@ class ContentManager implements ILifecycle {
     if (denylist != null && denylist.isBlockedByCidString(cid)) {
       final action = denylist.recordHit(cid, source: 'rpc');
       if (action == 'block') {
-        throw StateError('Content blocked by operator policy');
+        throw DenylistBlockedException(cid);
       }
     }
 

@@ -4,6 +4,7 @@ import 'package:dart_ipfs/src/core/types/peer_id.dart';
 
 import '../kademlia_tree.dart';
 import '../red_black_tree.dart';
+import '../xor_distance_metric.dart';
 import 'helpers.dart' as helpers;
 import 'kademlia_tree_node.dart';
 import 'lru_cache.dart';
@@ -46,13 +47,23 @@ extension BucketManagement on KademliaTree {
       bucketIndex + 1,
       RedBlackTree<PeerId, KademliaTreeNode>(
         compare: (PeerId a, PeerId b) {
-          final distanceA = helpers.xorDistance(root!.peerId, a);
-          final distanceB = helpers.xorDistance(root!.peerId, b);
-          final distanceComparison = distanceA.compareTo(distanceB);
+          // Allocation-free byte-wise XOR distance, same as the routing
+          // table's comparator — this runs on every bucket-tree insert.
+          final distanceComparison = compareXorDistanceToKey(
+            a.value,
+            b.value,
+            root!.peerId.value,
+          );
           if (distanceComparison != 0) {
             return distanceComparison;
           }
-          return a.toString().compareTo(b.toString());
+          final length = math.min(a.value.length, b.value.length);
+          for (var i = 0; i < length; i++) {
+            if (a.value[i] != b.value[i]) {
+              return a.value[i].compareTo(b.value[i]);
+            }
+          }
+          return a.value.length.compareTo(b.value.length);
         },
       ),
     );
