@@ -7,12 +7,14 @@ abstract class DistanceMetric {
   /// Calculates the distance between two peer IDs.
   ///
   /// Returns a numeric distance value where lower values indicate closer peers.
-  int calculateDistance(PeerId a, PeerId b);
+  /// The full-precision [BigInt] preserves ordering across the entire key
+  /// space (e.g., 256-bit SHA-256 multihashes/peer IDs).
+  BigInt calculateDistance(PeerId a, PeerId b);
 
   /// Calculates the distance between a peer ID and a raw key.
   ///
   /// Used when finding peers closest to a DHT key.
-  int calculateDistanceToKey(PeerId peerId, List<int> key);
+  BigInt calculateDistanceToKey(PeerId peerId, List<int> key);
 }
 
 /// Interface for DHT routing table operations.

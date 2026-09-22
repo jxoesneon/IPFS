@@ -19,6 +19,7 @@ import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/reprovider.dart';
+import 'package:dart_ipfs/src/protocols/dht/xor_distance_metric.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:test/test.dart';
 
@@ -135,16 +136,7 @@ void main() {
 
   /// Replicates the reprovider's big-endian XOR distance.
   BigInt xorDistance(PeerId a, PeerId b) {
-    final length = a.value.length > b.value.length
-        ? a.value.length
-        : b.value.length;
-    var result = BigInt.zero;
-    for (var i = 0; i < length; i++) {
-      final aByte = i < a.value.length ? a.value[i] : 0;
-      final bByte = i < b.value.length ? b.value[i] : 0;
-      result = (result << 8) | BigInt.from(aByte ^ bByte);
-    }
-    return result;
+    return const XorDistanceMetric().calculateDistance(a, b);
   }
 
   group('Reprovider strategies', () {

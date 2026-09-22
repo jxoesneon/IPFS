@@ -33,7 +33,9 @@ void main() {
     when(
       mockDhtClient.getRoutingKey(any),
     ).thenReturn(PeerId(value: Uint8List.fromList(List.filled(32, 0x42))));
-    when(mockRoutingTable.calculateDistance(any, any)).thenReturn(100);
+    when(
+      mockRoutingTable.calculateDistance(any, any),
+    ).thenReturn(BigInt.from(100));
     when(mockRoutingTable.findClosestPeers(any, any)).thenReturn([]);
 
     provider = OptimisticProvider(

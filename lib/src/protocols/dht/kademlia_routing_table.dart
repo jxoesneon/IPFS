@@ -13,6 +13,7 @@ import 'dht_client.dart';
 import 'kademlia_tree.dart';
 import 'kademlia_tree/kademlia_tree_node.dart';
 import 'red_black_tree.dart';
+import 'xor_distance_metric.dart';
 
 /// Kademlia DHT routing table implementation using k-buckets.
 ///
@@ -238,8 +239,13 @@ class KademliaRoutingTable {
   /// Maps peers to the time they were last seen (delegates to the tree).
   Map<PeerId, DateTime> get lastSeen => _tree.lastSeen;
 
-  /// Calculates the XOR distance between two peers.
-  int calculateDistance(PeerId a, PeerId b) => _calculateXorDistance(a, b);
+  /// Calculates the exact XOR distance between two peers.
+  ///
+  /// Returns the full-precision [BigInt] interpretation of the XOR byte array,
+  /// used for exact Kademlia ordering (closest-peer sorts). For bucket-index
+  /// derivation use [distance], which returns the logarithmic distance.
+  BigInt calculateDistance(PeerId a, PeerId b) =>
+      const XorDistanceMetric().calculateDistance(a, b);
 
   /// Provides access to the underlying buckets.
   List<RedBlackTree<PeerId, KademliaTreeNode>> get buckets => _tree.buckets;
@@ -312,11 +318,12 @@ class KademliaRoutingTable {
   Comparator<PeerId> get _xorDistanceComparator => (PeerId a, PeerId b) {
     if (_peersEqual(a, b)) return 0;
 
-    final int distA = _calculateXorDistance(a, _tree.root!.peerId);
-    final int distB = _calculateXorDistance(b, _tree.root!.peerId);
+    final BigInt distA = calculateDistance(a, _tree.root!.peerId);
+    final BigInt distB = calculateDistance(b, _tree.root!.peerId);
 
-    if (distA != distB) {
-      return distA.compareTo(distB);
+    final int distanceComparison = distA.compareTo(distB);
+    if (distanceComparison != 0) {
+      return distanceComparison;
     }
 
     final int length = min(a.value.length, b.value.length);
