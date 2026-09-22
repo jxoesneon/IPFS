@@ -204,8 +204,15 @@ class IPFS {
   /// (for subdirectories).
   ///
   /// Returns the CID of the added directory.
-  Future<String> addDirectory(Map<String, dynamic> directoryContent) async {
-    return _node.addDirectory(directoryContent);
+  ///
+  /// When [shardThreshold] is greater than zero and a directory's entry count
+  /// exceeds it, the directory is written as a HAMT-sharded node like Kubo's
+  /// automatic sharding.
+  Future<String> addDirectory(
+    Map<String, dynamic> directoryContent, {
+    int shardThreshold = 0,
+  }) async {
+    return _node.addDirectory(directoryContent, shardThreshold: shardThreshold);
   }
 
   /// Gets the content of a file or directory from IPFS.

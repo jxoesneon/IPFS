@@ -15,6 +15,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' show GatewayMode;
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
 import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
@@ -171,6 +172,205 @@ void main() {
       );
       final links = await manager.ls(dirBlock.cid.encode());
       expect(links.single.name, equals('child.txt'));
+    });
+
+    test('enumerates logical entries for a HAMT-sharded root', () async {
+      final repoDir = await Directory.systemTemp.createTemp('ipfs_ls_hamt_');
+      addTearDown(() => repoDir.delete(recursive: true));
+
+      final store = BlockStore(path: repoDir.path);
+      final entries = <UnixFSDirectoryEntry>[];
+      for (var i = 0; i < 8; i++) {
+        final data = Uint8List.fromList([i]);
+        final cid = await CID.fromContent(data, codec: 'raw');
+        await store.putBlock(Block(cid: cid, data: data));
+        entries.add(
+          UnixFSDirectoryEntry(name: 'file-$i.txt', cid: cid, tsize: 0),
+        );
+      }
+      final root = await createDirectory(store, entries, shardThreshold: 2);
+      expect(root.isHAMTShard, isTrue);
+
+      final manager = ContentManager(
+        datastoreHandler: datastore,
+        newContentController: contentController,
+        blockStore: store,
+      );
+      final links = await manager.ls(root.cid.encode());
+      expect(
+        links.map((l) => l.name).toSet(),
+        equals({for (var i = 0; i < 8; i++) 'file-$i.txt'}),
+      );
+    });
+  });
+
+  group('ContentManager path resolution', () {
+    late _FakeDatastoreHandler datastore;
+    late StreamController<String> contentController;
+
+    setUp(() {
+      datastore = _FakeDatastoreHandler();
+      contentController = StreamController<String>.broadcast();
+    });
+
+    tearDown(() async {
+      await contentController.close();
+    });
+
+    test('get resolves a path inside a plain directory', () async {
+      final repoDir = await Directory.systemTemp.createTemp('ipfs_getpath_');
+      addTearDown(() => repoDir.delete(recursive: true));
+
+      final store = BlockStore(path: repoDir.path);
+      final payload = Uint8List.fromList(utf8.encode('hello path'));
+      final fileCid = await CID.fromContent(payload, codec: 'raw');
+      await store.putBlock(Block(cid: fileCid, data: payload));
+      final root = await createDirectory(store, [
+        UnixFSDirectoryEntry(name: 'a.txt', cid: fileCid, tsize: 0),
+      ]);
+
+      final manager = ContentManager(
+        datastoreHandler: datastore,
+        newContentController: contentController,
+        blockStore: store,
+      );
+      final data = await manager.get(root.cid.encode(), path: 'a.txt');
+      expect(data, equals(payload));
+    });
+
+    test('get resolves a path inside a HAMT-sharded directory', () async {
+      final repoDir = await Directory.systemTemp.createTemp('ipfs_gethamt_');
+      addTearDown(() => repoDir.delete(recursive: true));
+
+      final store = BlockStore(path: repoDir.path);
+      final payload = Uint8List.fromList(utf8.encode('sharded content'));
+      final fileCid = await CID.fromContent(payload, codec: 'raw');
+      await store.putBlock(Block(cid: fileCid, data: payload));
+      final entries = <UnixFSDirectoryEntry>[
+        UnixFSDirectoryEntry(name: 'target.txt', cid: fileCid, tsize: 0),
+      ];
+      for (var i = 0; i < 10; i++) {
+        final filler = Uint8List.fromList([i, i]);
+        final fillerCid = await CID.fromContent(filler, codec: 'raw');
+        await store.putBlock(Block(cid: fillerCid, data: filler));
+        entries.add(
+          UnixFSDirectoryEntry(name: 'filler-$i', cid: fillerCid, tsize: 0),
+        );
+      }
+      final root = await createDirectory(store, entries, shardThreshold: 2);
+      expect(root.isHAMTShard, isTrue);
+
+      final manager = ContentManager(
+        datastoreHandler: datastore,
+        newContentController: contentController,
+        blockStore: store,
+      );
+      final data = await manager.get(root.cid.encode(), path: 'target.txt');
+      expect(data, equals(payload));
+    });
+
+    test('get returns null when the path does not resolve', () async {
+      final repoDir = await Directory.systemTemp.createTemp('ipfs_getmiss_');
+      addTearDown(() => repoDir.delete(recursive: true));
+
+      final store = BlockStore(path: repoDir.path);
+      final payload = Uint8List.fromList([1, 2, 3]);
+      final fileCid = await CID.fromContent(payload, codec: 'raw');
+      await store.putBlock(Block(cid: fileCid, data: payload));
+      final root = await createDirectory(store, [
+        UnixFSDirectoryEntry(name: 'exists.txt', cid: fileCid, tsize: 0),
+      ]);
+
+      final manager = ContentManager(
+        datastoreHandler: datastore,
+        newContentController: contentController,
+        blockStore: store,
+      );
+      final data = await manager.get(root.cid.encode(), path: 'missing.txt');
+      expect(data, isNull);
+    });
+
+    test(
+      'denylisted child block propagates a policy error during traversal',
+      () async {
+        final repoDir = await Directory.systemTemp.createTemp('ipfs_denypath_');
+        addTearDown(() => repoDir.delete(recursive: true));
+
+        final store = BlockStore(path: repoDir.path);
+        final payload = Uint8List.fromList(utf8.encode('blocked child'));
+        final fileCid = await CID.fromContent(payload, codec: 'raw');
+        await store.putBlock(Block(cid: fileCid, data: payload));
+        final root = await createDirectory(store, [
+          UnixFSDirectoryEntry(name: 'bad.txt', cid: fileCid, tsize: 0),
+        ]);
+
+        final metrics = _FakeMetricsCollector();
+        final denylist = DenylistService(
+          const SecurityConfig(
+            enableDenylist: true,
+            denylistDefaultAction: 'block',
+          ),
+          metrics,
+        );
+        addTearDown(() => denylist.stop());
+        denylist.blockCidString(fileCid.encode());
+
+        final manager = ContentManager(
+          datastoreHandler: datastore,
+          newContentController: contentController,
+          blockStore: store,
+          denylistService: denylist,
+        );
+
+        await expectLater(
+          manager.get(root.cid.encode(), path: 'bad.txt'),
+          throwsA(
+            isA<StateError>().having(
+              (e) => e.message,
+              'message',
+              'Content blocked by operator policy',
+            ),
+          ),
+        );
+      },
+    );
+  });
+
+  group('ContentManager addDirectory sharding', () {
+    late _FakeDatastoreHandler datastore;
+    late StreamController<String> contentController;
+
+    setUp(() {
+      datastore = _FakeDatastoreHandler();
+      contentController = StreamController<String>.broadcast();
+    });
+
+    tearDown(() async {
+      await contentController.close();
+    });
+
+    test('shardThreshold produces a HAMT root resolvable via get', () async {
+      final repoDir = await Directory.systemTemp.createTemp('ipfs_addhamt_');
+      addTearDown(() => repoDir.delete(recursive: true));
+
+      final store = BlockStore(path: repoDir.path);
+      final manager = ContentManager(
+        datastoreHandler: datastore,
+        newContentController: contentController,
+        blockStore: store,
+      );
+
+      final rootCid = await manager.addDirectory({
+        for (var i = 0; i < 12; i++)
+          'entry-$i.bin': Uint8List.fromList([i, i, i]),
+      }, shardThreshold: 2);
+
+      // The root block must be a HAMT shard, and path resolution must reach
+      // a leaf through the shard links.
+      final rootResp = await store.getBlock(rootCid);
+      expect(rootResp.found, isTrue);
+      final data = await manager.get(rootCid, path: 'entry-3.bin');
+      expect(data, equals(Uint8List.fromList([3, 3, 3])));
     });
   });
 

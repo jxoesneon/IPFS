@@ -532,8 +532,16 @@ class IPFSNode {
       _contentManager.addFileStream(dataStream);
 
   /// Returns a [Future] that resolves to the CID of the added [directoryContent].
-  Future<String> addDirectory(Map<String, dynamic> directoryContent) =>
-      _contentManager.addDirectory(directoryContent);
+  ///
+  /// When [shardThreshold] is greater than zero and a directory's entry count
+  /// exceeds it, the directory is written as a HAMT-sharded node.
+  Future<String> addDirectory(
+    Map<String, dynamic> directoryContent, {
+    int shardThreshold = 0,
+  }) => _contentManager.addDirectory(
+    directoryContent,
+    shardThreshold: shardThreshold,
+  );
 
   /// Sets the mode for retrieving content.
   GatewayMode _gatewayMode = GatewayMode.internal;

@@ -21,7 +21,11 @@ import '../security/denylist_service.dart';
 import '../storage/datastore.dart';
 import '../unixfs/unixfs_builder.dart';
 import '../unixfs/unixfs_directory.dart';
+import '../unixfs/unixfs_errors.dart';
+import '../unixfs/unixfs_hamt.dart';
+import '../unixfs/unixfs_node.dart';
 import '../unixfs/unixfs_reader.dart';
+import '../unixfs/unixfs_resolver.dart';
 import 'datastore_handler.dart';
 import 'ipfs_node.dart';
 
@@ -140,7 +144,14 @@ class ContentManager implements ILifecycle {
   /// sorted by UTF-8 name order and each link's `Tsize` is the cumulative
   /// serialized size of the linked subtree, so the resulting root CID matches
   /// `ipfs add -r` for the same contents.
-  Future<String> addDirectory(Map<String, dynamic> directoryContent) async {
+  ///
+  /// When [shardThreshold] is greater than zero and a directory's entry count
+  /// exceeds it, the directory is written as a HAMT-sharded node like
+  /// Kubo's automatic sharding.
+  Future<String> addDirectory(
+    Map<String, dynamic> directoryContent, {
+    int shardThreshold = 0,
+  }) async {
     try {
       final store = _ContentBlockStore(this);
       final entries = <UnixFSDirectoryEntry>[];
@@ -156,7 +167,10 @@ class ContentManager implements ILifecycle {
             UnixFSDirectoryEntry(name: name, cid: CID.decode(cid), tsize: 0),
           );
         } else if (value is Map<String, dynamic>) {
-          final subDirCid = await addDirectory(value);
+          final subDirCid = await addDirectory(
+            value,
+            shardThreshold: shardThreshold,
+          );
           entries.add(
             UnixFSDirectoryEntry(
               name: name,
@@ -171,7 +185,11 @@ class ContentManager implements ILifecycle {
         }
       }
 
-      final node = await createDirectory(store, entries);
+      final node = await createDirectory(
+        store,
+        entries,
+        shardThreshold: shardThreshold,
+      );
       _logger.info('Added directory with CID: ${node.cid}');
       return node.cid.toString();
     } catch (e, stackTrace) {
@@ -208,6 +226,12 @@ class ContentManager implements ILifecycle {
       }
 
       return await _getViaHttpFallback(cid);
+    } on StateError catch (e) {
+      // Policy blocks thrown by the denylist gate in [_fetchBlock] must
+      // propagate — same contract as the root-CID check above.
+      if (e.message == 'Content blocked by operator policy') rethrow;
+      _logger.error('Error retrieving content for CID $cid', e);
+      return null;
     } catch (e, stackTrace) {
       _logger.error('Error retrieving content for CID $cid', e, stackTrace);
       return null;
@@ -300,7 +324,19 @@ class ContentManager implements ILifecycle {
   ///
   /// Blocks retrieved over Bitswap are cached into the datastore so repeated
   /// traversal of a DAG does not re-fetch them.
+  ///
+  /// Every fetch is denylist-gated so traversal (path resolution, file
+  /// reassembly, TAR export, pinning) cannot serve a blocked child block —
+  /// matching the gateway's per-block egress gate in `_getBlockByCid`.
   Future<Block?> _fetchBlock(String cid) async {
+    final denylist = _denylistService;
+    if (denylist != null && denylist.isBlockedByCidString(cid)) {
+      final action = denylist.recordHit(cid, source: 'rpc');
+      if (action == 'block') {
+        throw StateError('Content blocked by operator policy');
+      }
+    }
+
     var block = await _datastoreHandler.getBlock(cid);
     if (block != null) {
       return block;
@@ -333,40 +369,27 @@ class ContentManager implements ILifecycle {
   Future<Uint8List?> _extractBlockData(Block block, String path) async {
     if (path.isEmpty) {
       return unixfsReadFile(block, (cid) => _fetchBlock(cid.encode()));
-    } else {
-      final node = MerkleDAGNode.fromBytes(block.data);
-      if (node.isDirectory) {
-        return await _resolvePathInDirectory(node, path);
-      }
     }
-    return null;
-  }
 
-  Future<Uint8List?> _resolvePathInDirectory(
-    MerkleDAGNode dirNode,
-    String path,
-  ) async {
-    final pathParts = path.split('/').where((part) => part.isNotEmpty).toList();
-    if (pathParts.isEmpty) return null;
-
-    for (final link in dirNode.links) {
-      if (link.name == pathParts[0]) {
-        final childBlock = await _fetchBlock(link.cid.encode());
-        if (childBlock == null) return null;
-
-        if (pathParts.length == 1) {
-          // Reassemble chunked UnixFS file targets like `cat` does.
-          return unixfsReadFile(childBlock, (cid) => _fetchBlock(cid.encode()));
-        } else {
-          final childNode = MerkleDAGNode.fromBytes(childBlock.data);
-          return await _resolvePathInDirectory(
-            childNode,
-            pathParts.sublist(1).join('/'),
-          );
-        }
-      }
+    // Resolve the path through the shared UnixFS resolver — it handles
+    // HAMT-sharded directories, symlinks, cycles, and traversal budgets,
+    // matching Kubo's resolution semantics for `cat <cid>/<path>`.
+    try {
+      final resolver = UnixFSPathResolver(store: _ContentBlockStore(this));
+      final resolved = await resolver.resolveNode(block.cid, path);
+      final resolvedBlock = Block(
+        cid: resolved.cid,
+        data: resolved.data,
+        format: resolved.cid.codec ?? 'dag-pb',
+      );
+      return unixfsReadFile(resolvedBlock, (cid) => _fetchBlock(cid.encode()));
+    } on PathResolutionError {
+      return null;
+    } on DAGCycleError {
+      return null;
+    } on SymlinkCycleError {
+      return null;
     }
-    return null;
   }
 
   /// Lists the links within a directory identified by [cid].
@@ -395,6 +418,19 @@ class ContentManager implements ILifecycle {
         if (!node.isDirectory) {
           _logger.warning('CID does not point to a directory: $cid');
           return [];
+        }
+
+        // A HAMT-sharded root stores links under hash-prefixed names;
+        // enumerate the logical entries like Kubo `ls` does.
+        final unixfsNode = UnixFSNode.fromBlock(block);
+        if (unixfsNode.isHAMTShard) {
+          final entries = await hamtLeafEntries(
+            _ContentBlockStore(this),
+            unixfsNode,
+          );
+          return entries
+              .map((e) => Link(name: e.name, cid: e.cid, size: e.tsize))
+              .toList();
         }
 
         return node.links;
