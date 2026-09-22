@@ -37,6 +37,8 @@ Target: 80% line coverage. As of 2026-07-09: 85.79% achieved.
 
 **Release gate (since 1.16.0):** after implementation and before publishing or tagging, new and changed code must be at ~100% line coverage. Scope the check to the diff: run `dart test --coverage=coverage` over the affected test trees, then compute per-file coverage for the files changed in the release. Close any gaps with focused tests before tagging; do not publish with uncovered new lines.
 
+**Merging coverage from multiple runs:** `format_coverage` emits one `SF` record per VM JSON input rather than combining hits — concatenating JSON files and re-formatting produces duplicate source-file records that the changed-line gate reads as uncovered. Worse, a targeted run emits `DA:<line>,0` rows for lines the full suite never instrumented (lazy compilation differences — e.g. class declaration lines), so naive per-line `max()` merging manufactures false uncovered lines. Correct merge: the full suite's `DA` row set is authoritative — for each `SF`, keep the base rows and apply `hits = max(base, delta)`; add delta rows only when `hits > 0` (a positive hit proves the line coverable); drop delta-only zero-hit rows. See `tool/changed_line_coverage.dart` consumers before rerunning partial coverage.
+
 **Release sign-off:** tagging/publishing requires a maintainer review sign-off on the release diff — correctness, coverage, security-sensitive surface (key material handling, auth, transport changes), and changelog accuracy. Record the sign-off in the PR or release notes before tagging. Checklist addition: verify new test files are actually tracked (`git check-ignore -v <file>` must return nothing) — an unanchored gitignore pattern once excluded test sources.
 
 ### Release surfaces
