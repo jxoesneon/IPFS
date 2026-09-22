@@ -266,6 +266,51 @@ void main() {
       expect(response.statusCode, equals(200));
     });
 
+    test('subdomain requests pass through rate limiting and CORS', () async {
+      // The subdomain dispatcher is innermost in the pipeline: requests
+      // addressed to a `*.ipfs.localhost` host are rate-limited and carry
+      // CORS headers like any other gateway request. Before the reorder
+      // they short-circuited to the subdomain handler and bypassed both.
+      final limited = GatewayServer(
+        blockStore: mockBlockStore,
+        httpAdapter: mockAdapter,
+        maxRequestsPerIp: 2,
+        rateLimitWindowSeconds: 60,
+      );
+      await limited.start();
+      final handler = mockAdapter.lastHandler!;
+      try {
+        final uri = Uri.parse('http://localhost/');
+        Request subdomainRequest() => Request(
+          'GET',
+          uri,
+          headers: {
+            'host': 'not-a-cid.ipfs.localhost',
+            'x-real-ip': '10.1.2.3',
+          },
+        );
+
+        // Two subdomain requests are dispatched (400: invalid CID label).
+        for (var i = 0; i < 2; i++) {
+          final response = await handler(subdomainRequest());
+          expect(response.statusCode, equals(400));
+          // CORS middleware wrapped the subdomain response.
+          expect(response.headers['Access-Control-Allow-Origin'], equals('*'));
+          expect(
+            response.headers['Access-Control-Allow-Methods'],
+            contains('GET'),
+          );
+        }
+
+        // The third request is rejected by the rate limiter before the
+        // subdomain middleware can dispatch it.
+        final limitedResponse = await handler(subdomainRequest());
+        expect(limitedResponse.statusCode, equals(429));
+      } finally {
+        await limited.stop();
+      }
+    });
+
     test('HEAD request returns headers only', () async {
       await server.start();
       final handler = mockAdapter.lastHandler!;

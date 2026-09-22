@@ -1,3 +1,6 @@
+import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart'
+    show unixfsReadDefaultMaxBytes;
+
 /// Configuration for the IPFS HTTP Gateway.
 class GatewayConfig {
   /// Creates a new [GatewayConfig].
@@ -32,6 +35,8 @@ class GatewayConfig {
     this.autoTlsCertificatePath,
     this.autoTlsPrivateKeyPath,
     this.autoTlsRenewalThresholdDays = 30,
+    this.trustForwardedHeaders = false,
+    this.maxFileResponseBytes = unixfsReadDefaultMaxBytes,
   });
 
   /// Creates a [GatewayConfig] from a JSON map.
@@ -72,6 +77,9 @@ class GatewayConfig {
       autoTlsPrivateKeyPath: json['autoTlsPrivateKeyPath'] as String?,
       autoTlsRenewalThresholdDays:
           json['autoTlsRenewalThresholdDays'] as int? ?? 30,
+      trustForwardedHeaders: json['trustForwardedHeaders'] as bool? ?? false,
+      maxFileResponseBytes:
+          json['maxFileResponseBytes'] as int? ?? unixfsReadDefaultMaxBytes,
     );
   }
 
@@ -173,6 +181,21 @@ class GatewayConfig {
   /// Number of days before certificate expiration to trigger renewal.
   final int autoTlsRenewalThresholdDays;
 
+  /// Whether to trust `X-Forwarded-Host` / `X-Forwarded-Proto` request
+  /// headers when computing redirect targets for the subdomain gateway.
+  ///
+  /// Defaults to `false`: these headers are trivially spoofable by direct
+  /// clients, so honoring them unconditionally would let an attacker force
+  /// open redirects to arbitrary hosts. Only enable this when the gateway
+  /// sits behind a trusted reverse proxy that strips and rewrites the
+  /// forwarded headers before forwarding traffic.
+  final bool trustForwardedHeaders;
+
+  /// Maximum number of bytes a single gateway file response will buffer
+  /// and serve. Defaults to [unixfsReadDefaultMaxBytes] (512 MiB);
+  /// responses that would exceed the budget are answered with HTTP 413.
+  final int maxFileResponseBytes;
+
   /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
     'enabled': enabled,
@@ -202,5 +225,7 @@ class GatewayConfig {
     'autoTlsCertificatePath': autoTlsCertificatePath,
     'autoTlsPrivateKeyPath': autoTlsPrivateKeyPath,
     'autoTlsRenewalThresholdDays': autoTlsRenewalThresholdDays,
+    'trustForwardedHeaders': trustForwardedHeaders,
+    'maxFileResponseBytes': maxFileResponseBytes,
   };
 }

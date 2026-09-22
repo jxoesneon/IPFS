@@ -349,4 +349,180 @@ void main() {
       expect(json['Peers'], isA<List<dynamic>>());
     });
   });
+
+  group('daemon', () {
+    late String dataDir;
+    late String configPath;
+
+    setUp(() {
+      dataDir = tempDataDir();
+      configPath = '$dataDir/config.json';
+    });
+
+    tearDown(() async {
+      await Directory(dataDir).delete(recursive: true);
+    });
+
+    Future<int> freePort() async {
+      final socket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+      final port = socket.port;
+      await socket.close();
+      return port;
+    }
+
+    /// Starts `ipfs daemon` with [config] written to [configPath], waits
+    /// until [marker] appears in the output (or the process exits), then
+    /// sends SIGTERM and waits for the daemon to shut down.
+    ///
+    /// `dart bin/ipfs.dart` is used instead of `dart run` so the CLI runs in
+    /// a single process: SIGTERM then reaches the VM's signal watchers
+    /// directly instead of the `dart run` launcher.
+    Future<ProcessResult> runDaemon({
+      required String marker,
+      required Map<String, dynamic> config,
+      int gatewayPort = 0,
+    }) async {
+      final apiPort = await freePort();
+      final cliGatewayPort = gatewayPort == 0 ? await freePort() : gatewayPort;
+      final swarmPort = await freePort();
+      File(configPath).writeAsStringSync(jsonEncode(config));
+
+      final env = <String, String>{
+        ...Platform.environment,
+        'IPFS_DATA_DIR': dataDir,
+        'IPFS_CONFIG_PATH': configPath,
+      };
+      final process = await Process.start(dart, [
+        cliPath,
+        'daemon',
+        '--api-addr',
+        '/ip4/127.0.0.1/tcp/$apiPort',
+        '--gateway-addr',
+        '/ip4/127.0.0.1/tcp/$cliGatewayPort',
+        '--swarm-addr',
+        '/ip4/127.0.0.1/tcp/$swarmPort',
+      ], environment: env);
+
+      final stdoutBuffer = StringBuffer();
+      final stderrBuffer = StringBuffer();
+      final markerSeen = Completer<void>();
+      void capture(String chunk, StringBuffer buffer) {
+        buffer.write(chunk);
+        if (!markerSeen.isCompleted &&
+            stdoutBuffer.toString().contains(marker)) {
+          markerSeen.complete();
+        }
+      }
+
+      final stdoutDone = process.stdout
+          .transform(utf8.decoder)
+          .listen((chunk) => capture(chunk, stdoutBuffer))
+          .asFuture<void>();
+      final stderrDone = process.stderr
+          .transform(utf8.decoder)
+          .listen((chunk) => capture(chunk, stderrBuffer))
+          .asFuture<void>();
+      await process.stdin.close();
+
+      // Wait for the marker or an early exit; a daemon that never reaches
+      // readiness is a failure, not a hang.
+      final startupTimeout = const Duration(minutes: 2);
+      final earlyExit =
+          await Future.any<int>([
+            markerSeen.future.then((_) => -1),
+            process.exitCode,
+          ]).timeout(
+            startupTimeout,
+            onTimeout: () {
+              process.kill(ProcessSignal.sigkill);
+              throw TimeoutException(
+                '`ipfs daemon` never printed "$marker" within $startupTimeout.\n'
+                'stdout so far: $stdoutBuffer\nstderr so far: $stderrBuffer',
+                startupTimeout,
+              );
+            },
+          );
+      if (earlyExit != -1) {
+        await Future.wait([stdoutDone, stderrDone]);
+        fail(
+          '`ipfs daemon` exited with $earlyExit before printing "$marker".\n'
+          'stdout: $stdoutBuffer\nstderr: $stderrBuffer',
+        );
+      }
+
+      process.kill(ProcessSignal.sigterm);
+      final int exitCode;
+      try {
+        exitCode = await process.exitCode.timeout(const Duration(seconds: 30));
+      } on TimeoutException {
+        process.kill(ProcessSignal.sigkill);
+        await Future.wait([stdoutDone, stderrDone]);
+        fail(
+          '`ipfs daemon` did not exit within 30s of SIGTERM.\n'
+          'stdout: $stdoutBuffer\nstderr: $stderrBuffer',
+        );
+      }
+      await Future.wait([stdoutDone, stderrDone]);
+
+      return ProcessResult(
+        process.pid,
+        exitCode,
+        stdoutBuffer.toString(),
+        stderrBuffer.toString(),
+      );
+    }
+
+    test('does not start a second gateway when config enables one', () async {
+      final configGatewayPort = await freePort();
+      final result = await runDaemon(
+        marker: 'RPC API running at:',
+        config: <String, dynamic>{
+          'offline': true,
+          'customConfig': <String, dynamic>{},
+          'gateway': <String, dynamic>{
+            'enabled': true,
+            'address': '127.0.0.1',
+            'port': configGatewayPort,
+          },
+        },
+      );
+      final stdout = result.stdout as String;
+      expect(
+        stdout,
+        contains(
+          'Gateway already running from config at '
+          '127.0.0.1:$configGatewayPort',
+        ),
+      );
+      // The CLI must not bind --gateway-addr on top of the
+      // config-started gateway.
+      expect(stdout, isNot(contains('Gateway running at:')));
+      expect(stdout, contains('Daemon stopped.'));
+      expect(result.exitCode, equals(0));
+    }, timeout: const Timeout(Duration(minutes: 4)));
+
+    test(
+      'starts the CLI gateway on --gateway-addr when config disables it',
+      () async {
+        final cliGatewayPort = await freePort();
+        final result = await runDaemon(
+          marker: 'RPC API running at:',
+          gatewayPort: cliGatewayPort,
+          config: <String, dynamic>{
+            'offline': true,
+            'customConfig': <String, dynamic>{},
+          },
+        );
+        final stdout = result.stdout as String;
+        expect(
+          stdout,
+          contains('Gateway running at: http://127.0.0.1:$cliGatewayPort'),
+        );
+        expect(stdout, isNot(contains('Gateway already running')));
+        expect(stdout, contains('Daemon stopped.'));
+        expect(result.exitCode, equals(0));
+      },
+      timeout: const Timeout(Duration(minutes: 4)),
+    );
+  });
 }

@@ -23,6 +23,24 @@ const int unixfsReadDefaultMaxDepth = 32;
 /// Matches the gateway CAR export block-count bound.
 const int unixfsReadDefaultMaxNodes = 10000;
 
+/// Default maximum payload size, in bytes, that a single [unixfsReadFile]
+/// call will buffer before failing (512 MiB).
+///
+/// Without a byte cap a large chunked file would be buffered into memory in
+/// full by callers such as the gateway's file handler and RPC `cat`. The
+/// value is a safety ceiling, not a quota — callers may pass a smaller
+/// [unixfsReadFile.maxBytes] to enforce their own limit.
+const int unixfsReadDefaultMaxBytes = 512 * 1024 * 1024;
+
+/// Prefix of the [StateError.message] thrown when a [unixfsReadFile] call
+/// exceeds its `maxBytes` budget.
+///
+/// Exposed so callers can distinguish the byte-budget failure from other
+/// traversal [StateError]s (missing blocks, depth/node limits) without
+/// relying on the exact wording.
+const String unixfsReadByteBudgetExceededPrefix =
+    'UnixFS traversal exceeded maximum byte budget';
+
 /// Reassembles the user-visible payload stored under [root].
 ///
 /// - Raw blocks return their payload directly.
@@ -33,13 +51,14 @@ const int unixfsReadDefaultMaxNodes = 10000;
 ///   "return the stored bytes" behavior for non-file content.
 ///
 /// Linked blocks are fetched through [fetchBlock]. Throws [StateError] when a
-/// linked block is missing or when the traversal exceeds [maxDepth] /
-/// [maxNodes].
+/// linked block is missing or when the traversal exceeds [maxDepth],
+/// [maxNodes], or the [maxBytes] payload budget.
 Future<Uint8List> unixfsReadFile(
   Block root,
   UnixFSBlockFetcher fetchBlock, {
   int maxDepth = unixfsReadDefaultMaxDepth,
   int maxNodes = unixfsReadDefaultMaxNodes,
+  int maxBytes = unixfsReadDefaultMaxBytes,
 }) async {
   if (root.cid.codec == 'raw') {
     return root.data;
@@ -56,16 +75,25 @@ Future<Uint8List> unixfsReadFile(
   }
 
   final out = BytesBuilder();
-  final budget = _TraversalBudget(maxDepth: maxDepth, maxNodes: maxNodes);
+  final budget = _TraversalBudget(
+    maxDepth: maxDepth,
+    maxNodes: maxNodes,
+    maxBytes: maxBytes,
+  );
   await _collectFileData(node, fetchBlock, out, budget, depth: 0);
   return out.takeBytes();
 }
 
 class _TraversalBudget {
-  _TraversalBudget({required this.maxDepth, required this.maxNodes});
+  _TraversalBudget({
+    required this.maxDepth,
+    required this.maxNodes,
+    required this.maxBytes,
+  });
 
   final int maxDepth;
   final int maxNodes;
+  final int maxBytes;
   int visited = 0;
 }
 
@@ -91,12 +119,14 @@ Future<void> _collectFileData(
 
   if (node.cid.codec == 'raw') {
     out.add(node.data);
+    _checkByteBudget(out, budget);
     return;
   }
 
   final inner = node.unixfsData;
   if (inner != null && inner.data.isNotEmpty) {
     out.add(inner.data);
+    _checkByteBudget(out, budget);
   }
 
   for (final link in node.pbNode.links) {
@@ -112,5 +142,13 @@ Future<void> _collectFileData(
       budget,
       depth: depth + 1,
     );
+  }
+}
+
+/// Throws a [StateError] carrying [unixfsReadByteBudgetExceededPrefix] when
+/// the buffered payload in [out] has grown past [budget]'s byte cap.
+void _checkByteBudget(BytesBuilder out, _TraversalBudget budget) {
+  if (out.length > budget.maxBytes) {
+    throw StateError('$unixfsReadByteBudgetExceededPrefix ${budget.maxBytes}');
   }
 }

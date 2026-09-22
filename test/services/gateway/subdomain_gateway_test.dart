@@ -443,6 +443,85 @@ void main() {
         );
       });
 
+      test(
+        'spoofed X-Forwarded-Proto cannot suppress the TLS redirect',
+        () async {
+          // Without trustForwardedHeaders a client claiming "https" via a
+          // header must still be redirected — the header is ignored.
+          handler = GatewayHandler(
+            blockStore,
+            gatewayDomain: 'ipfs.example.com',
+            enableSubdomainGateway: true,
+            subdomainTLSRedirect: true,
+          );
+          final request = Request(
+            'GET',
+            Uri.parse('http://localhost/some/path'),
+            headers: {
+              'host': '$cidV1Base32.ipfs.ipfs.example.com',
+              'x-forwarded-proto': 'https',
+            },
+          );
+          final response = await handler.handleSubdomain(request);
+          expect(response.statusCode, equals(301));
+          expect(
+            response.headers['location'],
+            equals('https://$cidV1Base32.ipfs.ipfs.example.com/some/path'),
+          );
+        },
+      );
+
+      test('trusted X-Forwarded-Proto suppresses the TLS redirect', () async {
+        handler = GatewayHandler(
+          blockStore,
+          gatewayDomain: 'ipfs.example.com',
+          enableSubdomainGateway: true,
+          subdomainTLSRedirect: true,
+          trustForwardedHeaders: true,
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/some/path'),
+          headers: {
+            'host': '$cidV1Base32.ipfs.ipfs.example.com',
+            'x-forwarded-proto': 'https',
+          },
+        );
+        final response = await handler.handleSubdomain(request);
+        // The proxy terminated TLS, so no redirect loop is triggered; the
+        // request is served normally.
+        expect(response.statusCode, equals(200));
+      });
+
+      test(
+        'trusted X-Forwarded-Proto http still triggers the TLS redirect',
+        () async {
+          // A trusted proxy reporting a plain-http downstream request must
+          // not suppress the upgrade redirect.
+          handler = GatewayHandler(
+            blockStore,
+            gatewayDomain: 'ipfs.example.com',
+            enableSubdomainGateway: true,
+            subdomainTLSRedirect: true,
+            trustForwardedHeaders: true,
+          );
+          final request = Request(
+            'GET',
+            Uri.parse('http://localhost/some/path'),
+            headers: {
+              'host': '$cidV1Base32.ipfs.ipfs.example.com',
+              'x-forwarded-proto': 'http',
+            },
+          );
+          final response = await handler.handleSubdomain(request);
+          expect(response.statusCode, equals(301));
+          expect(
+            response.headers['location'],
+            equals('https://$cidV1Base32.ipfs.ipfs.example.com/some/path'),
+          );
+        },
+      );
+
       test('TLS redirect never triggers for localhost', () async {
         handler = GatewayHandler(blockStore, subdomainTLSRedirect: true);
         final request = Request(
@@ -703,6 +782,7 @@ void main() {
           blockStore,
           gatewayDomain: 'dweb.link',
           enableSubdomainGateway: true,
+          trustForwardedHeaders: true,
         );
         final request = Request(
           'GET',
@@ -717,11 +797,32 @@ void main() {
         );
       });
 
+      test('X-Forwarded-Proto http preserves the redirect scheme', () async {
+        handler = GatewayHandler(
+          blockStore,
+          gatewayDomain: 'dweb.link',
+          enableSubdomainGateway: true,
+          trustForwardedHeaders: true,
+        );
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/$cidV1Base32'),
+          headers: {'host': 'dweb.link', 'x-forwarded-proto': 'http'},
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('http://$cidV1Base32.ipfs.dweb.link/'),
+        );
+      });
+
       test('X-Forwarded-Host selects the redirect domain', () async {
         handler = GatewayHandler(
           blockStore,
           gatewayDomain: 'dweb.link',
           enableSubdomainGateway: true,
+          trustForwardedHeaders: true,
         );
         final request = Request(
           'GET',
@@ -739,6 +840,35 @@ void main() {
           equals('https://$cidV1Base32.ipfs.example.com/'),
         );
       });
+
+      test(
+        'forwarded headers are ignored unless trustForwardedHeaders is set',
+        () async {
+          handler = GatewayHandler(
+            blockStore,
+            gatewayDomain: 'dweb.link',
+            enableSubdomainGateway: true,
+          );
+          final request = Request(
+            'GET',
+            Uri.parse('http://localhost/ipfs/$cidV1Base32'),
+            headers: {
+              'host': 'dweb.link',
+              // Spoofed headers must not change the redirect target: without
+              // trustForwardedHeaders the gateway uses the real Host and
+              // request scheme.
+              'x-forwarded-proto': 'https',
+              'x-forwarded-host': 'attacker.example',
+            },
+          );
+          final response = await handler.handlePath(request);
+          expect(response.statusCode, equals(301));
+          expect(
+            response.headers['location'],
+            equals('http://$cidV1Base32.ipfs.dweb.link/'),
+          );
+        },
+      );
 
       test('no redirect when subdomain gateway is disabled', () async {
         final request = Request(

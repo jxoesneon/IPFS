@@ -122,6 +122,60 @@ void main() {
       );
     });
 
+    test('throws StateError when the payload exceeds maxBytes', () async {
+      final payload = Uint8List(UnixFSBuilder.defaultChunkSize + 10);
+      final (root, fetch) = await buildFile(payload);
+
+      expect(
+        () => unixfsReadFile(root, fetch, maxBytes: 10),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            startsWith(unixfsReadByteBudgetExceededPrefix),
+          ),
+        ),
+      );
+    });
+
+    test('honors maxBytes when the payload fits exactly', () async {
+      final payload = Uint8List.fromList('hello unixfs'.codeUnits);
+      final (root, fetch) = await buildFile(payload);
+
+      final result = await unixfsReadFile(
+        root,
+        fetch,
+        maxBytes: payload.length,
+      );
+      expect(result, equals(payload));
+    });
+
+    test('byte budget applies to inline file data too', () async {
+      final data = unixfs_pb.Data(
+        type: unixfs_pb.Data_DataType.File,
+        data: Uint8List.fromList('inline payload'.codeUnits),
+        filesize: Int64(14),
+      );
+      final node = dag_pb.PBNode(data: data.writeToBuffer());
+      final encoded = node.writeToBuffer();
+      final root = Block(
+        cid: await CID.fromContent(encoded, codec: 'dag-pb'),
+        data: encoded,
+        format: 'dag-pb',
+      );
+
+      expect(
+        () => unixfsReadFile(root, (_) async => null, maxBytes: 4),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            startsWith(unixfsReadByteBudgetExceededPrefix),
+          ),
+        ),
+      );
+    });
+
     test('reads a nested tree of intermediate file nodes', () async {
       // Build a two-level tree by hand: root links to an intermediate file
       // node which links to a leaf file node.

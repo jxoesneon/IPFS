@@ -10,9 +10,12 @@ import 'dart:typed_data';
 
 import 'package:args/command_runner.dart';
 import 'package:dart_ipfs/dart_ipfs.dart';
+import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart'
+    show DnsLinkResult;
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
 import 'package:dart_ipfs/src/transport/libp2p_router.dart';
+import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/version.dart';
 import 'package:path/path.dart' as p;
 
@@ -136,32 +139,61 @@ class DaemonCommand extends IpfsCommand {
     final mergedConfig = IPFSConfig.fromJson(configJson);
 
     print('Starting dart_ipfs daemon v$packageVersion');
+
+    // Register signal watchers before any long-running startup work so a
+    // SIGTERM/SIGINT arriving during startup is still handled gracefully
+    // instead of killing the process with the default disposition.
+    final exitCompleter = Completer<void>();
+    _listenForSignal(ProcessSignal.sigterm, exitCompleter);
+    _listenForSignal(ProcessSignal.sigint, exitCompleter);
+
     final node = await IPFSNode.create(mergedConfig);
     await node.start();
 
-    print('Node started with Peer ID: ${node.peerId}');
+    // peerId throws in offline mode; fall back to a stable placeholder.
+    print('Node started with Peer ID: ${node.peerIdOrNull ?? 'offline'}');
     print('Listening addresses:');
     for (final addr in node.addresses) {
       print('  $addr');
     }
 
     final ipnsHandler = node.ipns;
-    final gateway = GatewayServer(
-      blockStore: node.blockStore,
-      node: node,
-      address: gatewayEndpoint.address,
-      port: gatewayEndpoint.port,
-      corsOrigins: ['*'],
-      gatewayConfig: mergedConfig.gateway,
-      ipnsResolver: ipnsHandler != null
-          ? (String name) => ipnsHandler.resolve(name)
-          : null,
-      ipnsRecordResolver: ipnsHandler != null
-          ? (String name) => ipnsHandler.getRecordBytes(name)
-          : null,
-    );
-    await gateway.start();
-    print('Gateway running at: ${gateway.url}');
+    // When `gateway.enabled` is set in the config, IPFSNodeBuilder has
+    // already created and started a GatewayServer on the configured
+    // address — binding a second listener on --gateway-addr would either
+    // double-bind the same port or shadow the configured one.
+    GatewayServer? gateway;
+    if (mergedConfig.gateway.enabled) {
+      print(
+        'Gateway already running from config at '
+        '${mergedConfig.gateway.address}:${mergedConfig.gateway.port}',
+      );
+    } else {
+      gateway = GatewayServer(
+        blockStore: node.blockStore,
+        node: node,
+        address: gatewayEndpoint.address,
+        port: gatewayEndpoint.port,
+        corsOrigins: ['*'],
+        gatewayConfig: mergedConfig.gateway,
+        denylistService: node.denylistService,
+        metricsCollector: node.metricsCollector,
+        metricsConfig: mergedConfig.metrics,
+        ipnsResolver: ipnsHandler != null
+            ? (String name) => ipnsHandler.resolve(name)
+            : null,
+        ipnsRecordResolver: ipnsHandler != null
+            ? (String name) => ipnsHandler.getRecordBytes(name)
+            : null,
+        dnsLinkResolver: (String domain) async {
+          final cid = await DNSLinkResolver.resolve(domain);
+          if (cid == null || cid.isEmpty) return null;
+          return DnsLinkResult('/ipfs/$cid');
+        },
+      );
+      await gateway.start();
+      print('Gateway running at: ${gateway.url}');
+    }
 
     final rpcApiKey = _normalizeApiKey(
       Platform.environment['DART_IPFS_API_KEY'] ?? mergedConfig.rpcApiKey,
@@ -191,23 +223,26 @@ class DaemonCommand extends IpfsCommand {
         jsonEncode({
           'level': 'info',
           'message': 'daemon ready',
-          'peer_id': node.peerId,
-          'gateway_url': gateway.url,
+          'peer_id': node.peerIdOrNull,
+          'gateway_url':
+              gateway?.url ??
+              'http://${mergedConfig.gateway.address}:'
+                  '${mergedConfig.gateway.port}',
           'rpc_url': rpc.url,
         }),
       );
     }
 
-    final exitCompleter = Completer<void>();
-    _listenForSignal(ProcessSignal.sigterm, exitCompleter);
-    _listenForSignal(ProcessSignal.sigint, exitCompleter);
     await exitCompleter.future;
 
     print('Shutting down...');
     await rpc.stop();
-    await gateway.stop();
+    await gateway?.stop();
     await node.stop();
     print('Daemon stopped.');
+    // Signal watchers and service timers can keep the event loop alive
+    // after shutdown; exit explicitly so the daemon actually terminates.
+    exit(0);
   }
 }
 
