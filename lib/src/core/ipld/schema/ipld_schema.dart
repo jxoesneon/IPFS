@@ -1,8 +1,22 @@
 // src/core/ipld/schema/ipld_schema.dart
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:dart_multihash/dart_multihash.dart';
 import 'package:fixnum/fixnum.dart';
 
 import '../../../proto/generated/ipld/data_model.pb.dart';
+import '../../cid.dart';
 import '../../errors/ipld_errors.dart';
+
+/// Resolves the node an [IPLDLink] points at.
+///
+/// Implementations typically wrap a block-store load path such as
+/// `IPLDHandler.getNode`; use [IPLDSchema.linkResolverFromNodeLoader] to
+/// adapt a `CID`-based loader. Returning `null` marks the target as
+/// unavailable, which is reported as a validation error at the link's path
+/// when the link type carries an `expectedType` clause.
+typedef IPLDLinkResolver = Future<IPLDNode?> Function(IPLDLink link);
 
 /// A single schema validation failure.
 ///
@@ -54,7 +68,20 @@ class SchemaValidationResult {
 /// * Representation strategies: `map`, `listpairs`, `stringpairs`, `tuple`,
 ///   `stringjoin` (structs and maps); `kinded`, `keyed`, `envelope`/
 ///   `enveloped`, `inline`, `stringprefix`, `bytesprefix`/`byteprefix`
-///   (unions); `string`, `int` (enums); `advanced` (accepted, not checked).
+///   (unions); `string`, `int` (enums); `advanced` (see below).
+/// * Link types may carry `expectedType` (e.g. `{"kind": "link",
+///   "expectedType": "Foo"}`). When an [IPLDLinkResolver] is supplied —
+///   per call or via the constructor — the link target is loaded and
+///   validated against that type, with failures reported at the link's
+///   path. Without a resolver links are kind-checked only.
+/// * `advanced` representations name an ADL whose data-model shape is
+///   declared in the schema's top-level `advanced` map (`{<adl>: <term>}`)
+///   or the [adlTypes] registry. The ADL name is taken from
+///   `representation: {advanced: <name>}`, or defaults to the type's own
+///   name per the IPLD spec. A `representation` clause that explicitly
+///   references an undeclared ADL name throws [IPLDSchemaError] when the
+///   schema is constructed; ADLs that are merely unknown (no declared or
+///   registered schema) skip validation leniently.
 /// * Legacy extensions are preserved: `valueConstraint` (`min`, `max`,
 ///   `pattern`, `minLength`, `maxLength`), `required`/`optional` field lists,
 ///   `strict` unknown-key rejection, and `{"kind": "type", "valueType": ...}`
@@ -63,14 +90,40 @@ class SchemaValidationResult {
 /// Two validation styles are available: [validate] returns a boolean for
 /// backward compatibility, while [check] returns a [SchemaValidationResult]
 /// carrying every error with a precise path. [validateOrThrow] throws
-/// [IPLDSchemaError] with the first offending path.
+/// [IPLDSchemaError] with the first offending path. The synchronous
+/// [check]/[validateOrThrow] entry points never resolve links; use
+/// [checkAsync]/[validateOrThrowAsync] (or [validate] with a resolver) to
+/// enforce link `expectedType` clauses.
 class IPLDSchema {
   /// Creates an IPLD schema with [name] and schema definition.
   ///
   /// [schema] maps type names to type declarations, each a `Map` with a
-  /// `kind` key plus kind-specific members.
-  IPLDSchema(this.name, this._schema);
+  /// `kind` key plus kind-specific members. The reserved key `advanced`
+  /// may hold a `Map` of ADL names to the type terms that describe their
+  /// data-model nodes.
+  ///
+  /// [linkResolver] is the default resolver used by [validate] and
+  /// [checkAsync] when a link type carries `expectedType`; passing a
+  /// resolver per call overrides it. [adlTypes] registers extra ADL
+  /// schemas — values are type terms (a type name or an inline `kind`
+  /// definition) resolved in this schema, or an [IPLDSchema] whose
+  /// ADL-named type is checked directly.
+  ///
+  /// Throws [IPLDSchemaError] immediately when a `representation` clause
+  /// explicitly references an ADL name that is declared neither in the
+  /// schema's `advanced` block nor in [adlTypes].
+  IPLDSchema(
+    this.name,
+    this._schema, {
+    IPLDLinkResolver? linkResolver,
+    Map<String, Object?>? adlTypes,
+  }) : _linkResolver = linkResolver,
+       _adlTypes = adlTypes {
+    _lintAdvancedDeclarations();
+  }
   final Map<String, dynamic> _schema;
+  final IPLDLinkResolver? _linkResolver;
+  final Map<String, Object?>? _adlTypes;
 
   /// Schema name.
   final String name;
@@ -123,29 +176,81 @@ class IPLDSchema {
   /// Throws [IPLDSchemaError] when the schema itself is malformed (unknown
   /// type, missing `kind`, bad references). Use [check] for per-field error
   /// paths, or [validateOrThrow] to raise on mismatched data.
-  Future<bool> validate(String typeName, IPLDNode node) async {
-    return check(typeName, node).isValid;
+  ///
+  /// When [linkResolver] (or the resolver given to the constructor) is
+  /// available, link `expectedType` clauses are enforced by loading each
+  /// link target; otherwise links are kind-checked only.
+  Future<bool> validate(
+    String typeName,
+    IPLDNode node, {
+    IPLDLinkResolver? linkResolver,
+  }) async {
+    final resolver = linkResolver ?? _linkResolver;
+    if (resolver == null) return check(typeName, node).isValid;
+    return (await checkAsync(typeName, node, linkResolver: resolver)).isValid;
   }
 
   /// Validates [node] against [typeName], collecting every mismatch with a
   /// precise path instead of stopping at the first boolean answer.
   ///
+  /// This entry point is synchronous and therefore never resolves links:
+  /// `expectedType` clauses are kind-checked only. Use [checkAsync] to
+  /// enforce them.
+  ///
   /// Throws [IPLDSchemaError] for malformed schema definitions.
   SchemaValidationResult check(String typeName, IPLDNode node) {
-    final typeSchema = _schema[typeName];
-    if (typeSchema == null) {
-      throw IPLDSchemaError('Type not found in schema: $typeName');
+    final validator = _SchemaValidator(_schema, adlTypes: _adlTypes);
+    validator._validateType(node, _typeDef(typeName), typeName: typeName);
+    return SchemaValidationResult(validator.errors);
+  }
+
+  /// Validates [node] against [typeName] like [check], additionally
+  /// resolving link targets when an [IPLDLinkResolver] is available.
+  ///
+  /// [linkResolver] overrides the constructor-supplied resolver; when both
+  /// are absent this behaves exactly like [check] (links are kind-checked
+  /// only). With a resolver, every `link` type carrying `expectedType`
+  /// loads its target — transitively, so links inside resolved nodes are
+  /// checked too — and reports mismatches at the link's path. A target
+  /// that cannot be loaded produces an error rather than an exception;
+  /// a `(target, expectedType)` pair is resolved once per call and cyclic
+  /// links are validated once to guarantee termination.
+  ///
+  /// Throws [IPLDSchemaError] for malformed schema definitions.
+  Future<SchemaValidationResult> checkAsync(
+    String typeName,
+    IPLDNode node, {
+    IPLDLinkResolver? linkResolver,
+  }) async {
+    final resolver = linkResolver ?? _linkResolver;
+    if (resolver == null) return check(typeName, node);
+    final validator = _SchemaValidator(
+      _schema,
+      linkResolver: resolver,
+      adlTypes: _adlTypes,
+    );
+    validator._validateType(node, _typeDef(typeName), typeName: typeName);
+    while (validator._deferred.isNotEmpty) {
+      final deferred = validator._deferred.removeAt(0);
+      final relative = await deferred.run();
+      if (relative.isEmpty) continue;
+      final base = _describeSegments(deferred.path);
+      for (final error in relative) {
+        validator.errors.add(
+          SchemaValidationError(
+            path: _joinPaths(base, error.path),
+            message: error.message,
+          ),
+        );
+      }
     }
-    if (typeSchema is! Map) {
-      throw IPLDSchemaError('Schema for type "$typeName" must be a map');
-    }
-    final validator = _SchemaValidator(_schema);
-    validator._validateType(node, _asMap(typeSchema));
     return SchemaValidationResult(validator.errors);
   }
 
   /// Validates [node] against [typeName], throwing [IPLDSchemaError] with the
   /// first precise error path when the node does not match.
+  ///
+  /// Synchronous: never resolves links — see [check].
   void validateOrThrow(String typeName, IPLDNode node) {
     final result = check(typeName, node);
     if (!result.isValid) {
@@ -153,6 +258,91 @@ class IPLDSchema {
         'Node does not match type "$typeName": ${result.errors.first}',
       );
     }
+  }
+
+  /// As [validateOrThrow], but resolves link targets through [linkResolver]
+  /// (or the constructor-supplied resolver) so `expectedType` clauses are
+  /// enforced.
+  Future<void> validateOrThrowAsync(
+    String typeName,
+    IPLDNode node, {
+    IPLDLinkResolver? linkResolver,
+  }) async {
+    final result = await checkAsync(typeName, node, linkResolver: linkResolver);
+    if (!result.isValid) {
+      throw IPLDSchemaError(
+        'Node does not match type "$typeName": ${result.errors.first}',
+      );
+    }
+  }
+
+  /// Adapts a `CID`-based node loader — e.g. `IPLDHandler.getNode`, the
+  /// same block-fetch path used by selector execution — into an
+  /// [IPLDLinkResolver]. Loader exceptions propagate and are reported as
+  /// resolution failures at the link's path.
+  static IPLDLinkResolver linkResolverFromNodeLoader(
+    Future<IPLDNode?> Function(CID cid) loadNode,
+  ) {
+    return (link) => loadNode(
+      CID.v1(link.codec, Multihash.decode(Uint8List.fromList(link.multihash))),
+    );
+  }
+
+  /// Returns the type definition map for [typeName] or throws
+  /// [IPLDSchemaError] when absent or not a map.
+  Map<String, dynamic> _typeDef(String typeName) {
+    final typeSchema = _schema[typeName];
+    if (typeSchema == null) {
+      throw IPLDSchemaError('Type not found in schema: $typeName');
+    }
+    if (typeSchema is! Map) {
+      throw IPLDSchemaError('Schema for type "$typeName" must be a map');
+    }
+    return _asMap(typeSchema);
+  }
+
+  /// Rejects `representation` clauses that explicitly reference an ADL
+  /// name declared neither in the schema's `advanced` block nor in
+  /// [adlTypes] — a malformed schema, surfaced at construction time.
+  void _lintAdvancedDeclarations() {
+    final declared = <String>{};
+    final block = _schema['advanced'];
+    if (block != null) {
+      if (block is! Map) {
+        throw IPLDSchemaError('Schema "advanced" declarations must be a map');
+      }
+      declared.addAll(block.keys.map((key) => '$key'));
+    }
+    final external = _adlTypes;
+    if (external != null) declared.addAll(external.keys);
+
+    final seen = <Object>{};
+    void walk(Object? value) {
+      if (value is Map) {
+        if (!seen.add(value)) return;
+        final rep = value['representation'];
+        if (rep is Map && rep.containsKey('advanced')) {
+          final cfg = rep['advanced'];
+          final ref = cfg is String
+              ? cfg
+              : cfg is Map && cfg['name'] is String
+              ? cfg['name'] as String
+              : null;
+          if (ref != null && ref.isNotEmpty && !declared.contains(ref)) {
+            throw IPLDSchemaError(
+              'advanced representation references undeclared ADL "$ref"',
+            );
+          }
+        }
+        value.forEach((_, v) => walk(v));
+      } else if (value is List) {
+        for (final element in value) {
+          walk(element);
+        }
+      }
+    }
+
+    walk(_schema);
   }
 }
 
@@ -177,15 +367,48 @@ class _Field {
 
 /// Stateful validation engine for a single [IPLDSchema.check] run.
 class _SchemaValidator {
-  _SchemaValidator(this._schema);
+  _SchemaValidator(
+    this._schema, {
+    IPLDLinkResolver? linkResolver,
+    Map<String, Object?>? adlTypes,
+  }) : _linkResolver = linkResolver,
+       _adlTypes = adlTypes;
 
   final Map<String, dynamic> _schema;
+
+  /// Resolver for link `expectedType` checks; null disables resolution.
+  final IPLDLinkResolver? _linkResolver;
+
+  /// Extra ADL registry (`{<adl>: <term-or-IPLDSchema>}`) consulted when the
+  /// schema's own `advanced` block does not declare a name.
+  final Map<String, Object?>? _adlTypes;
 
   /// Accumulated validation errors.
   final List<SchemaValidationError> errors = [];
 
   /// Current path segments: `String` for map keys, `int` for list indices.
   final List<Object> _path = [];
+
+  /// Absolute path prefix under which deferred link checks are recorded.
+  /// Empty at the document root; set to the link's path while a resolved
+  /// link target is being validated so nested links queue with absolute
+  /// paths while error paths stay relative to the target.
+  List<Object> _pathPrefix = const [];
+
+  /// Name of the type whose definition is currently being validated —
+  /// used to derive the implicit ADL name for bare `advanced`
+  /// representations (the type name is the ADL name). Null while inside
+  /// anonymous inline definitions.
+  String? _currentTypeName;
+
+  /// Deferred checks that need `await` (link target resolution), in
+  /// encounter order. Drained by [IPLDSchema.checkAsync].
+  final List<_DeferredCheck> _deferred = [];
+
+  /// Per-call cache of link target validations keyed by target identity and
+  /// expected type; a `null` value marks an in-flight check so cyclic
+  /// links terminate.
+  final Map<String, List<SchemaValidationError>?> _linkResults = {};
 
   /// A map key exempt from struct unknown-key checks (inline union
   /// discriminant key).
@@ -195,27 +418,11 @@ class _SchemaValidator {
     errors.add(SchemaValidationError(path: _describePath(), message: message));
   }
 
-  String _describePath() {
-    if (_path.isEmpty) return 'value';
-    final buffer = StringBuffer('field ');
-    var first = true;
-    for (final segment in _path) {
-      if (!first) buffer.write('.');
-      first = false;
-      if (segment is int) {
-        buffer
-          ..write('[')
-          ..write(segment)
-          ..write(']');
-      } else {
-        buffer
-          ..write('"')
-          ..write(segment)
-          ..write('"');
-      }
-    }
-    return buffer.toString();
-  }
+  String _describePath() => _describeSegments(_path);
+
+  /// The absolute path of the current node, including any enclosing
+  /// resolved-link prefix.
+  List<Object> _absolutePath() => [..._pathPrefix, ..._path];
 
   void _at(Object segment, void Function() body) {
     _path.add(segment);
@@ -230,7 +437,26 @@ class _SchemaValidator {
       IPLDSchema._kindToLabel[kind] ?? kind.name.toLowerCase();
 
   /// Validates [node] against a type definition map (a `{"kind": ...}` def).
-  void _validateType(IPLDNode node, Map<String, dynamic> def) {
+  ///
+  /// [typeName] is the schema name [def] was reached through, if any; it
+  /// becomes the implicit ADL name for `advanced` representations. Inline
+  /// definitions clear the name so a bare `advanced` repr cannot
+  /// accidentally attribute the enclosing type's ADL.
+  void _validateType(
+    IPLDNode node,
+    Map<String, dynamic> def, {
+    String? typeName,
+  }) {
+    final savedName = _currentTypeName;
+    _currentTypeName = typeName;
+    try {
+      _validateTypeBody(node, def);
+    } finally {
+      _currentTypeName = savedName;
+    }
+  }
+
+  void _validateTypeBody(IPLDNode node, Map<String, dynamic> def) {
     var kind = def['kind'];
     if (kind == null) {
       if (def.containsKey('type')) {
@@ -266,7 +492,18 @@ class _SchemaValidator {
   /// Validates [node] against a type term: a type name `String`, a
   /// `{type: ...}` wrapper, or an inline `{"kind": ...}` definition.
   void _validateTerm(IPLDNode node, Object? term) {
-    _validateType(node, _resolveTerm(term));
+    _validateType(node, _resolveTerm(term), typeName: _termTypeName(term));
+  }
+
+  /// Returns the schema type name a term refers to, unwrapping
+  /// `{type: ...}` wrappers, or null for anonymous/inline terms.
+  String? _termTypeName(Object? term) {
+    var t = term;
+    while (t is Map && !t.containsKey('kind') && t.containsKey('type')) {
+      t = t['type'];
+    }
+    if (t is String && _schema[t] is Map && t != 'advanced') return t;
+    return null;
   }
 
   /// Chases `type`/`copy` aliases without recursing through type-name
@@ -289,7 +526,7 @@ class _SchemaValidator {
         current = resolved;
         continue;
       }
-      _validateType(node, resolved);
+      _validateType(node, resolved, typeName: _termTypeName(ref));
       return;
     }
   }
@@ -325,9 +562,167 @@ class _SchemaValidator {
       _fail('expected $kind, found ${_kindLabel(node.kind)}');
       return;
     }
+    if (kind == 'link') {
+      _checkLinkExpectedType(node, def);
+      return;
+    }
     if (def.containsKey('valueConstraint')) {
       _validateConstraint(node, def['valueConstraint']);
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // Links
+  // ---------------------------------------------------------------------
+
+  /// Queues an `expectedType` check for a link node. Without a resolver the
+  /// link is only kind-checked, matching historical behavior.
+  void _checkLinkExpectedType(IPLDNode node, Map<String, dynamic> def) {
+    final expected = def['expectedType'];
+    final resolver = _linkResolver;
+    if (expected == null || resolver == null) return;
+    final path = _absolutePath();
+    final link = node.linkValue;
+    _deferred.add(
+      _DeferredCheck(path, () => _runLinkCheck(path, link, expected)),
+    );
+  }
+
+  /// Resolves [link] and validates the target against [expectedType],
+  /// returning errors with paths relative to the resolved node. Results are
+  /// cached per `(target, expectedType)` pair so repeated links share the
+  /// outcome and cyclic graphs terminate.
+  Future<List<SchemaValidationError>> _runLinkCheck(
+    List<Object> path,
+    IPLDLink link,
+    Object? expectedType,
+  ) async {
+    final key = _linkKey(link, expectedType);
+    final cached = _linkResults[key];
+    if (cached != null) return cached;
+    if (_linkResults.containsKey(key)) {
+      // The same pair is being validated further up the stack; treat this
+      // edge as satisfied so cyclic links terminate. Errors, if any, are
+      // already reported at the first occurrence's path.
+      return const [];
+    }
+    _linkResults[key] = null;
+
+    IPLDNode? target;
+    try {
+      target = await _linkResolver!(link);
+    } catch (e) {
+      return _linkResults[key] = [
+        SchemaValidationError(
+          path: 'value',
+          message: 'link resolution failed: $e',
+        ),
+      ];
+    }
+    if (target == null) {
+      return _linkResults[key] = const [
+        SchemaValidationError(path: 'value', message: 'link target not found'),
+      ];
+    }
+
+    // Validate the target with paths relative to it (clear `_path`), while
+    // `_pathPrefix` keeps nested link checks anchored at the link's
+    // absolute path.
+    final savedPrefix = _pathPrefix;
+    final savedPath = List<Object>.of(_path);
+    _pathPrefix = path;
+    _path.clear();
+    final mark = errors.length;
+    try {
+      _validateTerm(target, expectedType);
+    } finally {
+      _pathPrefix = savedPrefix;
+      _path
+        ..clear()
+        ..addAll(savedPath);
+    }
+    final relative = errors.sublist(mark);
+    errors.length = mark;
+    return _linkResults[key] = relative;
+  }
+
+  /// Cache key for a link target/expected-type pair.
+  String _linkKey(IPLDLink link, Object? expectedType) {
+    final typeKey = expectedType is String
+        ? 'n:$expectedType'
+        : 'i:${identityHashCode(expectedType)}';
+    return '${link.codec}:${base64Encode(link.multihash)}|$typeKey';
+  }
+
+  // ---------------------------------------------------------------------
+  // Advanced (ADL) representations
+  // ---------------------------------------------------------------------
+
+  /// Validates a node whose type uses an `advanced` representation.
+  ///
+  /// The ADL name comes from [cfg] (`representation: {advanced: <name>}`
+  /// or `{advanced: {name: <name>}}`); when absent it defaults to the
+  /// enclosing type's name, per the spec rule that the type name is the
+  /// ADL name. A declared ADL validates the node against its registered
+  /// term; an unknown ADL skips validation (spec leniency). An *explicit*
+  /// reference to an undeclared name is a schema error — normally caught
+  /// at construction by [IPLDSchema._lintAdvancedDeclarations].
+  void _validateAdvancedRepr(IPLDNode node, Object? cfg) {
+    String? adlName;
+    var explicit = false;
+    if (cfg is String && cfg.isNotEmpty) {
+      adlName = cfg;
+      explicit = true;
+    } else if (cfg is Map) {
+      final name = cfg['name'];
+      if (name is String && name.isNotEmpty) {
+        adlName = name;
+        explicit = true;
+      }
+    }
+    adlName ??= _currentTypeName;
+    if (adlName == null) return;
+
+    final (found, term) = _lookupAdl(adlName);
+    if (!found) {
+      if (explicit) {
+        throw IPLDSchemaError(
+          'advanced representation references undeclared ADL "$adlName"',
+        );
+      }
+      return; // unknown ADL: no registered schema — skip validation
+    }
+    if (term == null) return; // declared without a node schema — skip
+    if (term is IPLDSchema) {
+      // A fully registered schema validates the node against its
+      // ADL-named type.
+      final result = term.check(adlName, node);
+      final base = _describePath();
+      for (final error in result.errors) {
+        errors.add(
+          SchemaValidationError(
+            path: _joinPaths(base, error.path),
+            message: 'ADL "$adlName": ${error.message}',
+          ),
+        );
+      }
+      return;
+    }
+    _validateTerm(node, term);
+  }
+
+  /// Looks up an ADL declaration: `(true, term)` when [name] is declared in
+  /// the schema's `advanced` block or the [adlTypes] registry.
+  (bool, Object?) _lookupAdl(String name) {
+    final block = _schema['advanced'];
+    if (block is Map && block.containsKey(name)) {
+      return (true, block[name]);
+    }
+    final external = _adlTypes;
+    if (external != null && external.containsKey(name)) {
+      return (true, external[name]);
+    }
+    return (false, null);
   }
 
   void _validateConstraint(IPLDNode node, dynamic constraint) {
@@ -397,7 +792,10 @@ class _SchemaValidator {
       final cfg = _reprConfig(def, 'unit');
       mode = _normalizeName('${cfg['representation'] ?? 'null'}');
     }
-    if (rep == 'advanced') return;
+    if (rep == 'advanced') {
+      _validateAdvancedRepr(node, _reprValue(def, 'advanced'));
+      return;
+    }
     switch (mode) {
       case 'null':
         if (node.kind != Kind.NULL) {
@@ -446,7 +844,7 @@ class _SchemaValidator {
       case 'listpairs':
         _validateStructListPairs(node, def);
       case 'advanced':
-        break; // ADL projections cannot be validated without the layout.
+        _validateAdvancedRepr(node, _reprValue(def, 'advanced'));
       default:
         throw IPLDSchemaError('Unknown struct representation: $rep');
     }
@@ -808,7 +1206,7 @@ class _SchemaValidator {
       case 'stringpairs':
         _validateMapStringPairs(node, def);
       case 'advanced':
-        break;
+        _validateAdvancedRepr(node, _reprValue(def, 'advanced'));
       default:
         throw IPLDSchemaError('Unknown map representation: $rep');
     }
@@ -954,15 +1352,20 @@ class _SchemaValidator {
   // ---------------------------------------------------------------------
 
   void _validateListType(IPLDNode node, Map<String, dynamic> def) {
-    if (node.kind != Kind.LIST) {
-      _fail('expected list, found ${_kindLabel(node.kind)}');
-      return;
-    }
     final rep = _reprKind(def);
     if (rep != null && rep != 'list' && rep != 'advanced') {
       throw IPLDSchemaError('Unknown list representation: $rep');
     }
-    if (rep == 'advanced') return;
+    // ADL representations define their own node shape, so the list kind
+    // check must not run first.
+    if (rep == 'advanced') {
+      _validateAdvancedRepr(node, _reprValue(def, 'advanced'));
+      return;
+    }
+    if (node.kind != Kind.LIST) {
+      _fail('expected list, found ${_kindLabel(node.kind)}');
+      return;
+    }
     final valueType = def['valueType'];
     if (valueType == null) return; // bare `list` kind check only
     final valueNullable = def['valueNullable'] == true;
@@ -1040,13 +1443,19 @@ class _SchemaValidator {
 
   void _validateLegacyUnion(IPLDNode node, Map<dynamic, dynamic> rep) {
     for (final entry in rep.entries) {
-      final probe = _SchemaValidator(_schema);
+      // Tentatively validate against the member on this validator so link
+      // resolution and ADL settings apply; roll back errors and queued
+      // link checks when the member does not match.
+      final errorMark = errors.length;
+      final deferredMark = _deferred.length;
       try {
-        probe._validateTerm(node, entry.value);
+        _validateTerm(node, entry.value);
       } on IPLDSchemaError {
         rethrow; // malformed member schema must surface
       }
-      if (probe.errors.isEmpty) return;
+      if (errors.length == errorMark) return;
+      errors.length = errorMark;
+      _deferred.length = deferredMark;
     }
     _fail('value does not match any union member');
   }
@@ -1069,7 +1478,7 @@ class _SchemaValidator {
       case 'byteprefix':
         _unionBytePrefix(node, cfg);
       case 'advanced':
-        break;
+        _validateAdvancedRepr(node, cfgRaw);
       // coverage:ignore-start
       default:
         throw IPLDSchemaError('Unknown union representation: $strategy');
@@ -1189,7 +1598,7 @@ class _SchemaValidator {
     final saved = _allowedExtraKey;
     _allowedExtraKey = discriminantKey;
     try {
-      _validateType(node, resolved);
+      _validateType(node, resolved, typeName: _termTypeName(term));
     } finally {
       _allowedExtraKey = saved;
     }
@@ -1288,6 +1697,58 @@ class _SchemaValidator {
     }
     return <String, dynamic>{};
   }
+
+  /// Returns the raw value under `representation.<kind>` (any shape:
+  /// string, map, or null), or null when the representation is a bare
+  /// string or the key is absent.
+  Object? _reprValue(Map<String, dynamic> def, String kind) {
+    final rep = def['representation'];
+    if (rep is Map) return rep[kind];
+    return null;
+  }
+}
+
+/// A queued asynchronous check: [run] produces errors whose paths are
+/// relative to the node at [path] (absolute segments, root = `[]`).
+class _DeferredCheck {
+  const _DeferredCheck(this.path, this.run);
+
+  /// Absolute path segments of the node the deferred check applies to.
+  final List<Object> path;
+
+  /// Produces errors with paths relative to the checked node.
+  final Future<List<SchemaValidationError>> Function() run;
+}
+
+/// Renders path segments (`String` map keys, `int` list indices) in the
+/// `field "links".[2]."Hash"` form; an empty path renders as `value`.
+String _describeSegments(List<Object> path) {
+  if (path.isEmpty) return 'value';
+  final buffer = StringBuffer('field ');
+  var first = true;
+  for (final segment in path) {
+    if (!first) buffer.write('.');
+    first = false;
+    if (segment is int) {
+      buffer
+        ..write('[')
+        ..write(segment)
+        ..write(']');
+    } else {
+      buffer
+        ..write('"')
+        ..write(segment)
+        ..write('"');
+    }
+  }
+  return buffer.toString();
+}
+
+/// Joins a rendered [base] path with a rendered [sub] path relative to it.
+String _joinPaths(String base, String sub) {
+  if (sub == 'value') return base;
+  if (base == 'value') return sub;
+  return '$base.${sub.substring('field '.length)}';
 }
 
 /// Coerces a loose map to `Map<String, dynamic>` with stringified keys.
