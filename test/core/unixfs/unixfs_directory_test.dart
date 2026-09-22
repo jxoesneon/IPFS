@@ -107,7 +107,7 @@ void main() {
       expect(link.size.toInt(), equals(20));
       expect(
         dir.cid.toString(),
-        equals('QmcAMsiAwoNC8Wp2uSn2RWSTLZe7dPRc5A6XS8BHnvWHS9'),
+        equals('QmfLiVjH2vujCVP2e75zyzBYmpcjktmDeU1YBz6Ct8BBsc'),
       );
     });
 

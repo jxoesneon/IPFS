@@ -12,6 +12,7 @@ import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
+import 'package:dart_ipfs/src/proto/dag_marshal.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
@@ -318,7 +319,7 @@ class RPCHandlers {
       type: unixfs_pb.Data_DataType.Directory,
     ).writeToBuffer();
     final node_ = dag_pb.PBNode(data: dirData, links: links);
-    final serialized = node_.writeToBuffer();
+    final serialized = marshalDagPBNode(node_);
 
     final dirCid = await CID.fromContent(
       serialized,

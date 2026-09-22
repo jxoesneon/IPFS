@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_errors.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
+import 'package:dart_ipfs/src/proto/dag_marshal.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
@@ -181,7 +182,7 @@ class UnixFSHAMTBuilder {
       data: unixFsData.writeToBuffer(),
       links: links,
     );
-    final bytes = pbNode.writeToBuffer();
+    final bytes = marshalDagPBNode(pbNode);
     final cid = await CID.fromContent(
       bytes,
       codec: 'dag-pb',

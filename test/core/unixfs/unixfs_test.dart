@@ -527,7 +527,7 @@ void main() {
 
       expect(
         root.cid.toString(),
-        'bafybeihm6mblyhd6uapkc3munv7p44q2gbi4xkdjfvcuoidfjalr3tyfm4',
+        'bafybeigaihlj43plisionpwrxq7rvtlaa2r3b7a4mbhjj4woa6kvhhy3qq',
       );
       expect(root.pbNode.links.length, 2);
       expect(root.pbNode.links[0].name, '4Ab.txt');
@@ -540,7 +540,7 @@ void main() {
       final root = await buildHAMT();
       expect(
         root.cid.toString(),
-        'bafybeibzmjjj4zfwr6pgrupdjk5nkhpcpztc4j4skztpo2uxfo3wmxad54',
+        'bafybeig634ioq3i6ls3jj3n72jfdy47b3uqyozoldi3ceje7nj7rd6lbom',
       );
       expect(root.pbNode.links.length, 168);
     });

@@ -9,6 +9,7 @@ import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
+import 'package:dart_ipfs/src/proto/dag_marshal.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 import 'package:fixnum/fixnum.dart';
@@ -247,7 +248,7 @@ class MFSManager implements ILifecycle {
     } else {
       final dirManager = IPFSDirectoryManager();
       final node = dirManager.build();
-      final data = node.writeToBuffer();
+      final data = marshalDagPBNode(node);
       _rootCid = await CID.fromContent(data, codec: 'dag-pb');
       await _blockStore.putBlock(
         Block(cid: _rootCid!, data: data, format: 'dag-pb'),
@@ -331,7 +332,7 @@ class MFSManager implements ILifecycle {
               ..mtimeNsecs = mtimeNsecs;
             node.data = unixData.writeToBuffer();
           }
-          final data = node.writeToBuffer();
+          final data = marshalDagPBNode(node);
           final cid = await CID.fromContent(
             data,
             codec: 'dag-pb',
@@ -533,7 +534,7 @@ class MFSManager implements ILifecycle {
         parentNode.links.clear();
         parentNode.links.addAll(newLinks);
 
-        final newData = parentNode.writeToBuffer();
+        final newData = marshalDagPBNode(parentNode);
         final newCid = await CID.fromContent(newData, codec: 'dag-pb');
         await _blockStore.putBlock(
           Block(cid: newCid, data: newData, format: 'dag-pb'),
@@ -1104,7 +1105,7 @@ class MFSManager implements ILifecycle {
     if (mtimeSecs != null) unixData.mtime = Int64(mtimeSecs);
     if (mtimeNsecs != null) unixData.mtimeNsecs = mtimeNsecs;
     node.data = unixData.writeToBuffer();
-    final newData = node.writeToBuffer();
+    final newData = marshalDagPBNode(node);
     final newCid = await CID.fromContent(
       newData,
       codec: 'dag-pb',
@@ -1409,7 +1410,7 @@ class MFSManager implements ILifecycle {
         // Create intermediate directory
         final dirManager = IPFSDirectoryManager();
         final emptyDirNode = dirManager.build();
-        final emptyDirData = emptyDirNode.writeToBuffer();
+        final emptyDirData = marshalDagPBNode(emptyDirNode);
         final emptyDirCid = await CID.fromContent(
           emptyDirData,
           codec: 'dag-pb',
@@ -1455,7 +1456,7 @@ class MFSManager implements ILifecycle {
     node.links.clear();
     node.links.addAll(newLinks);
 
-    final newData = node.writeToBuffer();
+    final newData = marshalDagPBNode(node);
     final updatedCid = await CID.fromContent(newData, codec: 'dag-pb');
     await _blockStore.putBlock(
       Block(cid: updatedCid, data: newData, format: 'dag-pb'),

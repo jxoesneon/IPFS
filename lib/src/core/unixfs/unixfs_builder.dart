@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:async/async.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/proto/dag_marshal.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
@@ -89,7 +90,7 @@ class UnixFSBuilder {
     );
 
     final outerNode = dag_pb.PBNode(data: unixFs.writeToBuffer(), links: links);
-    final rootData = outerNode.writeToBuffer();
+    final rootData = marshalDagPBNode(outerNode);
 
     final rootCid = await CID.fromContent(
       rootData,
@@ -120,7 +121,7 @@ class UnixFSBuilder {
     );
 
     final node = dag_pb.PBNode(data: unixFs.writeToBuffer());
-    final encoded = node.writeToBuffer();
+    final encoded = marshalDagPBNode(node);
 
     final cid = await CID.fromContent(
       encoded,

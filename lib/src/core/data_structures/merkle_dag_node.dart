@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
+import 'package:dart_ipfs/src/proto/dag_marshal.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_proto;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_proto;
@@ -111,7 +112,7 @@ class MerkleDAGNode {
 
     pbNode.links.addAll(links.map((link) => link.toProto()));
 
-    return pbNode.writeToBuffer();
+    return marshalDagPBNode(pbNode);
   }
 
   @override
