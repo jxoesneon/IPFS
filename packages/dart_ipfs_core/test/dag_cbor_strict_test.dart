@@ -38,6 +38,29 @@ void main() {
       expect(encoded, equals(bytes([0xfb, 0, 0, 0, 0, 0, 0, 0, 0])));
     });
 
+    test('encodes uint32-width integer arguments canonically', () async {
+      // 70000 = 0x11170 exceeds the uint16 argument form.
+      final encoded = await codec.encode(BigInt.from(70000));
+      expect(encoded, equals(bytes([0x1a, 0x00, 0x01, 0x11, 0x70])));
+    });
+
+    test('rejects nesting beyond the maximum depth', () async {
+      dynamic deep = 0;
+      for (var i = 0; i < 1100; i++) {
+        deep = <dynamic>[deep];
+      }
+      expect(() => codec.encode(deep), throwsArgumentError);
+    });
+
+    test('rejects map keys that collide after UTF-8 encoding', () async {
+      // Distinct unpaired surrogates both encode as U+FFFD (EF BF BD), so the
+      // map cannot be represented canonically.
+      expect(
+        () => codec.encode(<String, dynamic>{'\uD800': 1, '\uD801': 2}),
+        throwsArgumentError,
+      );
+    });
+
     test('always encodes doubles as 64-bit floats', () async {
       final encoded = await codec.encode(1.0);
       expect(encoded, equals(bytes([0xfb, 0x3f, 0xf0, 0, 0, 0, 0, 0, 0])));
@@ -338,6 +361,14 @@ void main() {
         0xd8, 0x2a, 0x23, 0x00, //
         ...List.filled(34, 0x12), // starts 0x12 but wrong v0 length
       ], 'CIDv0-like bytes with wrong length');
+      await expectReject([
+        0xd8, 0x2a, 0x47, 0x00, //
+        0x01, 0x55, 0x12, 0x05, 0xaa, 0xbb, // digest length exceeds input
+      ], 'CIDv1 with a digest length mismatch');
+      await expectReject([
+        0xd8, 0x2a, 0x46, 0x00, //
+        0x01, 0x55, 0x05, 0x01, 0xaa, // multihash code 0x05 is unsupported
+      ], 'CIDv1 with an unsupported multihash code');
     });
 
     test('rejects CIDv1 bytes with trailing garbage', () async {
@@ -402,6 +433,32 @@ void main() {
       expect(
         await codec.decode(bytes([0xfa, 0x3f, 0x80, 0x00, 0x00])),
         equals(1.0),
+      );
+    });
+
+    test('decodes half-precision edge cases', () async {
+      // Zero and negative zero; -0.0 normalizes to canonical 0.0.
+      expect(await codec.decode(bytes([0xf9, 0x00, 0x00])), equals(0.0));
+      final negZero = await codec.decode(bytes([0xf9, 0x80, 0x00]));
+      expect(negZero, equals(0.0));
+      expect((negZero as double).isNegative, isFalse);
+      // Subnormal half: 2^-24.
+      expect(
+        await codec.decode(bytes([0xf9, 0x00, 0x01])),
+        closeTo(5.960464477539063e-8, 1e-20),
+      );
+      // Non-finite halves are still rejected.
+      await expectLater(
+        codec.decode(bytes([0xf9, 0x7c, 0x00])), // +inf
+        throwsFormatException,
+      );
+      await expectLater(
+        codec.decode(bytes([0xf9, 0xfc, 0x00])), // -inf
+        throwsFormatException,
+      );
+      await expectLater(
+        codec.decode(bytes([0xf9, 0x7e, 0x00])), // NaN
+        throwsFormatException,
       );
     });
 

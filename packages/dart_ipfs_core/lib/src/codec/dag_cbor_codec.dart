@@ -195,7 +195,10 @@ class DagCborCodec implements IPLDCodec {
         writer.addByte(((value >> (i * 8)) & _byteMask).toInt());
       }
     } else {
+      // Unreachable: every caller bounds arguments to <= maxUint64.
+      // coverage:ignore-start
       throw ArgumentError('Integer argument out of CBOR range');
+      // coverage:ignore-end
     }
   }
 
@@ -321,8 +324,11 @@ class DagCborCodec implements IPLDCodec {
         return _decodeMap(reader, argument, depth);
       case 6:
         return _decodeTagged(reader, argument, depth);
+      // Unreachable: major is a 3-bit field; 7 returns early, 0-6 are cased.
+      // coverage:ignore-start
       default:
         throw FormatException('Unsupported CBOR major type: $major');
+      // coverage:ignore-end
     }
   }
 
@@ -549,8 +555,12 @@ class DagCborCodec implements IPLDCodec {
       }
     } on FormatException {
       rethrow;
+      // Unreachable today: readVarint only throws FormatException; kept as a
+      // guard against future callees that could throw other error types.
+      // coverage:ignore-start
     } catch (e) {
       throw FormatException('Malformed CID bytes in tag 42 link: $e');
+      // coverage:ignore-end
     }
   }
 
