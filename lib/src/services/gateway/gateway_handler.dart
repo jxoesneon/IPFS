@@ -2462,7 +2462,7 @@ class GatewayHandler {
             final cidStr = cid.encode();
             ipnsPath = '/ipfs/$cidStr';
             final denylisted = _checkDenylist(
-              subPath == '/' ? ipnsPath : '$ipnsPath$subPath',
+              subPath.isEmpty ? ipnsPath : '$ipnsPath/$subPath',
             );
             if (denylisted != null) {
               response = denylisted;
@@ -2488,7 +2488,7 @@ class GatewayHandler {
         // ipns
         ipnsPath = '/ipns/${sub.identifier}';
         final denylisted = _checkDenylist(
-          subPath == '/' ? ipnsPath : '$ipnsPath$subPath',
+          subPath.isEmpty ? ipnsPath : '$ipnsPath/$subPath',
         );
         if (denylisted != null) {
           response = denylisted;
@@ -2508,9 +2508,7 @@ class GatewayHandler {
             // The resolved CID must be checked too: an allowed IPNS name
             // must not become a proxy for denylisted content.
             final resolvedDenylisted = _checkDenylist(
-              subPath == '/' || subPath.isEmpty
-                  ? '/ipfs/$cidStr'
-                  : '/ipfs/$cidStr$subPath',
+              subPath.isEmpty ? '/ipfs/$cidStr' : '/ipfs/$cidStr/$subPath',
             );
             if (resolvedDenylisted != null) {
               response = resolvedDenylisted;

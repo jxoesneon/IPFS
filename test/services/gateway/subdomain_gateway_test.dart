@@ -349,6 +349,40 @@ void main() {
         expect(response.statusCode, equals(451));
       });
 
+      test('path-scoped denylist rule matches subdomain sub-paths', () async {
+        // Regression: request.url.path has no leading slash, so the denylist
+        // path must be joined with an explicit separator — otherwise
+        // '/ipfs/<cid>/file.txt' rules were evaluated against
+        // '/ipfs/<cid>file.txt' and never matched.
+        final denylist = DenylistService(
+          const SecurityConfig(enableDenylist: true),
+          _MockMetrics(),
+        )..loadCompactBytes(utf8.encode('/ipfs/$cidV1Base32/file.txt'));
+        handler = GatewayHandler(blockStore, denylistService: denylist);
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/file.txt'),
+          headers: {'host': '$cidV1Base32.ipfs.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, equals(451));
+      });
+
+      test('path-scoped denylist rule still allows other sub-paths', () async {
+        final denylist = DenylistService(
+          const SecurityConfig(enableDenylist: true),
+          _MockMetrics(),
+        )..loadCompactBytes(utf8.encode('/ipfs/$cidV1Base32/file.txt'));
+        handler = GatewayHandler(blockStore, denylistService: denylist);
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/'),
+          headers: {'host': '$cidV1Base32.ipfs.localhost'},
+        );
+        final response = await handler.handleSubdomain(request);
+        expect(response.statusCode, isNot(equals(451)));
+      });
+
       test('blocked IPNS name returns 451 before resolution', () async {
         final denylist = DenylistService(
           const SecurityConfig(enableDenylist: true),
