@@ -72,6 +72,11 @@ class RPCHandlers {
   static const int _maxExportDepth = 32;
   static const int _maxExportBlocks = 10000;
 
+  /// Maximum total file payload bytes a `get` TAR export may buffer (1 GiB).
+  /// The archive is assembled in memory, so payload bytes must be bounded
+  /// globally across the whole traversal.
+  static const int _maxExportBytes = 1024 * 1024 * 1024;
+
   /// Reads the request body into memory, rejecting bodies over [maxBytes].
   static Future<Uint8List> _readBodyBounded(
     Request request,
@@ -370,6 +375,13 @@ class RPCHandlers {
       return null;
     }
 
+    return _denylistBlockedResponse();
+  }
+
+  /// The 451 "blocked by operator policy" response shared by request-time
+  /// denylist checks and traversal-time [_DenylistBlockedException]
+  /// rejections.
+  static Response _denylistBlockedResponse() {
     return Response(
       451,
       body: json.encode({
@@ -407,7 +419,11 @@ class RPCHandlers {
     final cid = segments.first;
     final subPath = segments.sublist(1).join('/');
 
-    final blocked = _checkDenylist(cid);
+    // Check the full /ipfs/<cid>/<sub/path> so path-scoped denylist rules
+    // (e.g. `/ipfs/CID/blocked.txt`) are enforced, not just root CIDs.
+    final blocked = _checkDenylist(
+      '/ipfs/$cid${subPath.isEmpty ? '' : '/$subPath'}',
+    );
     if (blocked != null) {
       return blocked;
     }
@@ -450,7 +466,9 @@ class RPCHandlers {
         return _errorResponse('Missing argument: path');
       }
 
-      final blocked = _checkDenylist(segments[0]);
+      // Check the full /ipfs/<cid>/<sub/path> so path-scoped denylist rules
+      // are enforced, not just the root CID.
+      final blocked = _checkDenylist('/ipfs/${segments.join('/')}');
       if (blocked != null) {
         return blocked;
       }
@@ -473,7 +491,13 @@ class RPCHandlers {
       }
 
       final tar = _TarWriter();
-      await _tarAddNode(tar, segments.last, block!, depth: 0);
+      await _tarAddNode(
+        tar,
+        segments.last,
+        block!,
+        depth: 0,
+        budget: _TarTraversalBudget(),
+      );
 
       final tarBytes = tar.close();
       return Response.ok(
@@ -484,6 +508,9 @@ class RPCHandlers {
           'X-Stream-Output': '1',
         },
       );
+    } on _DenylistBlockedException {
+      // A block fetched mid-traversal matched the denylist.
+      return _denylistBlockedResponse();
     } catch (e, st) {
       _logger.error('Get failed for path: $arg', e, st);
       return _errorResponse('Get failed');
@@ -491,7 +518,15 @@ class RPCHandlers {
   }
 
   /// Fetches a block from the local block store, falling back to Bitswap.
+  ///
+  /// Every fetched CID is gated through the denylist so path-scoped and
+  /// child-CID rules cannot be bypassed mid-traversal/export; a blocked
+  /// fetch throws [_DenylistBlockedException], which the calling handler
+  /// translates into the 451 response.
   Future<Block?> _rpcGetBlock(String cid) async {
+    if (_checkDenylist(cid) != null) {
+      throw const _DenylistBlockedException();
+    }
     final response = await node.blockStore.getBlock(cid);
     if (response.found) {
       return response.block.toBlock();
@@ -528,21 +563,22 @@ class RPCHandlers {
   /// UnixFS directories emit a directory entry and recurse into named links;
   /// everything else (files, raw blocks, non-UnixFS nodes) emits a file entry
   /// with the reassembled or raw payload.
+  ///
+  /// [budget] is shared across the entire traversal: every visited node and
+  /// every buffered payload byte counts against the export-wide limits, so a
+  /// wide or deep DAG cannot exceed them through per-frame counters.
   Future<void> _tarAddNode(
     _TarWriter tar,
     String name,
     Block block, {
     required int depth,
-    int nodes = 1,
+    required _TarTraversalBudget budget,
   }) async {
     if (depth > _maxExportDepth) {
       throw StateError('TAR export exceeded maximum depth $_maxExportDepth');
     }
-    if (nodes > _maxExportBlocks) {
-      throw StateError('TAR export exceeded maximum nodes $_maxExportBlocks');
-    }
+    budget.addNode();
 
-    var nodeCount = nodes;
     if (block.cid.codec == 'dag-pb') {
       try {
         final pbNode = dag_pb.PBNode.fromBuffer(block.data);
@@ -563,14 +599,14 @@ class RPCHandlers {
                 link.name,
                 child,
                 depth: depth + 1,
-                nodes: ++nodeCount,
+                budget: budget,
               );
             }
             return;
           }
         }
       } catch (e) {
-        if (e is StateError) rethrow;
+        if (e is StateError || e is _DenylistBlockedException) rethrow;
         // Not a UnixFS directory: fall through and serve as a file entry.
       }
     }
@@ -579,6 +615,7 @@ class RPCHandlers {
       block,
       (cid) => _rpcGetBlock(cid.encode()),
     );
+    budget.addBytes(data.length);
     tar.addFile(name, data);
   }
 
@@ -587,6 +624,22 @@ class RPCHandlers {
     final path = request.url.queryParameters['arg'];
     if (path == null || path.isEmpty) {
       return _errorResponse('Missing argument: path');
+    }
+
+    // Normalize /ipfs/<cid>[/sub/path] or bare <cid>[/sub/path] the same way
+    // as cat/get so path-scoped denylist rules are enforced here too.
+    var normalized = path;
+    if (normalized.startsWith('/ipfs/')) {
+      normalized = normalized.substring(6);
+    } else if (normalized.startsWith('ipfs/')) {
+      normalized = normalized.substring(5);
+    } else if (normalized.startsWith('/')) {
+      normalized = normalized.substring(1);
+    }
+
+    final blocked = _checkDenylist('/ipfs/$normalized');
+    if (blocked != null) {
+      return blocked;
     }
 
     // Kubo `resolve-type` defaults to true; Type is the UnixFS DataType enum
@@ -598,7 +651,7 @@ class RPCHandlers {
     );
 
     try {
-      final entries = await node.ls(path);
+      final entries = await node.ls(normalized);
       final objects = <Map<String, dynamic>>[];
       for (final e in entries) {
         objects.add({
@@ -1471,6 +1524,50 @@ class RPCHandlers {
       body: json.encode({'Message': message, 'Code': 0, 'Type': 'error'}),
       headers: {'Content-Type': 'application/json'},
     );
+  }
+}
+
+/// Thrown when a block fetched mid-traversal (sub-path resolution, TAR
+/// export, or chunked-file reassembly) matches the denylist. Handlers
+/// translate it into the shared 451 response.
+class _DenylistBlockedException implements Exception {
+  /// Creates a new [_DenylistBlockedException].
+  const _DenylistBlockedException();
+}
+
+/// Mutable traversal budget shared across an entire TAR export.
+///
+/// The node and byte limits are global to the traversal: counts accumulate
+/// across every recursion branch, so a wide or deep DAG cannot exceed the
+/// export bounds through per-frame counters.
+class _TarTraversalBudget {
+  /// Maximum number of DAG nodes the export may visit.
+  int maxNodes = RPCHandlers._maxExportBlocks;
+
+  /// Maximum total file payload bytes the export may buffer.
+  int maxBytes = RPCHandlers._maxExportBytes;
+
+  /// Nodes visited so far.
+  int nodes = 0;
+
+  /// Payload bytes written so far.
+  int bytes = 0;
+
+  /// Counts one visited node, throwing [StateError] once [maxNodes] is
+  /// exceeded.
+  void addNode() {
+    if (++nodes > maxNodes) {
+      throw StateError('TAR export exceeded maximum nodes $maxNodes');
+    }
+  }
+
+  /// Counts [n] payload bytes, throwing [StateError] once [maxBytes] is
+  /// exceeded.
+  void addBytes(int n) {
+    bytes += n;
+    if (bytes > maxBytes) {
+      throw StateError('TAR export exceeded maximum bytes $maxBytes');
+    }
   }
 }
 

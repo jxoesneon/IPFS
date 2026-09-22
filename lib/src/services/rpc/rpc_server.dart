@@ -155,6 +155,9 @@ class RPCServer implements ILifecycle {
     _router.post('/api/v0/pubsub/ls', _handlers.handlePubsubLs);
     _router.post('/api/v0/pubsub/peers', _handlers.handlePubsubPeers);
 
+    // MFS endpoints: the full `/api/v0/files/*` surface.
+    _handlers.mfsHandlers.registerOn(_router);
+
     _setupMetricsRoute();
   }
 
