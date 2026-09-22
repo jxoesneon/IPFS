@@ -76,30 +76,91 @@ void main() {
       },
     );
 
-    test('encodes positive BigInt beyond int64 with tag 2', () async {
-      final bigValue = BigInt.parse('9223372036854775808'); // 2^63
+    test(
+      'encodes BigInt in the uint64 range as a plain major-type-0 int',
+      () async {
+        // 2^63 does not fit in a signed int64 but does fit in major type 0
+        // (unsigned 64-bit); using tag 2 for it would be non-canonical.
+        final bigValue = BigInt.parse('9223372036854775808'); // 2^63
+        final value = <String, dynamic>{'huge': bigValue};
+        final encoded = await codec.encode(value);
+
+        // {'huge': 2^63} = a1 64 68756765 1b 8000000000000000
+        expect(
+          encoded,
+          equals(
+            Uint8List.fromList([
+              0xa1, 0x64, 0x68, 0x75, 0x67, 0x65, //
+              0x1b, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            ]),
+          ),
+        );
+
+        final decoded = await codec.decode(encoded);
+        expect(decoded['huge'], equals(bigValue));
+      },
+    );
+
+    test('encodes positive BigInt beyond uint64 with tag 2', () async {
+      final bigValue = BigInt.parse('18446744073709551616'); // 2^64
       final value = <String, dynamic>{'huge': bigValue};
       final encoded = await codec.encode(value);
-      expect(encoded, isNotEmpty);
 
-      // Verify the raw encoding contains tag 2 (0xc2 prefix for tag 2).
-      // Tag 2 in CBOR is encoded as 0xc2.
-      final hasTag2 = encoded.any((b) => b == 0xc2);
-      expect(hasTag2, isTrue, reason: 'Positive bignum should use tag 2');
+      // {'huge': 2^64} = a1 64 68756765 c2 49 010000000000000000
+      expect(
+        encoded,
+        equals(
+          Uint8List.fromList([
+            0xa1, 0x64, 0x68, 0x75, 0x67, 0x65, //
+            0xc2, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          ]),
+        ),
+      );
 
       final decoded = await codec.decode(encoded);
       expect(decoded['huge'], equals(bigValue));
     });
 
-    test('encodes negative BigInt beyond int64 with tag 3', () async {
-      final bigValue = BigInt.parse('-9223372036854775809'); // -(2^63 + 1)
+    test('encodes negative BigInt beyond int64 without a tag', () async {
+      // -(2^63 + 1) is outside int64 but fits major type 1 ([-2^64, -1]);
+      // tag 3 would be superfluous.
+      final bigValue = BigInt.parse('-9223372036854775809');
       final value = <String, dynamic>{'huge_neg': bigValue};
       final encoded = await codec.encode(value);
-      expect(encoded, isNotEmpty);
 
-      // Verify the raw encoding contains tag 3 (0xc3 prefix for tag 3).
-      final hasTag3 = encoded.any((b) => b == 0xc3);
-      expect(hasTag3, isTrue, reason: 'Negative bignum should use tag 3');
+      // {'huge_neg': -(2^63+1)} =
+      //   a1 68 687567655f6e6567 3b 8000000000000000
+      expect(
+        encoded,
+        equals(
+          Uint8List.fromList([
+            0xa1, 0x68, 0x68, 0x75, 0x67, 0x65, 0x5f, 0x6e, 0x65, 0x67, //
+            0x3b, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          ]),
+        ),
+      );
+
+      final decoded = await codec.decode(encoded);
+      expect(decoded['huge_neg'], equals(bigValue));
+    });
+
+    test('encodes negative BigInt below -2^64 with tag 3', () async {
+      final bigValue = BigInt.parse('-18446744073709551617'); // -(2^64 + 1)
+      final value = <String, dynamic>{'huge_neg': bigValue};
+      final encoded = await codec.encode(value);
+
+      // Tag 3 stores -(1 + n), so n = 2^64 = 0x010000000000000000 (9 bytes).
+      // {'huge_neg': -(2^64+1)} =
+      //   a1 68 687567655f6e6567 c3 49 010000000000000000
+      expect(
+        encoded,
+        equals(
+          Uint8List.fromList([
+            0xa1, 0x68, 0x68, 0x75, 0x67, 0x65, 0x5f, 0x6e, 0x65, 0x67, //
+            0xc3, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          ]),
+        ),
+      );
 
       final decoded = await codec.decode(encoded);
       expect(decoded['huge_neg'], equals(bigValue));
