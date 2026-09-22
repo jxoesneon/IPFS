@@ -2004,6 +2004,30 @@ void main() {
           expect(response.statusCode, equals(200), reason: 'prefix $prefix');
         }
       });
+
+      test(
+        'handleDagExport returns 451 when traversal reaches a blocked child',
+        () async {
+          final file = await Block.fromData(
+            Uint8List.fromList(utf8.encode('secret')),
+            format: 'raw',
+          );
+          storeBlock(file);
+          final dir = await storeDir({'secret.txt': file});
+          denylist.blockCidString(file.cid.encode());
+
+          final response = await handlers.handleDagExport(
+            Request(
+              'POST',
+              Uri.parse(
+                'http://localhost/api/v0/dag/export?arg=${dir.cid.encode()}',
+              ),
+            ),
+          );
+          expect(response.statusCode, equals(451));
+          expect(denylistMetrics.securityEvents, contains('denylist_blocked'));
+        },
+      );
     });
 
     test(

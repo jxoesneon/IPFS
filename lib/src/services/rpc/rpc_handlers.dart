@@ -868,6 +868,8 @@ class RPCHandlers {
           'Content-Length': carData.length.toString(),
         },
       );
+    } on _DenylistBlockedException {
+      return _denylistBlockedResponse();
     } catch (e, st) {
       _logger.error('DAG export failed for cid: $cid', e, st);
       return _errorResponse('DAG export failed: $e');
@@ -970,6 +972,12 @@ class RPCHandlers {
     final key = cid.toString();
     if (visited.contains(key)) return;
     visited.add(key);
+
+    // Mid-traversal denylist gate — a blocked child CID must not leak into
+    // the exported archive.
+    if (_checkDenylist(key) != null) {
+      throw const _DenylistBlockedException();
+    }
 
     final response = await node.blockStore.getBlock(key);
     if (!response.found) {
