@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/metrics/otel_exporter.dart';
+import 'package:http/http.dart' as http;
 import 'package:prometheus_client/prometheus_client.dart';
 import 'package:test/test.dart';
 
@@ -25,6 +26,14 @@ Future<HttpServer> _startCapturingServer(
   return server;
 }
 
+/// An HTTP client whose requests always fail with a [TimeoutException].
+class _TimeoutHttpClient extends http.BaseClient {
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    throw TimeoutException('simulated slow collector');
+  }
+}
+
 Map<String, dynamic> _decodeBody(String body) =>
     jsonDecode(body) as Map<String, dynamic>;
 
@@ -38,6 +47,71 @@ List<dynamic> _metricsOf(Map<String, dynamic> payload) {
 }
 
 void main() {
+  group('OTelExportException', () {
+    test('toString includes the status code when present', () {
+      expect(
+        OTelExportException('rejected', statusCode: 503).toString(),
+        equals('OTelExportException: rejected (HTTP 503)'),
+      );
+      expect(
+        OTelExportException('boom').toString(),
+        equals('OTelExportException: boom'),
+      );
+    });
+  });
+
+  group('OTelExporter configuration', () {
+    test('endpoint getter returns the configured endpoint', () {
+      final exporter = OTelExporter(
+        endpoint: Uri.parse('http://otel.example:4318/v1/metrics'),
+      );
+      addTearDown(exporter.close);
+      expect(
+        exporter.endpoint,
+        equals(Uri.parse('http://otel.example:4318/v1/metrics')),
+      );
+    });
+
+    test('buildMetricsPayload honors an explicit startTimestamp', () async {
+      final exporter = OTelExporter(
+        endpoint: Uri.parse('http://localhost:4318/v1/metrics'),
+      );
+      addTearDown(exporter.close);
+
+      final registry = CollectorRegistry();
+      final gauge = Gauge(name: 'test_window', help: 'w')..register(registry);
+      gauge.inc();
+
+      final start = DateTime.fromMillisecondsSinceEpoch(1234567890000);
+      final payload = exporter.buildMetricsPayload(
+        await registry.collectMetricFamilySamples(),
+        timestamp: DateTime.fromMillisecondsSinceEpoch(1234567999000),
+        startTimestamp: start,
+      );
+
+      final metrics = _metricsOf(payload);
+      final point =
+          ((metrics.single as Map<String, dynamic>)['gauge']
+                  as Map<String, dynamic>)['dataPoints']
+              as List<dynamic>;
+      final dataPoint = point.single as Map<String, dynamic>;
+      expect(
+        dataPoint['startTimeUnixNano'],
+        equals((start.microsecondsSinceEpoch * 1000).toString()),
+      );
+      expect(
+        dataPoint['timeUnixNano'],
+        equals(
+          (DateTime.fromMillisecondsSinceEpoch(
+                    1234567999000,
+                  ).microsecondsSinceEpoch *
+                  1000)
+              .toString(),
+        ),
+      );
+    });
+  });
+
   group('OTelExporter payload', () {
     late CollectorRegistry registry;
     late OTelExporter exporter;
@@ -242,6 +316,26 @@ void main() {
             (e) => e.statusCode,
             'statusCode',
             equals(400),
+          ),
+        ),
+      );
+    });
+
+    test('maps request timeouts to OTelExportException', () async {
+      server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final exporter = OTelExporter(
+        endpoint: Uri.parse('http://localhost:${server.port}/v1/metrics'),
+        httpClient: _TimeoutHttpClient(),
+      );
+      addTearDown(exporter.close);
+
+      await expectLater(
+        exporter.export(const <MetricFamilySamples>[]),
+        throwsA(
+          isA<OTelExportException>().having(
+            (e) => e.message,
+            'message',
+            contains('timed out'),
           ),
         ),
       );

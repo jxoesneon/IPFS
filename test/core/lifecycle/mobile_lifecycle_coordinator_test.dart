@@ -50,6 +50,17 @@ class FakeNetworkManager implements NetworkManager {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// An adapter whose background-extension request always fails, as on hosts
+/// without the platform channel.
+class ThrowingExtensionAdapter extends ManualMobileLifecycleAdapter {
+  @override
+  Future<bool> requestBackgroundExtension({
+    Duration duration = const Duration(seconds: 30),
+  }) async {
+    throw StateError('platform channel unavailable');
+  }
+}
+
 class FakeBlockStore implements BlockStore {
   bool flushCalled = false;
   int flushCallCount = 0;
@@ -303,6 +314,36 @@ void main() {
         equals(IpfsPowerMode.suspendedMesh),
       );
       await customCoordinator.stop();
+    });
+
+    test(
+      'still suspends when the background extension request fails',
+      () async {
+        final throwingAdapter = ThrowingExtensionAdapter();
+        addTearDown(throwingAdapter.dispose);
+        final c = MobileLifecycleCoordinator(adapter: throwingAdapter);
+        await c.start();
+
+        throwingAdapter.setLifecycleState(NodeLifecycleState.paused);
+        await pumpEventQueue();
+
+        // The failed extension request is logged, not propagated.
+        expect(c.currentPowerMode, equals(IpfsPowerMode.suspendedMesh));
+        expect(c.currentLifecycleState, equals(NodeLifecycleState.paused));
+        await c.stop();
+      },
+    );
+
+    test('still enters lowPower when the connection trim fails', () async {
+      networkManager.shouldThrowOnTrim = true;
+      await coordinator.start();
+
+      adapter.setLowBattery(true);
+      await pumpEventQueue();
+
+      // The failed trim is logged, not propagated.
+      expect(coordinator.currentPowerMode, equals(IpfsPowerMode.lowPower));
+      expect(networkManager.trimCallCount, equals(1));
     });
 
     test(

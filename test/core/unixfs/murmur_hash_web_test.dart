@@ -44,5 +44,31 @@ void main() {
         );
       }
     });
+
+    test(
+      'murmur3X64Hash64Digest returns the full 64-bit digest as LE bytes',
+      () {
+        final rng = Random(7);
+        for (var length = 0; length <= 64; length++) {
+          final bytes = List<int>.generate(length, (_) => rng.nextInt(256));
+          expect(
+            web.murmur3X64Hash64Digest(bytes),
+            equals(native.murmur3X64Hash64Digest(bytes)),
+            reason: 'length $length diverged',
+          );
+        }
+      },
+    );
+
+    test('murmur3X64Hash64Digest matches the native digest for seeds', () {
+      final input = utf8.encode('hamt-digest-check');
+      for (final seed in <int>[0, 1, 0x9747b28c]) {
+        expect(
+          web.murmur3X64Hash64Digest(input, seed: seed),
+          equals(native.murmur3X64Hash64Digest(input, seed: seed)),
+          reason: 'seed $seed diverged',
+        );
+      }
+    });
   });
 }

@@ -11,8 +11,11 @@ import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/provide_result.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
 
@@ -42,6 +45,42 @@ class _FailingRouter extends FakeRouter {
     String? protocolId,
   }) async {
     throw StateError('send failed');
+  }
+}
+
+/// A handler whose [provideDetailed] throws, so the queue processor's error
+/// propagation path can be exercised.
+class _ExplodingProvideHandler extends DHTHandler {
+  // DHTHandler's router parameter is a private field formal and cannot be a
+  // super-parameter, so this constructor forwards explicitly.
+  // ignore: use_super_parameters
+  _ExplodingProvideHandler(
+    IPFSConfig config,
+    RouterInterface router,
+    NetworkHandler networkHandler, {
+    MemoryDatastore? storage,
+  }) : super(config, router, networkHandler, storage: storage);
+
+  @override
+  Future<ProvideResult> provideDetailed(
+    CID cid, {
+    bool recursive = false,
+    Duration? timeout,
+    BlockStore? blockStore,
+    bool recordMetrics = true,
+  }) {
+    throw StateError('simulated provide explosion');
+  }
+}
+
+/// A block store whose [getBlock] always throws, so the DAG enumeration
+/// error path can be exercised.
+class _FailingGetBlockStore extends BlockStore {
+  _FailingGetBlockStore() : super(path: '');
+
+  @override
+  Future<GetBlockResponse> getBlock(String cid) async {
+    throw StateError('simulated blockstore read failure');
   }
 }
 
@@ -222,6 +261,40 @@ void main() {
       expect(result.failures, greaterThan(0));
       expect(result.errors, isNotEmpty);
     });
+
+    test('recursive provide records blocks missing from the store', () async {
+      final handler = makeHandler(FakeRouter());
+      addTearDown(handler.stop);
+      await handler.dhtClient.initialize();
+
+      // The root CID's block is intentionally absent from the store.
+      final missing = await CID.fromContent(
+        Uint8List.fromList([40, 41, 42]),
+        codec: 'dag-pb',
+      );
+      final result = await handler.provideDetailed(
+        missing,
+        recursive: true,
+        blockStore: blockStore,
+      );
+
+      expect(result.errors, contains(contains('missing block')));
+    });
+
+    test('recursive provide records enumeration failures', () async {
+      final handler = makeHandler(FakeRouter());
+      addTearDown(handler.stop);
+      await handler.dhtClient.initialize();
+
+      final cid = await addBlock(Uint8List.fromList([43, 44, 45]));
+      final result = await handler.provideDetailed(
+        cid,
+        recursive: true,
+        blockStore: _FailingGetBlockStore(),
+      );
+
+      expect(result.errors, contains(contains('failed to enumerate')));
+    });
   });
 
   group('DHTHandler provide queue', () {
@@ -289,5 +362,122 @@ void main() {
       }
       expect(handler.enqueueProvide(cid), isNull);
     });
+
+    test(
+      'enqueueProvideAndWait throws StateError when the queue is full',
+      () async {
+        final router = _BlockingRouter();
+        final handler = makeHandler(router);
+        addTearDown(() async {
+          router.release();
+          await handler.stop();
+        });
+        await handler.dhtClient.initialize();
+        await seedPeer(handler, 1);
+
+        final cid = await addBlock(Uint8List.fromList([31, 32, 33]));
+
+        // First job blocks inside sendMessage, keeping the processor busy.
+        handler.enqueueProvide(cid);
+        final startDeadline = DateTime.now().add(const Duration(seconds: 5));
+        while (!(handler.provideQueueProcessing &&
+            handler.provideQueueLength == 0)) {
+          if (DateTime.now().isAfter(startDeadline)) {
+            fail('provide queue processor never started');
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+        }
+
+        for (var i = 0; i < DHTHandler.maxProvideQueueSize; i++) {
+          handler.enqueueProvide(cid);
+        }
+        expect(() => handler.enqueueProvideAndWait(cid), throwsStateError);
+      },
+    );
+
+    test(
+      'enqueueProvideAndWait propagates a job failure to the result',
+      () async {
+        final router = FakeRouter();
+        final networkHandler = NetworkHandler(nodeConfig, router: router);
+        final handler = _ExplodingProvideHandler(
+          nodeConfig,
+          router,
+          networkHandler,
+          storage: datastore,
+        );
+        addTearDown(handler.stop);
+
+        final cid = await addBlock(Uint8List.fromList([34, 35, 36]));
+        await expectLater(
+          handler.enqueueProvideAndWait(cid),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
+  });
+
+  group('DHTClient.addProviderDetailed', () {
+    test('timeout records an error and skips remaining attempts', () async {
+      final handler = makeHandler(FakeRouter());
+      addTearDown(handler.stop);
+      await handler.dhtClient.initialize();
+      await seedPeer(handler, 1);
+
+      final cid = await addBlock(Uint8List.fromList([52, 53, 54]));
+      final result = await handler.dhtClient.addProviderDetailed(
+        cid.toString(),
+        handler.dhtClient.peerId.toBase58(),
+        timeout: Duration.zero,
+      );
+
+      expect(result.attempts, equals(0));
+      expect(result.errors, contains(contains('timeout')));
+    });
+  });
+
+  group('ProvideResult', () {
+    test('toJson serializes every field', () async {
+      final cid = await CID.fromContent(
+        Uint8List.fromList([60, 61]),
+        codec: 'raw',
+      );
+      final result = ProvideResult(
+        cid: cid,
+        attempts: 3,
+        successes: 2,
+        failures: 1,
+        duration: const Duration(milliseconds: 42),
+        errors: const ['boom'],
+        cidsAnnounced: 7,
+      );
+
+      expect(
+        result.toJson(),
+        equals({
+          'cid': cid.toString(),
+          'attempts': 3,
+          'successes': 2,
+          'failures': 1,
+          'duration_ms': 42,
+          'errors': ['boom'],
+          'cidsAnnounced': 7,
+        }),
+      );
+    });
+
+    test(
+      'PendingProvide.result completes with an error via completeError',
+      () async {
+        final cid = await CID.fromContent(
+          Uint8List.fromList([62, 63]),
+          codec: 'raw',
+        );
+        final job = PendingProvide(cid: cid);
+        job.completeError(StateError('boom'));
+
+        await expectLater(job.result, throwsA(isA<StateError>()));
+      },
+    );
   });
 }

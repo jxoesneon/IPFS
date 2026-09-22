@@ -22,8 +22,10 @@ import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/provide_result.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
 import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
@@ -37,6 +39,40 @@ import '../../fakes/fake_router.dart';
 import 'rpc_handlers_test.mocks.dart';
 
 core.CID coreCid(CID cid) => cid;
+
+/// A [DHTHandler] whose on-demand provide surface always reports a saturated
+/// queue and a failing engine, for exercising the RPC error branches.
+class _UnhappyDHTHandler extends DHTHandler {
+  // DHTHandler's router parameter is a private field formal and cannot be a
+  // super-parameter, so this constructor forwards explicitly.
+  // ignore: use_super_parameters
+  _UnhappyDHTHandler(
+    IPFSConfig config,
+    RouterInterface router,
+    NetworkHandler networkHandler, {
+    MemoryDatastore? storage,
+  }) : super(config, router, networkHandler, storage: storage);
+
+  @override
+  int? enqueueProvide(
+    CID cid, {
+    bool recursive = false,
+    Duration? timeout,
+    BlockStore? blockStore,
+    bool recordMetrics = true,
+  }) => null;
+
+  @override
+  Future<ProvideResult> provideDetailed(
+    CID cid, {
+    bool recursive = false,
+    Duration? timeout,
+    BlockStore? blockStore,
+    bool recordMetrics = true,
+  }) {
+    throw StateError('simulated provide failure');
+  }
+}
 
 @GenerateNiceMocks([
   MockSpec<IPFSNode>(),
@@ -303,6 +339,82 @@ void main() {
           realHandler.getLocalProvidersForCid(childBlock.cid.toString()),
           isNotEmpty,
         );
+      });
+
+      test('queue=true returns 503 when the provide queue is full', () async {
+        final router = FakeRouter();
+        final nodeConfig = IPFSConfig(
+          dht: const DHTConfig(requestTimeout: Duration(milliseconds: 100)),
+        );
+        final storage = MemoryDatastore();
+        await storage.init();
+        final unhappy = _UnhappyDHTHandler(
+          nodeConfig,
+          router,
+          NetworkHandler(nodeConfig, router: router),
+          storage: storage,
+        );
+        addTearDown(() async {
+          await unhappy.stop();
+          await storage.close();
+        });
+        when(mockNode.dhtHandler).thenReturn(unhappy);
+
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/dht/provide?arg=$cid&queue=true'),
+        );
+        final response = await handlers.handleDhtProvide(request);
+        expect(response.statusCode, equals(503));
+      });
+
+      test('returns 500 when the provide engine throws', () async {
+        final router = FakeRouter();
+        final nodeConfig = IPFSConfig(
+          dht: const DHTConfig(requestTimeout: Duration(milliseconds: 100)),
+        );
+        final storage = MemoryDatastore();
+        await storage.init();
+        final unhappy = _UnhappyDHTHandler(
+          nodeConfig,
+          router,
+          NetworkHandler(nodeConfig, router: router),
+          storage: storage,
+        );
+        addTearDown(() async {
+          await unhappy.stop();
+          await storage.close();
+        });
+        when(mockNode.dhtHandler).thenReturn(unhappy);
+
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/dht/provide?arg=$cid'),
+        );
+        final response = await handlers.handleDhtProvide(request);
+        expect(response.statusCode, equals(500));
+        final body = json.decode(await response.readAsString());
+        expect(body['Message'], equals('DHT provide failed'));
+      });
+
+      test('timeout parameter accepts all Kubo duration units', () async {
+        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        for (final timeout in ['5', '500ms', '5m', '1h']) {
+          final request = Request(
+            'POST',
+            Uri.parse(
+              'http://localhost/api/v0/dht/provide?arg=$cid&timeout=$timeout',
+            ),
+          );
+          final response = await handlers.handleDhtProvide(request);
+          expect(
+            response.statusCode,
+            equals(200),
+            reason: 'timeout=$timeout was not accepted',
+          );
+        }
       });
     });
 

@@ -7,10 +7,12 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_errors.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_resolver.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
 import 'package:fixnum/fixnum.dart';
@@ -588,6 +590,163 @@ void main() {
         expect(await resolver.resolve(root.cid, 'link'), equals(fileCid));
       },
     );
+
+    group('read-side error paths', () {
+      /// Builds a fanout-256 HAMT shard node carrying [links] without
+      /// storing it, for exercising malformed-shard error paths.
+      Future<UnixFSNode> bareShard(List<dag_pb.PBLink> links) async {
+        final unixFsData = unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.HAMTShard,
+          data: Uint8List(32),
+          hashType: Int64(kUnixFSHAMTHashType),
+          fanout: Int64(256),
+        );
+        final pbNode = dag_pb.PBNode(
+          data: unixFsData.writeToBuffer(),
+          links: links,
+        );
+        final bytes = pbNode.writeToBuffer();
+        final cid = await CID.fromContent(bytes, codec: 'dag-pb');
+        return UnixFSNode.fromBlock(
+          Block(cid: cid, data: bytes, format: 'dag-pb'),
+        );
+      }
+
+      test(
+        'resolveHAMTSegment throws when the level exhausts the digest',
+        () async {
+          final shard = await bareShard(const []);
+          // Fanout 256 consumes 8 bits per level; a 64-bit digest supports
+          // levels 0-7 only.
+          expect(
+            () => resolveHAMTSegment(shard, 'anything', 8),
+            throwsA(
+              isA<PathResolutionError>().having(
+                (e) => e.toString(),
+                'message',
+                contains('sharded directory too deep'),
+              ),
+            ),
+          );
+        },
+      );
+
+      test('resolveHAMTSegment returns null for a missing entry', () async {
+        final shard = await bareShard(const []);
+        expect(resolveHAMTSegment(shard, 'absent', 0), isNull);
+      });
+
+      test('hamtLeafEntries rejects a non-shard node', () async {
+        final data = Uint8List.fromList([77]);
+        final cid = await CID.fromContent(data, codec: 'raw');
+        await store.putBlock(Block(cid: cid, data: data));
+        final dirNode = await createDirectory(store, [
+          UnixFSDirectoryEntry(name: 'f', cid: cid, tsize: data.length),
+        ], cidVersion: 1);
+
+        expect(
+          hamtLeafEntries(store, dirNode),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Not a HAMT shard node'),
+            ),
+          ),
+        );
+      });
+
+      test('hamtLeafEntries enforces the depth limit', () async {
+        final shard = await bareShard(const []);
+        expect(
+          hamtLeafEntries(store, shard, maxDepth: -1),
+          throwsA(
+            isA<DAGCycleError>().having(
+              (e) => e.toString(),
+              'message',
+              contains('maximum depth'),
+            ),
+          ),
+        );
+      });
+
+      test('hamtLeafEntries fails when a sub-shard block is missing', () async {
+        final missing = await CID.fromContent(
+          Uint8List.fromList([1, 2, 3]),
+          codec: 'raw',
+        );
+        final shard = await bareShard([
+          dag_pb.PBLink(
+            name: 'AB', // exactly the 2-char prefix -> child shard reference
+            hash: missing.toBytes(),
+            size: Int64(0),
+          ),
+        ]);
+
+        expect(
+          hamtLeafEntries(store, shard),
+          throwsA(
+            isA<PathResolutionError>().having(
+              (e) => e.toString(),
+              'message',
+              contains('sub-shard block not found'),
+            ),
+          ),
+        );
+      });
+
+      test('hamtLeafEntries fails when a sub-shard is not a shard', () async {
+        final leafData = Uint8List.fromList([4, 5, 6]);
+        final leafCid = await CID.fromContent(leafData, codec: 'raw');
+        await store.putBlock(Block(cid: leafCid, data: leafData));
+        final shard = await bareShard([
+          dag_pb.PBLink(
+            name: 'CD',
+            hash: leafCid.toBytes(),
+            size: Int64(leafData.length),
+          ),
+        ]);
+
+        expect(
+          hamtLeafEntries(store, shard),
+          throwsA(
+            isA<PathResolutionError>().having(
+              (e) => e.toString(),
+              'message',
+              contains('does not point at a shard'),
+            ),
+          ),
+        );
+      });
+
+      test(
+        'hamtLeafEntries fails on link names shorter than the prefix',
+        () async {
+          final someCid = await CID.fromContent(
+            Uint8List.fromList([9, 9]),
+            codec: 'raw',
+          );
+          final shard = await bareShard([
+            dag_pb.PBLink(
+              name: 'A', // 1 char < the 2-char prefix width
+              hash: someCid.toBytes(),
+              size: Int64(0),
+            ),
+          ]);
+
+          expect(
+            hamtLeafEntries(store, shard),
+            throwsA(
+              isA<PathResolutionError>().having(
+                (e) => e.toString(),
+                'message',
+                contains('shorter than'),
+              ),
+            ),
+          );
+        },
+      );
+    });
 
     test('symlink targets round-trip non-ASCII UTF-8 paths', () async {
       final link = await createSymlink(store, '文件.txt');

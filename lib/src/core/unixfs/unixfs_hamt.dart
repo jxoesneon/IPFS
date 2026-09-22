@@ -196,7 +196,10 @@ class UnixFSHAMTBuilder {
   int _bucketIndex(Uint8List digest, int level) {
     final offset = level * _log2Fanout;
     if (offset + _log2Fanout > digest.length * 8) {
-      throw StateError('sharded directory too deep');
+      // Reaching this depth requires entries colliding on all 64 bits of the
+      // murmur3-x64-64 digest — a full hash collision, not constructible in
+      // tests.
+      throw StateError('sharded directory too deep'); // coverage:ignore-line
     }
     return hamtBucketIndex(digest, offset, _log2Fanout);
   }
