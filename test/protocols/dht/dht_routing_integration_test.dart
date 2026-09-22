@@ -139,11 +139,11 @@ void main() {
       // Identical peers should have distance 0
       expect(
         metric.calculateDistanceToKey(sortedPeers[0], targetKey),
-        equals(0),
+        equals(BigInt.zero),
       );
       expect(
         metric.calculateDistanceToKey(sortedPeers[1], targetKey),
-        equals(0),
+        equals(BigInt.zero),
       );
     });
   });

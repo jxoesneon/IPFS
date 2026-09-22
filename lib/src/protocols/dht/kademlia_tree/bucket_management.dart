@@ -46,10 +46,11 @@ extension BucketManagement on KademliaTree {
       bucketIndex + 1,
       RedBlackTree<PeerId, KademliaTreeNode>(
         compare: (PeerId a, PeerId b) {
-          final distanceA = helpers.calculateDistance(root!.peerId, a);
-          final distanceB = helpers.calculateDistance(root!.peerId, b);
-          if (distanceA != distanceB) {
-            return distanceA.compareTo(distanceB);
+          final distanceA = helpers.xorDistance(root!.peerId, a);
+          final distanceB = helpers.xorDistance(root!.peerId, b);
+          final distanceComparison = distanceA.compareTo(distanceB);
+          if (distanceComparison != 0) {
+            return distanceComparison;
           }
           return a.toString().compareTo(b.toString());
         },

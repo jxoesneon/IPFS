@@ -131,10 +131,11 @@ class KademliaTree {
       _buckets.add(
         RedBlackTree<PeerId, KademliaTreeNode>(
           compare: (PeerId a, PeerId b) {
-            final int distanceA = helpers.calculateDistance(_root!.peerId, a);
-            final int distanceB = helpers.calculateDistance(_root!.peerId, b);
-            if (distanceA != distanceB) {
-              return distanceA.compareTo(distanceB);
+            final BigInt distanceA = helpers.xorDistance(_root!.peerId, a);
+            final BigInt distanceB = helpers.xorDistance(_root!.peerId, b);
+            final int distanceComparison = distanceA.compareTo(distanceB);
+            if (distanceComparison != 0) {
+              return distanceComparison;
             }
             return a.toString().compareTo(b.toString());
           },
@@ -190,7 +191,7 @@ class KademliaTree {
 
       int stagnantRounds = 0;
       const int maxStagnantRounds = 3;
-      double previousBestDistance = double.infinity;
+      BigInt? previousBestDistance;
 
       for (int iteration = 0; iteration < 20; iteration++) {
         final List<PeerId> peersToQuery = closestPeers
@@ -200,11 +201,13 @@ class KademliaTree {
 
         if (peersToQuery.isEmpty) break;
 
-        final double currentBestDistance = helpers
-            .calculateDistance(target, closestPeers.first)
-            .toDouble();
+        final BigInt currentBestDistance = helpers.xorDistance(
+          target,
+          closestPeers.first,
+        );
 
-        if (currentBestDistance >= previousBestDistance) {
+        final previous = previousBestDistance;
+        if (previous != null && currentBestDistance >= previous) {
           stagnantRounds++;
           if (stagnantRounds >= maxStagnantRounds) break;
         } else {
@@ -234,8 +237,8 @@ class KademliaTree {
           final List<PeerId> allPeers = [...closestPeers, ...newPeers];
           allPeers.sort(
             (a, b) => helpers
-                .calculateDistance(target, a)
-                .compareTo(helpers.calculateDistance(target, b)),
+                .xorDistance(target, a)
+                .compareTo(helpers.xorDistance(target, b)),
           );
 
           closestPeers = allPeers.take(K).toList();

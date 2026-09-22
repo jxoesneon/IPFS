@@ -1508,12 +1508,12 @@ class MockKademliaRoutingTable extends _i1.Mock
   );
 
   @override
-  int calculateDistance(_i13.PeerId? a, _i13.PeerId? b) =>
+  BigInt calculateDistance(_i13.PeerId? a, _i13.PeerId? b) =>
       (super.noSuchMethod(
             Invocation.method(#calculateDistance, [a, b]),
-            returnValue: 0,
+            returnValue: BigInt.zero,
           )
-          as int);
+          as BigInt);
 
   @override
   List<_i13.PeerId> findClosestPeers(_i13.PeerId? target, int? k) =>

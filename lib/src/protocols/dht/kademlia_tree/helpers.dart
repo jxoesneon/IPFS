@@ -6,9 +6,21 @@ import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart'
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia_node.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/protocols/dht/xor_distance_metric.dart';
 import 'package:fixnum/fixnum.dart';
 
 // lib/src/protocols/dht/kademlia_tree/helpers.dart
+
+/// The full-precision XOR distance metric shared by tree operations.
+const XorDistanceMetric _xorMetric = XorDistanceMetric();
+
+/// Calculates the exact XOR distance between two Peer IDs as a [BigInt].
+///
+/// This is the full big-endian interpretation of the XOR byte array, used
+/// wherever exact Kademlia ordering is required (sorts, closest-peer
+/// selection). For bucket-index derivation use [calculateDistance], which
+/// returns the logarithmic distance (bit length).
+BigInt xorDistance(PeerId a, PeerId b) => _xorMetric.calculateDistance(a, b);
 
 /// Calculates the logarithmic XOR distance (bit length) between two Peer IDs.
 /// Returns a value between 0 and 256.
@@ -46,18 +58,18 @@ KademliaNode? findClosestNode(KademliaNode? root, PeerId target) {
   final rootPeerId = PeerId(value: Uint8List.fromList(root.peerId.id));
 
   // Calculate distances
-  int rootDistance = calculateDistance(rootPeerId, target);
+  final BigInt rootDistance = xorDistance(rootPeerId, target);
 
   // Initialize closest as root
   KademliaNode closest = root;
-  int minDistance = rootDistance;
+  BigInt minDistance = rootDistance;
 
   // Check children recursively
   for (var child in root.children) {
     // Convert KademliaId to PeerId for child
     final childPeerId = PeerId(value: Uint8List.fromList(child.peerId.id));
 
-    int childDistance = calculateDistance(childPeerId, target);
+    final BigInt childDistance = xorDistance(childPeerId, target);
     if (childDistance < minDistance) {
       closest = child;
       minDistance = childDistance;
@@ -70,7 +82,7 @@ KademliaNode? findClosestNode(KademliaNode? root, PeerId target) {
       final closestPeerId = PeerId(
         value: Uint8List.fromList(childClosest.peerId.id),
       );
-      int closestDistance = calculateDistance(closestPeerId, target);
+      final BigInt closestDistance = xorDistance(closestPeerId, target);
       if (closestDistance < minDistance) {
         closest = childClosest;
         minDistance = closestDistance;

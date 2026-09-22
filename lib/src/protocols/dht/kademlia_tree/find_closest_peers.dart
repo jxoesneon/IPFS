@@ -13,10 +13,10 @@ extension FindClosestPeers on KademliaTree {
       KademliaTreeNode a,
       KademliaTreeNode b,
     ) {
-      return calculateDistance(
+      return xorDistance(
         target,
         a.peerId,
-      ).compareTo(calculateDistance(target, b.peerId));
+      ).compareTo(xorDistance(target, b.peerId));
     });
 
     // Add all nodes from all buckets to the priority queue

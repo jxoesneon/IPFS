@@ -16,7 +16,7 @@ void main() {
       test('distance to self is zero', () {
         final peerId = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
         final distance = metric.calculateDistance(peerId, peerId);
-        expect(distance, equals(0));
+        expect(distance, equals(BigInt.zero));
       });
 
       test('distance is symmetric', () {
@@ -31,7 +31,7 @@ void main() {
         final peerA = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
         final peerB = PeerId(value: Uint8List.fromList([5, 6, 7, 8]));
         final distance = metric.calculateDistance(peerA, peerB);
-        expect(distance, greaterThanOrEqualTo(0));
+        expect(distance, greaterThanOrEqualTo(BigInt.zero));
       });
 
       test('calculates correct XOR distance for simple bytes', () {
@@ -39,7 +39,7 @@ void main() {
         final peerA = PeerId(value: Uint8List.fromList([1]));
         final peerB = PeerId(value: Uint8List.fromList([2]));
         final distance = metric.calculateDistance(peerA, peerB);
-        expect(distance, equals(3));
+        expect(distance, equals(BigInt.from(3)));
       });
 
       test('calculates correct XOR distance for multi-byte values', () {
@@ -47,7 +47,7 @@ void main() {
         final peerA = PeerId(value: Uint8List.fromList([1, 2]));
         final peerB = PeerId(value: Uint8List.fromList([3, 4]));
         final distance = metric.calculateDistance(peerA, peerB);
-        expect(distance, equals(518));
+        expect(distance, equals(BigInt.from(518)));
       });
 
       test('handles different length peer IDs', () {
@@ -55,14 +55,14 @@ void main() {
         final peerB = PeerId(value: Uint8List.fromList([4, 5]));
         final distance = metric.calculateDistance(peerA, peerB);
         // Should not throw and should produce a valid distance
-        expect(distance, greaterThanOrEqualTo(0));
+        expect(distance, greaterThanOrEqualTo(BigInt.zero));
       });
 
       test('handles empty peer IDs', () {
         final peerA = PeerId(value: Uint8List(0));
         final peerB = PeerId(value: Uint8List.fromList([1, 2, 3]));
         final distance = metric.calculateDistance(peerA, peerB);
-        expect(distance, greaterThanOrEqualTo(0));
+        expect(distance, greaterThanOrEqualTo(BigInt.zero));
       });
 
       test('triangle inequality holds approximately', () {
@@ -77,7 +77,10 @@ void main() {
         // Triangle inequality: distance(a,c) <= distance(a,b) + distance(b,c)
         // Note: XOR distance doesn't strictly satisfy triangle inequality,
         // but it should be reasonably close for practical purposes
-        expect(distanceAC, lessThanOrEqualTo(distanceAB + distanceBC + 1000));
+        expect(
+          distanceAC,
+          lessThanOrEqualTo(distanceAB + distanceBC + BigInt.from(1000)),
+        );
       });
     });
 
@@ -86,7 +89,7 @@ void main() {
         final peerId = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
         final key = [1, 2, 3, 4];
         final distance = metric.calculateDistanceToKey(peerId, key);
-        expect(distance, equals(0));
+        expect(distance, equals(BigInt.zero));
       });
 
       test('calculates correct XOR distance to key', () {
@@ -94,21 +97,21 @@ void main() {
         final key = [5, 6, 7, 8];
         final distance = metric.calculateDistanceToKey(peerId, key);
         // 0x01020304 XOR 0x05060708 = 0x0404040C
-        expect(distance, equals(0x0404040C));
+        expect(distance, equals(BigInt.from(0x0404040C)));
       });
 
       test('handles different length peer ID and key', () {
         final peerId = PeerId(value: Uint8List.fromList([1, 2, 3]));
         final key = [4, 5, 6, 7, 8];
         final distance = metric.calculateDistanceToKey(peerId, key);
-        expect(distance, greaterThanOrEqualTo(0));
+        expect(distance, greaterThanOrEqualTo(BigInt.zero));
       });
 
       test('handles empty key', () {
         final peerId = PeerId(value: Uint8List.fromList([1, 2, 3]));
         final key = <int>[];
         final distance = metric.calculateDistanceToKey(peerId, key);
-        expect(distance, greaterThanOrEqualTo(0));
+        expect(distance, greaterThanOrEqualTo(BigInt.zero));
       });
 
       test('symmetric with calculateDistance when key is peer ID', () {
@@ -169,7 +172,7 @@ void main() {
         final peer = PeerId(
           value: Uint8List.fromList(List.generate(32, (i) => i * 7)),
         );
-        expect(metric.calculateDistance(peer, peer), equals(0));
+        expect(metric.calculateDistance(peer, peer), equals(BigInt.zero));
       });
 
       test('distance is symmetric for 32-byte peer IDs', () {
@@ -188,15 +191,15 @@ void main() {
       test('a single differing trailing byte yields distance 1', () {
         final zero = PeerId(value: Uint8List(32));
         final close = peerOfByte(31, 0x01);
-        expect(metric.calculateDistance(zero, close), equals(1));
+        expect(metric.calculateDistance(zero, close), equals(BigInt.one));
       });
 
       test('a single differing leading byte yields a large distance', () {
         final zero = PeerId(value: Uint8List(32));
         final far = peerOfByte(0, 0x01);
-        // The leading byte lands in the first 8-byte chunk:
-        // 0x01 << 56 = 72057594037927936.
-        expect(metric.calculateDistance(zero, far), equals(72057594037927936));
+        // The leading byte is the most significant byte of the 256-bit
+        // XOR result: 0x01 << 248.
+        expect(metric.calculateDistance(zero, far), equals(BigInt.one << 248));
       });
 
       test('orders 32-byte peers by XOR distance to a target', () {
@@ -219,10 +222,84 @@ void main() {
         final peer = PeerId(value: Uint8List(32));
         // A key differing only in the trailing byte has distance 1.
         final key = List<int>.filled(32, 0)..[31] = 1;
-        expect(metric.calculateDistanceToKey(peer, key), equals(1));
+        expect(metric.calculateDistanceToKey(peer, key), equals(BigInt.one));
 
         // Distance to a key equal to the peer ID is zero.
-        expect(metric.calculateDistanceToKey(peer, peer.value), equals(0));
+        expect(
+          metric.calculateDistanceToKey(peer, peer.value),
+          equals(BigInt.zero),
+        );
+      });
+
+      test('distance equals BigInt.parse of XOR hex for 256-bit keys', () {
+        // Verifies that distance(a, b) is exactly the big-endian value of the
+        // full 256-bit XOR byte array.
+        final a = PeerId(
+          value: Uint8List.fromList(List.generate(32, (i) => (i * 31) & 0xFF)),
+        );
+        final b = PeerId(
+          value: Uint8List.fromList(
+            List.generate(32, (i) => (i * 17 + 5) & 0xFF),
+          ),
+        );
+
+        final xorHex = [
+          for (var i = 0; i < 32; i++)
+            (a.value[i] ^ b.value[i]).toRadixString(16).padLeft(2, '0'),
+        ].join();
+
+        expect(
+          metric.calculateDistance(a, b),
+          equals(BigInt.parse(xorHex, radix: 16)),
+        );
+      });
+
+      test(
+        'exactly orders peers whose 8-byte-chunk XOR reductions collide',
+        () {
+          // Two 256-bit keys whose XOR distances collapse to the same value
+          // under the previous lossy chunk-XOR reduction (XOR of four 64-bit
+          // chunks), but whose true distances differ by orders of magnitude.
+          //
+          // peerHigh differs in byte 0  -> XOR = 0x01 << 248
+          // peerLow  differs in byte 8  -> XOR = 0x01 << 184
+          // Chunk-XOR of both = 0x01 << 56 (identical), so the old metric
+          // could not order them at all.
+          final target = PeerId(value: Uint8List(32));
+          final peerHigh = peerOfByte(0, 0x01);
+          final peerLow = peerOfByte(8, 0x01);
+
+          final distanceHigh = metric.calculateDistance(target, peerHigh);
+          final distanceLow = metric.calculateDistance(target, peerLow);
+
+          expect(distanceHigh, equals(BigInt.one << 248));
+          expect(distanceLow, equals(BigInt.one << 184));
+          // peerLow is strictly closer despite the colliding reduction.
+          expect(distanceLow, lessThan(distanceHigh));
+        },
+      );
+
+      test('exactly orders peers where lossy reduction inverts ordering', () {
+        // The old chunk-XOR reduction ranked these peers in the wrong order:
+        //
+        // peerA differs in byte 8  -> true distance 0xFF << 184
+        //                             old reduction: 0xFF << 56
+        // peerB differs in byte 0  -> true distance 0x01 << 248
+        //                             old reduction: 0x01 << 56
+        //
+        // Old ordering claimed peerB was closer (0x01<<56 < 0xFF<<56), but
+        // the true distances order the other way: peerA is closer
+        // (0xFF<<184 < 0x01<<248).
+        final target = PeerId(value: Uint8List(32));
+        final peerA = peerOfByte(8, 0xFF);
+        final peerB = peerOfByte(0, 0x01);
+
+        final distanceA = metric.calculateDistance(target, peerA);
+        final distanceB = metric.calculateDistance(target, peerB);
+
+        expect(distanceA, equals(BigInt.from(0xFF) << 184));
+        expect(distanceB, equals(BigInt.one << 248));
+        expect(distanceA, lessThan(distanceB));
       });
     });
   });

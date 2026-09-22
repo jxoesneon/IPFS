@@ -12,6 +12,7 @@ import 'package:dart_ipfs/src/core/mfs/mfs_manager.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/xor_distance_metric.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -500,18 +501,9 @@ class Reprovider implements ILifecycle {
   }
 
   BigInt _xorDistance(PeerId a, PeerId b) {
-    final aBytes = a.value;
-    final bBytes = b.value;
-    final length = aBytes.length > bBytes.length
-        ? aBytes.length
-        : bBytes.length;
-    var result = BigInt.zero;
-    for (var i = 0; i < length; i++) {
-      final aByte = i < aBytes.length ? aBytes[i] : 0;
-      final bByte = i < bBytes.length ? bBytes[i] : 0;
-      result = (result << 8) | BigInt.from(aByte ^ bByte);
-    }
-    return result;
+    // Delegates to the shared full-precision metric so sweep ordering matches
+    // the routing table's Kademlia ordering exactly.
+    return const XorDistanceMetric().calculateDistance(a, b);
   }
 
   ReproviderResult _busyResult() {

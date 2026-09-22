@@ -43,10 +43,7 @@ extension NodeLookup on KademliaTree {
       }
 
       newClosestPeers.sort(
-        (a, b) => calculateDistance(
-          target,
-          a,
-        ).compareTo(calculateDistance(target, b)),
+        (a, b) => xorDistance(target, a).compareTo(xorDistance(target, b)),
       );
       newClosestPeers = newClosestPeers.take(K).toList();
 
