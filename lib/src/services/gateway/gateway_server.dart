@@ -159,23 +159,6 @@ class GatewayServer implements ILifecycle {
       return await _handler.handlePath(request);
     });
 
-    // HEAD requests for metadata (GET-equivalent headers, no body)
-    _router.head('/ipfs/<path|.*>', (Request request, String path) async {
-      final response = await _handler.handlePath(request);
-      // Return headers only, no body
-      return Response(response.statusCode, headers: response.headers);
-    });
-
-    // coverage:ignore-start
-    // Unreachable: the GET route above auto-registers a HEAD handler that
-    // always matches first; this explicit HEAD route is dead code kept for
-    // readability.
-    _router.head('/ipns/<path|.*>', (Request request, String path) async {
-      final response = await _handler.handlePath(request);
-      return Response(response.statusCode, headers: response.headers);
-    });
-    // coverage:ignore-end
-
     // Version endpoint
     _router.get('/api/v0/version', (Request request) {
       return Response.ok(
