@@ -321,7 +321,9 @@ class GatewayHandler {
       }
 
       try {
-        final denylisted = _checkDenylist('/ipfs/$cidStr');
+        final denylisted = _checkDenylist(
+          subPath.isEmpty ? '/ipfs/$cidStr' : '/ipfs/$cidStr/$subPath',
+        );
         if (denylisted != null) {
           response = denylisted;
         } else {
@@ -369,7 +371,9 @@ class GatewayHandler {
       }
 
       try {
-        final denylisted = _checkDenylist('/ipns/$name');
+        final denylisted = _checkDenylist(
+          subPath.isEmpty ? '/ipns/$name' : '/ipns/$name/$subPath',
+        );
         if (denylisted != null) {
           response = denylisted;
         } else {
@@ -391,7 +395,14 @@ class GatewayHandler {
             response = Response(501, body: 'IPNS resolution disabled');
           } else {
             final cid = await ipnsResolver!(name);
-            if (negotiation.format != null) {
+            // The resolved CID must be checked too: an allowed IPNS name
+            // must not become a proxy for denylisted content.
+            final resolvedDenylisted = _checkDenylist(
+              subPath.isEmpty ? '/ipfs/$cid' : '/ipfs/$cid/$subPath',
+            );
+            if (resolvedDenylisted != null) {
+              response = resolvedDenylisted;
+            } else if (negotiation.format != null) {
               response = await _serveTrustless(
                 _decodeCid(cid),
                 subPath,
@@ -639,7 +650,10 @@ class GatewayHandler {
     Request request, {
     String? ipnsPath,
   }) async {
-    final denylisted = _checkDenylist(ipnsPath ?? '/ipfs/${cid.encode()}');
+    final denylistBase = ipnsPath ?? '/ipfs/${cid.encode()}';
+    final denylisted = _checkDenylist(
+      subPath.isEmpty ? denylistBase : '$denylistBase/$subPath',
+    );
     if (denylisted != null) {
       return denylisted;
     }
@@ -2392,7 +2406,9 @@ class GatewayHandler {
           } else {
             final cidStr = cid.encode();
             ipnsPath = '/ipfs/$cidStr';
-            final denylisted = _checkDenylist('/ipfs/$cidStr');
+            final denylisted = _checkDenylist(
+              subPath == '/' ? ipnsPath : '$ipnsPath$subPath',
+            );
             if (denylisted != null) {
               response = denylisted;
             } else {
@@ -2416,7 +2432,9 @@ class GatewayHandler {
       } else {
         // ipns
         ipnsPath = '/ipns/${sub.identifier}';
-        final denylisted = _checkDenylist(ipnsPath);
+        final denylisted = _checkDenylist(
+          subPath == '/' ? ipnsPath : '$ipnsPath$subPath',
+        );
         if (denylisted != null) {
           response = denylisted;
         } else if (!_isValidSubdomainIdentifier(sub.identifier)) {
@@ -2432,26 +2450,37 @@ class GatewayHandler {
           } else {
             dnsLinkDomain = resolution.dnsLinkDomain;
             ipnsTtl = resolution.ttlSeconds ?? _defaultIpnsTtlSeconds;
-            final negotiation = _negotiateTrustless(request);
-            final negError = negotiation.error;
-            if (negError != null) {
-              response = negError;
-            } else if (negotiation.format == TrustlessFormat.ipnsRecord) {
-              response = await _serveIpnsRecord(
-                sub.identifier,
-                request,
-                negotiation,
-              );
-            } else if (negotiation.format != null) {
-              response = await _serveTrustless(
-                cid,
-                subPath,
-                negotiation,
-                request,
-                ipnsPath: ipnsPath,
-              );
+            // The resolved CID must be checked too: an allowed IPNS name
+            // must not become a proxy for denylisted content.
+            final resolvedDenylisted = _checkDenylist(
+              subPath == '/' || subPath.isEmpty
+                  ? '/ipfs/$cidStr'
+                  : '/ipfs/$cidStr$subPath',
+            );
+            if (resolvedDenylisted != null) {
+              response = resolvedDenylisted;
             } else {
-              response = await _serveContent(cidStr, subPath, request);
+              final negotiation = _negotiateTrustless(request);
+              final negError = negotiation.error;
+              if (negError != null) {
+                response = negError;
+              } else if (negotiation.format == TrustlessFormat.ipnsRecord) {
+                response = await _serveIpnsRecord(
+                  sub.identifier,
+                  request,
+                  negotiation,
+                );
+              } else if (negotiation.format != null) {
+                response = await _serveTrustless(
+                  cid,
+                  subPath,
+                  negotiation,
+                  request,
+                  ipnsPath: ipnsPath,
+                );
+              } else {
+                response = await _serveContent(cidStr, subPath, request);
+              }
             }
           }
         }
