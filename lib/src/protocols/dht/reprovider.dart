@@ -459,12 +459,17 @@ class Reprovider implements ILifecycle {
     }
     try {
       final localPeerId = handler.dhtClient.peerId;
-      final keyed = [
-        for (final cid in cids)
-          (cid, _xorDistance(_routingKey(cid), localPeerId)),
-      ];
-      keyed.sort((a, b) => a.$2.compareTo(b.$2));
-      return [for (final entry in keyed) entry.$1];
+      final sorted = List<CID>.of(cids);
+      // Byte-wise XOR comparison of the cached routing keys: ordering matches
+      // the routing table's Kademlia ordering without allocating BigInts.
+      sorted.sort(
+        (a, b) => compareXorDistanceToKey(
+          _routingKey(a).value,
+          _routingKey(b).value,
+          localPeerId.value,
+        ),
+      );
+      return sorted;
     } catch (e) {
       _logger.debug('XOR ordering unavailable (DHT not initialized): $e');
       return cids;
@@ -482,12 +487,22 @@ class Reprovider implements ILifecycle {
     try {
       final routingTable = handler.dhtClient.kademliaRoutingTable;
 
+      // Snapshot the routing table once: the same candidate set serves every
+      // CID in the sweep instead of re-walking all buckets per CID.
+      final candidates = routingTable.peers;
+      // When the table holds no more peers than k, every CID shares the same
+      // closest set — the whole snapshot.
+      final List<PeerId>? sharedClosest = candidates.length <= k
+          ? candidates
+          : null;
+
       // [cids] arrives XOR-sorted (see [_sortByXorDistance]); iterate in
       // that order so the returned map groups nearby keys together.
       final grouped = <PeerId, List<CID>>{};
       for (final cid in cids) {
-        final target = _routingKey(cid);
-        final closest = routingTable.findClosestPeers(target, k);
+        final closest =
+            sharedClosest ??
+            closestPeersToKey(candidates, _routingKey(cid).value, k);
         for (final peer in closest) {
           grouped.putIfAbsent(peer, () => []).add(cid);
         }
@@ -508,12 +523,6 @@ class Reprovider implements ILifecycle {
       );
       return PeerId(value: hashBytes);
     });
-  }
-
-  BigInt _xorDistance(PeerId a, PeerId b) {
-    // Delegates to the shared full-precision metric so sweep ordering matches
-    // the routing table's Kademlia ordering exactly.
-    return const XorDistanceMetric().calculateDistance(a, b);
   }
 
   ReproviderResult _busyResult() {

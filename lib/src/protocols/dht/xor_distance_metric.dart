@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:collection/collection.dart';
+
 import '../../core/types/peer_id.dart';
 
 import 'dht_routing_table_interface.dart';
@@ -95,4 +97,27 @@ int compareXorDistanceToKey(
   }
 
   return 0;
+}
+
+/// Returns up to [k] peers from [candidates] with the smallest XOR distance
+/// to [reference], ordered nearest-first.
+///
+/// This is the in-memory equivalent of a closest-peers routing-table lookup:
+/// the same peer set can serve every key in a batch (e.g. a reprovide sweep)
+/// instead of re-walking the routing table per key. Uses
+/// [compareXorDistanceToKey] for ordering, so no [BigInt]s are allocated.
+List<PeerId> closestPeersToKey(
+  Iterable<PeerId> candidates,
+  List<int> reference,
+  int k,
+) {
+  final queue = PriorityQueue<PeerId>(
+    (a, b) => compareXorDistanceToKey(a.value, b.value, reference),
+  )..addAll(candidates);
+
+  final closest = <PeerId>[];
+  for (var i = 0; i < k && queue.isNotEmpty; i++) {
+    closest.add(queue.removeFirst());
+  }
+  return closest;
 }

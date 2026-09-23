@@ -167,10 +167,6 @@ class KademliaRoutingTable {
     final KademliaTreeNode? node = _findNode(peerId);
     if (node != null) {
       bucket.remove(peerId);
-      bucket.entries.removeWhere(
-        (MapEntry<PeerId, KademliaTreeNode> e) => _peersEqual(e.key, peerId),
-      );
-      bucket.size = bucket.entries.length;
 
       _cleanupPeerTracking(peerId);
       _logger.info('Removed peer $peerId from routing table');
@@ -208,9 +204,18 @@ class KademliaRoutingTable {
     return false;
   }
 
+  /// All peers currently in the routing table, as a snapshot.
+  ///
+  /// Lets a batch of lookups (e.g. a reprovide sweep) select the closest
+  /// peers per key in memory instead of re-traversing every bucket per key.
+  List<PeerId> get peers => [
+    for (final bucket in _tree.buckets)
+      for (final entry in bucket.entries) entry.key,
+  ];
+
   /// Total number of peers currently in the routing table.
   int get peerCount =>
-      _tree.buckets.fold(0, (sum, bucket) => sum + bucket.entries.length);
+      _tree.buckets.fold(0, (sum, bucket) => sum + bucket.size);
 
   /// Clears all entries from the routing table.
   void clear() {
@@ -441,8 +446,6 @@ class KademliaRoutingTable {
     for (final bucket in _tree.buckets) {
       if (_findNodeInBucket(bucket, peerId) != null) {
         bucket.remove(peerId);
-        bucket.entries.removeWhere((e) => _peersEqual(e.key, peerId));
-        bucket.size = bucket.entries.length;
         _cleanupPeerTracking(peerId);
         break;
       }

@@ -73,9 +73,8 @@ class Deletion<K_PeerId, V_PeerInfo> {
       ); // Fix any violations
     }
 
-    // Update tree size and entries
+    // Update tree size
     tree.size--;
-    tree.entries.removeWhere((entry) => tree.compare(entry.key, key) == 0);
     if (tree.size == 0) {
       tree.isEmpty = true;
     }

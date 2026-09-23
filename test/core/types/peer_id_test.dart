@@ -52,6 +52,33 @@ void main() {
     });
   });
 
+  group('PeerId hashCode', () {
+    test('equal values produce equal hashCodes', () {
+      final a = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
+      final b = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+    });
+
+    test('is position-sensitive for transposed bytes', () {
+      // The previous folding XOR hashed transposed bytes identically.
+      final a = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
+      final b = PeerId(value: Uint8List.fromList([4, 3, 2, 1]));
+      expect(a, isNot(equals(b)));
+      expect(a.hashCode, isNot(equals(b.hashCode)));
+    });
+
+    test('distributes over varied peer IDs without collisions', () {
+      final hashes = <int>{};
+      for (var i = 0; i < 256; i++) {
+        hashes.add(
+          PeerId(value: Uint8List.fromList([i, 0xAB, 0xCD, 0xEF])).hashCode,
+        );
+      }
+      expect(hashes.length, equals(256));
+    });
+  });
+
   group('PeerId PoW', () {
     test('verifyPoW should accept PeerId with enough leading zeros', () {
       // Find a PeerId that satisfies a 4-bit difficulty

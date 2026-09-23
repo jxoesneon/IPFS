@@ -389,5 +389,50 @@ void main() {
         );
       });
     });
+
+    group('closestPeersToKey', () {
+      test('returns the k nearest peers ordered like the BigInt sort', () {
+        final random = Random(0xBADDCAFE);
+        PeerId randomPeer() => PeerId(
+          value: Uint8List.fromList(
+            List.generate(32, (_) => random.nextInt(256)),
+          ),
+        );
+
+        final reference = randomPeer();
+        final candidates = List.generate(40, (_) => randomPeer());
+        const k = 10;
+
+        final expected = [...candidates]
+          ..sort(
+            (a, b) => metric
+                .calculateDistance(reference, a)
+                .compareTo(metric.calculateDistance(reference, b)),
+          );
+
+        expect(
+          closestPeersToKey(candidates, reference.value, k),
+          orderedEquals(expected.take(k)),
+        );
+      });
+
+      test('returns all candidates when fewer than k exist', () {
+        final reference = PeerId(value: Uint8List.fromList([10, 0, 0, 0]));
+        final close = PeerId(value: Uint8List.fromList([11, 0, 0, 0]));
+        final far = PeerId(value: Uint8List.fromList([0, 0, 0, 0]));
+
+        expect(
+          closestPeersToKey([far, close], reference.value, 20),
+          orderedEquals([close, far]),
+        );
+      });
+
+      test('returns empty for empty candidates', () {
+        expect(
+          closestPeersToKey(const [], List<int>.filled(32, 0), 20),
+          isEmpty,
+        );
+      });
+    });
   });
 }

@@ -136,7 +136,19 @@ bool _listsEqual(List<int> a, List<int> b) {
 }
 
 int _listHashCode(List<int> list) {
-  return list.fold(0, (prev, element) => prev ^ element.hashCode);
+  // Jenkins one-at-a-time mix (the same scheme `Object.hashAll` uses).
+  // Position-sensitive and cheap — the previous folding XOR lost byte order,
+  // so e.g. transposed bytes produced identical hashes and degraded the
+  // maps that key on PeerId in hot routing paths.
+  var hash = 0;
+  for (final byte in list) {
+    hash = 0x1fffffff & (hash + byte);
+    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
+    hash = hash ^ (hash >> 6);
+  }
+  hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
+  hash = hash ^ (hash >> 11);
+  return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
 }
 
 const _base36Alphabet = '0123456789abcdefghijklmnopqrstuvwxyz';
