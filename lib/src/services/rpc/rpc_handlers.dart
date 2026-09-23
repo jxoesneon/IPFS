@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/block/gated_block_fetcher.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
@@ -82,6 +83,17 @@ class RPCHandlers {
   /// The archive is assembled in memory, so payload bytes must be bounded
   /// globally across the whole traversal.
   static const int _maxExportBytes = 1024 * 1024 * 1024;
+
+  /// The shared denylist-gated fetch pipeline backing [_rpcGetBlock]:
+  /// denylist gate first, then identity-CID synthesis, then the local
+  /// block store, then Bitswap — with a write-back of fetched blocks into
+  /// the block store.
+  late final GatedBlockFetcher _blockFetcher = GatedBlockFetcher(
+    denylistGate: _throwIfDenylisted,
+    localGet: _localGetBlock,
+    localPut: node.blockStore.putBlock,
+    wantBlock: _wantBlockBitswap,
+  );
 
   /// Reads the request body into memory, rejecting bodies over [maxBytes].
   static Future<Uint8List> _readBodyBounded(
@@ -538,27 +550,34 @@ class RPCHandlers {
 
   /// Fetches a block from the local block store, falling back to Bitswap.
   ///
+  /// Identity CIDs (multihash code `0x00`) are synthesized by the shared
+  /// fetch pipeline — the digest is the block data — so DAGs containing
+  /// identity links resolve the same way the gateway serves them.
+  ///
   /// Every fetched CID is gated through the denylist so path-scoped and
   /// child-CID rules cannot be bypassed mid-traversal/export; a blocked
   /// fetch throws [DenylistBlockedException], which the calling handler
   /// translates into the 451 response.
-  Future<Block?> _rpcGetBlock(String cid) async {
+  Future<Block?> _rpcGetBlock(String cid) => _blockFetcher.fetch(cid);
+
+  /// Denylist gate for [_blockFetcher]: a blocked CID throws
+  /// [DenylistBlockedException] after [_checkDenylist] has recorded the hit.
+  void _throwIfDenylisted(String cid) {
     if (_checkDenylist(cid) != null) {
       throw DenylistBlockedException(cid);
     }
+  }
+
+  /// Local-store leg of [_blockFetcher].
+  Future<Block?> _localGetBlock(String cid) async {
     final response = await node.blockStore.getBlock(cid);
-    if (response.found) {
-      return response.block.toBlock();
-    }
+    return response.found ? response.block.toBlock() : null;
+  }
+
+  /// Bitswap leg of [_blockFetcher].
+  Future<Block?> _wantBlockBitswap(String cid) async {
     final bitswap = node.bitswap;
-    if (bitswap != null) {
-      final networkBlock = await bitswap.wantBlock(cid);
-      if (networkBlock != null) {
-        await node.blockStore.putBlock(networkBlock);
-        return networkBlock;
-      }
-    }
-    return null;
+    return bitswap == null ? null : await bitswap.wantBlock(cid);
   }
 
   /// Appends the node addressed by [block] to [tar] under [name].
@@ -602,9 +621,15 @@ class RPCHandlers {
 
       if (unixfsNode != null && unixfsNode.isHAMTShard) {
         // A HAMT shard is a logical directory: enumerate leaf entries
-        // (hash-prefixed names stripped) and recurse per entry.
+        // (hash-prefixed names stripped) and recurse per entry. Sub-shard
+        // block fetches inside the walk count as visited nodes against the
+        // shared traversal budget.
         tar.addDirectory(name);
-        final entries = await hamtLeafEntries(_RpcBlockStore(this), unixfsNode);
+        final entries = await hamtLeafEntries(
+          _RpcBlockStore(this),
+          unixfsNode,
+          onFetch: budget.addNode,
+        );
         for (final entry in entries) {
           final child = await _rpcGetBlock(entry.cid.encode());
           if (child == null) {
@@ -626,7 +651,10 @@ class RPCHandlers {
         final pbNode = unixfsNode!.pbNode;
         tar.addDirectory(name);
         for (final link in pbNode.links) {
-          final childCid = CID.fromBytes(Uint8List.fromList(link.hash));
+          // Lenient decode tolerates zero-length identity digests; malformed
+          // link targets still surface the strict decoder's error.
+          final childCid = tryDecodeCidBytesLenient(link.hash) ??
+              CID.fromBytes(Uint8List.fromList(link.hash));
           final child = await _rpcGetBlock(childCid.encode());
           if (child == null) {
             throw StateError(
@@ -746,13 +774,13 @@ class RPCHandlers {
       if (cid.codec != 'dag-pb') {
         return 0;
       }
-      final response = await node.blockStore.getBlock(cid.encode());
-      if (!response.found) {
+      // Route through the gated fetch so denylisted children do not leak
+      // their type and identity-CID links resolve to their inline node.
+      final block = await _rpcGetBlock(cid.encode());
+      if (block == null) {
         return 0;
       }
-      final pbNode = dag_pb.PBNode.fromBuffer(
-        Uint8List.fromList(response.block.data),
-      );
+      final pbNode = dag_pb.PBNode.fromBuffer(block.data);
       if (pbNode.data.isEmpty) {
         return 0;
       }
@@ -1008,7 +1036,12 @@ class RPCHandlers {
   }
 
   Future<Uint8List> _exportCar(String rootCidStr) async {
-    final root = CID.decode(rootCidStr);
+    // The lenient decode tolerates zero-length identity digests so an
+    // identity root exports as a header-only CAR like the gateway's.
+    final root = tryDecodeCidLenient(rootCidStr);
+    if (root == null) {
+      throw FormatException('Invalid CID: $rootCidStr');
+    }
     final writer = CarWriter(roots: [root]);
     final visited = <String>{};
     // CAR output is fully buffered, so bound payload bytes as well as
@@ -1038,17 +1071,23 @@ class RPCHandlers {
     if (visited.contains(key)) return;
     visited.add(key);
 
-    // Mid-traversal denylist gate — a blocked child CID must not leak into
-    // the exported archive.
-    if (_checkDenylist(key) != null) {
-      throw DenylistBlockedException(key);
+    // Identity CIDs carry their content inline in the link, so they are
+    // never fetched or written to the CAR (matching Kubo and the gateway's
+    // CAR handler). The skip precedes the gated fetch so denylisted
+    // identity links are audited (not rejected) via
+    // [_recordSkippedIdentityLink].
+    if (cid.multihash.code == 0x00) {
+      _recordSkippedIdentityLink(cid);
+      return;
     }
 
-    final response = await node.blockStore.getBlock(key);
-    if (!response.found) {
+    // Denylist-gated, local-only fetch: `dag/export` reads the local repo
+    // like Kubo — a blocked or missing child aborts the export rather than
+    // leaking into the archive or hitting the network.
+    final block = await _blockFetcher.fetch(key, localOnly: true);
+    if (block == null) {
       throw StateError('Block not found: $key');
     }
-    final block = response.block.toBlock();
     bytes.add(block.data.length);
     await writer.write(cid, block.data);
 
@@ -1057,9 +1096,33 @@ class RPCHandlers {
     if (block.cid.codec == 'dag-pb' || block.format == 'dag-pb') {
       final pbNode = dag_pb.PBNode.fromBuffer(block.data);
       for (final link in pbNode.links) {
-        final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+        // Identity CIDs carry their content inline in the link, so they are
+        // never fetched or written to the CAR — matching Kubo, which omits
+        // them from exports. The lenient decode also tolerates zero-length
+        // identity digests; malformed targets surface the strict error.
+        final linkCid = tryDecodeCidBytesLenient(link.hash) ??
+            CID.fromBytes(Uint8List.fromList(link.hash));
+        if (linkCid.multihash.code == 0x00) {
+          _recordSkippedIdentityLink(linkCid);
+          continue;
+        }
         await _exportBlock(linkCid, writer, visited, bytes, depth: depth + 1);
       }
+    }
+  }
+
+  /// Records a denylist hit for an identity-CID link skipped during CAR
+  /// export. Identity children are never fetched, so the denylist gate in
+  /// [_rpcGetBlock] never sees them — without this the audit trail would
+  /// miss a blocked CID reached mid-traversal.
+  void _recordSkippedIdentityLink(CID cid) {
+    final service = node.denylistService;
+    if (service == null || !service.configuredEnabled) {
+      return;
+    }
+    final cidStr = cid.encode();
+    if (service.isBlockedByCidString(cidStr)) {
+      service.recordHit(cidStr, source: 'car');
     }
   }
 
@@ -1360,23 +1423,13 @@ class RPCHandlers {
     }
 
     try {
-      var block = await node.blockStore.getBlock(cid);
-
-      if (!block.found) {
-        // Try fetching the block via Bitswap from connected peers.
-        final bitswap = node.bitswap;
-        if (bitswap != null) {
-          _logger.debug('Block $cid not found locally, trying Bitswap');
-          final networkBlock = await bitswap.wantBlock(cid);
-          if (networkBlock != null) {
-            await node.blockStore.putBlock(networkBlock);
-            return Response.ok(networkBlock.data);
-          }
-        }
+      final block = await _rpcGetBlock(cid);
+      if (block == null) {
         return _errorResponse('Block not found', code: 404);
       }
-
-      return Response.ok(block.block.data);
+      return Response.ok(block.data);
+    } on DenylistBlockedException {
+      return _denylistBlockedResponse();
     } catch (e, st) {
       _logger.error('Block get failed for cid: $cid', e, st);
       return _errorResponse('Block get failed');

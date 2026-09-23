@@ -7,6 +7,7 @@ import '../../proto/generated/core/pin.pb.dart';
 import '../../protocols/bitswap/bitswap_handler.dart';
 import '../../transport/http_gateway_client.dart';
 import '../../utils/logger.dart';
+import '../block/gated_block_fetcher.dart';
 import '../cid.dart';
 import '../config/bitswap_config.dart';
 import '../data_structures/block.dart';
@@ -55,6 +56,17 @@ class ContentManager implements ILifecycle {
   final Logger _logger;
   final HttpGatewayClient _httpGatewayClient = HttpGatewayClient();
   final StreamController<String> _newContentController;
+
+  /// The shared denylist-gated fetch pipeline backing [_fetchBlock]:
+  /// denylist gate first, then identity-CID synthesis, then datastore and
+  /// block store, then Bitswap — with a datastore write-back for fetched
+  /// blocks.
+  late final GatedBlockFetcher _blockFetcher = GatedBlockFetcher(
+    denylistGate: _throwIfDenylisted,
+    localGet: _localGetBlock,
+    localPut: _datastoreHandler.putBlock,
+    wantBlock: _wantBlockBitswap,
+  );
 
   @override
   Future<void> start() async {
@@ -323,42 +335,53 @@ class ContentManager implements ILifecycle {
   /// Fetches a block by CID string from the local datastore, the shared
   /// block store, or the Bitswap network, in that order.
   ///
+  /// Identity CIDs (multihash code `0x00`) are synthesized by the shared
+  /// fetch pipeline — the digest is the block data — so DAGs containing
+  /// identity links resolve the same way the gateway serves them.
+  ///
   /// Blocks retrieved over Bitswap are cached into the datastore so repeated
   /// traversal of a DAG does not re-fetch them.
   ///
   /// Every fetch is denylist-gated so traversal (path resolution, file
   /// reassembly, TAR export, pinning) cannot serve a blocked child block —
-  /// matching the gateway's per-block egress gate in `_getBlockByCid`.
-  Future<Block?> _fetchBlock(String cid) async {
-    final denylist = _denylistService;
-    if (denylist != null && denylist.isBlockedByCidString(cid)) {
-      final action = denylist.recordHit(cid, source: 'rpc');
-      if (action == 'block') {
-        throw DenylistBlockedException(cid);
-      }
-    }
+  /// matching the gateway's per-block egress gate.
+  Future<Block?> _fetchBlock(String cid) => _blockFetcher.fetch(cid);
 
-    var block = await _datastoreHandler.getBlock(cid);
+  /// Denylist gate for [_blockFetcher]: a blocked CID throws
+  /// [DenylistBlockedException] after the hit is recorded with the `rpc`
+  /// source, matching the root-CID check in [get].
+  void _throwIfDenylisted(String cid) {
+    final denylist = _denylistService;
+    if (denylist == null || !denylist.isBlockedByCidString(cid)) {
+      return;
+    }
+    if (denylist.recordHit(cid, source: 'rpc') == 'block') {
+      throw DenylistBlockedException(cid);
+    }
+  }
+
+  /// Local-store leg of [_blockFetcher]: datastore first, then the shared
+  /// block store.
+  Future<Block?> _localGetBlock(String cid) async {
+    final block = await _datastoreHandler.getBlock(cid);
     if (block != null) {
       return block;
     }
-
     final blockResult = await _blockStore?.getBlock(cid);
     if (blockResult != null && blockResult.found) {
       return blockResult.block.toBlock();
     }
-
-    final bitswap = _bitswapHandler;
-    if (bitswap != null) {
-      _logger.debug('Attempting to retrieve block $cid via Bitswap');
-      final networkBlock = await bitswap.wantBlock(cid);
-      if (networkBlock != null) {
-        await _datastoreHandler.putBlock(networkBlock);
-        return networkBlock;
-      }
-    }
-
     return null;
+  }
+
+  /// Bitswap leg of [_blockFetcher].
+  Future<Block?> _wantBlockBitswap(String cid) async {
+    final bitswap = _bitswapHandler;
+    if (bitswap == null) {
+      return null;
+    }
+    _logger.debug('Attempting to retrieve block $cid via Bitswap');
+    return bitswap.wantBlock(cid);
   }
 
   /// Extracts the user-visible payload from [block].
@@ -396,18 +419,9 @@ class ContentManager implements ILifecycle {
   /// Lists the links within a directory identified by [cid].
   Future<List<Link>> ls(String cid) async {
     try {
-      Block? block = await _datastoreHandler.getBlock(cid);
-
-      if (block == null && _bitswapHandler != null) {
-        block = await _bitswapHandler.wantBlock(cid);
-      }
-
-      if (block == null) {
-        final blockResult = await _blockStore?.getBlock(cid);
-        if (blockResult != null && blockResult.found) {
-          block = blockResult.block.toBlock();
-        }
-      }
+      // Same denylist-gated datastore → block store → Bitswap pipeline as
+      // [_fetchBlock]; identity CIDs resolve to their inline digest.
+      final block = await _fetchBlock(cid);
 
       if (block == null) {
         _logger.warning('Directory not found: $cid');

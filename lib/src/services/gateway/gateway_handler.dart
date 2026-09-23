@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:dart_ipfs/src/core/block/gated_block_fetcher.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
@@ -23,8 +24,6 @@ import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart' as utils_dnslink;
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/varint.dart';
-import 'package:dart_ipfs_core/dart_ipfs_core.dart'
-    show MultibaseUtils, Multicodec, MultihashInfo;
 import 'package:mime/mime.dart';
 import 'package:multibase/multibase.dart';
 import 'package:shelf/shelf.dart';
@@ -272,6 +271,18 @@ class GatewayHandler {
   final int maxCarResponseBytes;
 
   final _logger = Logger('GatewayHandler');
+
+  /// The shared denylist-gated fetch pipeline backing [_getBlock] and
+  /// [_getBlockByCid]: denylist gate first, then identity-CID synthesis,
+  /// then the local block store, then Bitswap. The Bitswap handler already
+  /// writes received blocks to the store, so the store is re-read after a
+  /// network fetch instead of writing back here.
+  late final GatedBlockFetcher _blockFetcher = GatedBlockFetcher(
+    denylistGate: _throwIfDenylisted,
+    localGet: _localGetBlock,
+    wantBlock: _wantBlockBitswap,
+    rereadAfterFetch: true,
+  );
 
   /// Maximum number of `index.html` indirections followed while serving a
   /// directory. A directory whose `index.html` link resolves to another
@@ -826,9 +837,7 @@ class GatewayHandler {
                   body: 'index.html resolution depth exceeded',
                 );
               }
-              final indexCid = CID.fromBytes(
-                Uint8List.fromList(indexLink.hash),
-              );
+              final indexCid = _decodeLinkCid(indexLink.hash);
               return await _serveContent(
                 indexCid.encode(),
                 '',
@@ -1385,6 +1394,7 @@ class GatewayHandler {
     _CarTraversal state,
   ) async {
     if (cid.multihash.code == 0x00) {
+      _recordCarDenylistHit(cid);
       return false;
     }
     if (state.dedup && !state.seen.add(cid.encode())) {
@@ -1404,6 +1414,29 @@ class GatewayHandler {
     }
     await writer.write(cid, block.data);
     return true;
+  }
+
+  /// Records a denylist hit for an identity-CID link skipped during CAR
+  /// traversal. Identity children are never fetched or written, so the
+  /// per-block denylist gate in [_getBlock] never sees them — without this
+  /// the audit trail would miss a blocked CID reached mid-traversal.
+  void _recordCarDenylistHit(CID cid) {
+    final service = denylistService;
+    if (service == null || !service.configuredEnabled) {
+      return;
+    }
+    final cidStr = cid.encode();
+    if (service.isBlockedByCidString(cidStr)) {
+      service.recordHit(cidStr, source: 'car');
+    }
+  }
+
+  /// Decodes a DAG-PB link target, tolerating the zero-length identity
+  /// multihash that [CID.fromBytes] rejects. Malformed targets surface the
+  /// strict decoder's error.
+  CID _decodeLinkCid(List<int> hash) {
+    return tryDecodeCidBytesLenient(hash) ??
+        CID.fromBytes(Uint8List.fromList(hash));
   }
 
   /// Fetches a linked block for CAR traversal, throwing on missing blocks.
@@ -1446,9 +1479,11 @@ class GatewayHandler {
     try {
       final pbNode = PBNode.fromBuffer(block.data);
       for (final link in pbNode.links) {
-        final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+        final linkCid = _decodeLinkCid(link.hash);
         if (linkCid.multihash.code == 0x00) {
-          continue; // identity CID: data is inline in the link
+          // identity CID: data is inline in the link
+          _recordCarDenylistHit(linkCid);
+          continue;
         }
         final childBlock = await _carChildBlock(linkCid, localOnly: localOnly);
         await _writeCarSubtree(
@@ -1491,8 +1526,11 @@ class GatewayHandler {
 
     final links = await _entityChildLinks(block);
     for (final link in links) {
-      final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
-      if (linkCid.multihash.code == 0x00) continue;
+      final linkCid = _decodeLinkCid(link.hash);
+      if (linkCid.multihash.code == 0x00) {
+        _recordCarDenylistHit(linkCid);
+        continue;
+      }
       final childBlock = await _carChildBlock(linkCid, localOnly: localOnly);
       await _writeCarEntity(
         linkCid,
@@ -1553,8 +1591,11 @@ class GatewayHandler {
       // Not byte-addressable: entity-bytes degrades to dag-scope=entity.
       final links = _entityLinksFrom(pbNode, unixfsData);
       for (final link in links) {
-        final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
-        if (linkCid.multihash.code == 0x00) continue;
+        final linkCid = _decodeLinkCid(link.hash);
+        if (linkCid.multihash.code == 0x00) {
+          _recordCarDenylistHit(linkCid);
+          continue;
+        }
         final childBlock = await _carChildBlock(linkCid, localOnly: localOnly);
         await _writeCarEntity(
           linkCid,
@@ -1574,8 +1615,11 @@ class GatewayHandler {
     if (blockSizes.length != pbNode.links.length) {
       // blocksizes missing/unreliable: include the whole file entity.
       for (final link in pbNode.links) {
-        final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
-        if (linkCid.multihash.code == 0x00) continue;
+        final linkCid = _decodeLinkCid(link.hash);
+        if (linkCid.multihash.code == 0x00) {
+          _recordCarDenylistHit(linkCid);
+          continue;
+        }
         final childBlock = await _carChildBlock(linkCid, localOnly: localOnly);
         await _writeCarEntity(
           linkCid,
@@ -1597,8 +1641,11 @@ class GatewayHandler {
       final childEnd = cursor + childSize - 1;
       cursor += childSize;
 
-      final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
-      if (linkCid.multihash.code == 0x00) continue;
+      final linkCid = _decodeLinkCid(link.hash);
+      if (linkCid.multihash.code == 0x00) {
+        _recordCarDenylistHit(linkCid);
+        continue;
+      }
       if (childSize <= 0) continue;
       if (childEnd < rangeFrom || childStart > rangeTo) continue;
 
@@ -1930,7 +1977,7 @@ class GatewayHandler {
       final pbNode = PBNode.fromBuffer(block.data);
       for (final link in pbNode.links) {
         if (link.name == name) {
-          return CID.fromBytes(Uint8List.fromList(link.hash));
+          return _decodeLinkCid(link.hash);
         }
       }
     } catch (e) {
@@ -1967,7 +2014,7 @@ class GatewayHandler {
       // SEC-005: Escape untrusted file names to prevent XSS attacks
       final escapedName = const HtmlEscape().convert(name);
       final size = link.size.toInt();
-      final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+      final linkCid = _decodeLinkCid(link.hash);
       html.writeln('<tr>');
       html.writeln(
         '  <td><a href="/ipfs/${linkCid.encode()}">$escapedName</a></td>',
@@ -2008,7 +2055,7 @@ class GatewayHandler {
     for (final link in directory.links) {
       final linkName = link.name;
       if (linkName == targetName) {
-        final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+        final linkCid = _decodeLinkCid(link.hash);
         return await _serveContent(
           linkCid.encode(),
           remainingPath,
@@ -2054,7 +2101,7 @@ class GatewayHandler {
               body: 'index.html resolution depth exceeded',
             );
           }
-          final indexCid = CID.fromBytes(Uint8List.fromList(indexLink.hash));
+          final indexCid = _decodeLinkCid(indexLink.hash);
           return await _serveContent(
             indexCid.encode(),
             '',
@@ -2071,7 +2118,7 @@ class GatewayHandler {
       if (link == null) {
         return Response.notFound('Path not found: $subPath');
       }
-      final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+      final linkCid = _decodeLinkCid(link.hash);
       if (link.name.length == hamtPrefixWidth(node.fanout)) {
         // The bucket holds a child shard, not the entry itself: descend and
         // resolve the same segment at the next level.
@@ -2104,9 +2151,7 @@ class GatewayHandler {
       if (link.name.length != hamtPrefixWidth(current.fanout)) {
         return link;
       }
-      current = await _hamtSubShard(
-        CID.fromBytes(Uint8List.fromList(link.hash)),
-      );
+      current = await _hamtSubShard(_decodeLinkCid(link.hash));
       currentLevel++;
     }
   }
@@ -2141,9 +2186,7 @@ class GatewayHandler {
       final width = hamtPrefixWidth(shard.fanout);
       for (final link in shard.pbNode.links) {
         if (link.name.length == width) {
-          pending.add(
-            await _hamtSubShard(CID.fromBytes(Uint8List.fromList(link.hash))),
-          );
+          pending.add(await _hamtSubShard(_decodeLinkCid(link.hash)));
         } else if (link.name.length > width) {
           links.add(
             PBLink(
@@ -2949,72 +2992,21 @@ class GatewayHandler {
   /// digest (e.g. the `bafkqaaa` probe CID) which the standard multihash
   /// decoder rejects. Throws [FormatException] for invalid input.
   CID _decodeCid(String cidStr) {
-    try {
-      return CID.decode(cidStr);
-    } catch (e) {
-      final identity = _tryDecodeIdentityCid(cidStr);
-      if (identity != null) {
-        return identity;
-      }
+    final cid = tryDecodeCidLenient(cidStr);
+    if (cid == null) {
       throw FormatException('Invalid CID: $cidStr');
     }
-  }
-
-  /// Manually decodes a CIDv1 whose multihash uses the identity function
-  /// (`0x00`) with a zero-length digest — the shape the multihash decoder
-  /// cannot handle. Returns `null` for anything else.
-  CID? _tryDecodeIdentityCid(String cidStr) {
-    try {
-      final bytes = MultibaseUtils.decode(cidStr);
-      // CIDv1 layout: 0x01 | <codec varint> | 0x00 (identity) | 0x00 (len 0)
-      if (bytes.length < 4 || bytes[0] != 0x01) return null;
-      var i = 1;
-      var codecCode = 0;
-      var shift = 0;
-      while (true) {
-        if (i >= bytes.length) return null;
-        final b = bytes[i++];
-        codecCode |= (b & 0x7f) << shift;
-        if (b & 0x80 == 0) break;
-        shift += 7;
-        if (shift > 28) return null;
-      }
-      if (i + 2 != bytes.length) return null;
-      if (bytes[i] != 0x00 || bytes[i + 1] != 0x00) return null;
-      final codec = Multicodec.supportsByCode(codecCode)
-          ? Multicodec.name(codecCode)
-          : 'raw';
-      return CID.v1(
-        codec,
-        MultihashInfo(
-          code: 0x00,
-          name: 'identity',
-          digest: Uint8List(0),
-          size: 0,
-        ),
-      );
-    } catch (_) {
-      return null;
-    }
+    return cid;
   }
 
   /// Helper method to get a block by [CID].
   ///
   /// Identity CIDs (multihash code `0x00`) carry the block data inside the
-  /// digest, so they are synthesized without touching the store or network.
-  /// Otherwise delegates to [_getBlockByCid].
-  Future<Block?> _getBlock(CID cid, {bool localOnly = false}) async {
-    // Identity CIDs are synthesized without touching the store, but they are
-    // still subject to the egress denylist when reached mid-traversal.
-    _throwIfDenylisted(cid.encode());
-    if (cid.multihash.code == 0x00) {
-      return Block(
-        cid: cid,
-        data: Uint8List.fromList(cid.multihash.digest),
-        format: cid.codec ?? 'raw',
-      );
-    }
-    return _getBlockByCid(cid.encode(), localOnly: localOnly);
+  /// digest and are synthesized by the shared fetch pipeline without
+  /// touching the store or network — but only after the denylist gate has
+  /// run, so a denylisted identity CID is still blocked.
+  Future<Block?> _getBlock(CID cid, {bool localOnly = false}) {
+    return _blockFetcher.fetch(cid.encode(), localOnly: localOnly);
   }
 
   /// Helper method to get a block by CID string.
@@ -3022,11 +3014,13 @@ class GatewayHandler {
   /// First tries the local blockstore, then falls back to Bitswap if a
   /// [bitswapHandler] is available and running. When [localOnly] is true
   /// (a `Cache-Control: only-if-cached` request), Bitswap is skipped.
-  Future<Block?> _getBlockByCid(String cidStr, {bool localOnly = false}) async {
-    // Denylist egress gate: a blocked CID is never served, whether it is the
-    // request target or a child block reached during DAG/file traversal.
-    _throwIfDenylisted(cidStr);
+  Future<Block?> _getBlockByCid(String cidStr, {bool localOnly = false}) {
+    return _blockFetcher.fetch(cidStr, localOnly: localOnly);
+  }
 
+  /// Local-store leg of [_blockFetcher]; lookup errors are logged and
+  /// reported as a miss so Bitswap can still be attempted.
+  Future<Block?> _localGetBlock(String cidStr) async {
     try {
       final response = await blockStore.getBlock(cidStr);
       if (response.found) {
@@ -3035,29 +3029,22 @@ class GatewayHandler {
     } catch (e, stackTrace) {
       _logger.error('Error getting block $cidStr', e, stackTrace);
     }
+    return null;
+  }
 
-    if (localOnly) {
+  /// Bitswap leg of [_blockFetcher]; retrieval failures are logged and
+  /// reported as a miss rather than failing the request.
+  Future<Block?> _wantBlockBitswap(String cidStr) async {
+    final bitswap = bitswapHandler;
+    if (bitswap == null) {
       return null;
     }
-
-    final bitswap = bitswapHandler;
-    if (bitswap != null) {
-      try {
-        _logger.debug('Attempting Bitswap retrieval for $cidStr');
-        final networkBlock = await bitswap.wantBlock(cidStr);
-        if (networkBlock != null) {
-          // BitswapHandler stores received blocks in the blockstore; verify.
-          final stored = await blockStore.getBlock(cidStr);
-          if (stored.found) {
-            return stored.block.toBlock();
-          }
-          return networkBlock;
-        }
-      } catch (e, stackTrace) {
-        _logger.warning('Bitswap retrieval failed for $cidStr', e, stackTrace);
-      }
+    try {
+      _logger.debug('Attempting Bitswap retrieval for $cidStr');
+      return await bitswap.wantBlock(cidStr);
+    } catch (e, stackTrace) {
+      _logger.warning('Bitswap retrieval failed for $cidStr', e, stackTrace);
+      return null;
     }
-
-    return null;
   }
 }

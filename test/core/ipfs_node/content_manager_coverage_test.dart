@@ -20,6 +20,7 @@ import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
 import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' show MultihashInfo;
 import 'package:logging/logging.dart';
 import 'package:test/test.dart';
 
@@ -385,6 +386,172 @@ void main() {
       final data = await manager.get(rootCid, path: 'entry-3.bin');
       expect(data, equals(Uint8List.fromList([3, 3, 3])));
     });
+  });
+
+  group('ContentManager identity CIDs', () {
+    late _FakeDatastoreHandler datastore;
+    late StreamController<String> contentController;
+
+    setUp(() {
+      datastore = _FakeDatastoreHandler();
+      contentController = StreamController<String>.broadcast();
+    });
+
+    tearDown(() async {
+      await contentController.close();
+    });
+
+    /// A CIDv1 whose multihash is the identity function: [data] is carried
+    /// inline in the digest, so no block exists in any store.
+    CID identityCid(List<int> data, {String codec = 'raw'}) {
+      final digest = Uint8List.fromList(data);
+      return CID.v1(
+        codec,
+        MultihashInfo(
+          code: 0x00,
+          name: 'identity',
+          digest: digest,
+          size: digest.length,
+        ),
+      );
+    }
+
+    /// Stores a UnixFS directory node whose links point at the given CIDs.
+    Future<Block> storeDir(BlockStore store, Map<String, CID> links) async {
+      final node = MerkleDAGNode(
+        links: [
+          for (final entry in links.entries)
+            Link(
+              name: entry.key,
+              cid: entry.value,
+              size: entry.value.multihash.size,
+            ),
+        ],
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+      );
+      final block = Block(cid: node.cid, data: node.toBytes());
+      await store.putBlock(block);
+      return block;
+    }
+
+    test('get returns the inline payload of an identity CID', () async {
+      final payload = Uint8List.fromList(utf8.encode('inline payload'));
+      final manager = ContentManager(
+        datastoreHandler: datastore,
+        newContentController: contentController,
+      );
+
+      // No datastore, block store, or Bitswap — only identity synthesis
+      // can answer this fetch.
+      expect(
+        await manager.get(identityCid(payload).encode()),
+        equals(payload),
+      );
+      expect(datastore.storedBlocks, isEmpty);
+    });
+
+    test(
+      'get resolves a child linked via an identity CID (cat path)',
+      () async {
+        final repoDir = await Directory.systemTemp.createTemp('ipfs_idcat_');
+        addTearDown(() => repoDir.delete(recursive: true));
+
+        final store = BlockStore(path: repoDir.path);
+        final payload = Uint8List.fromList(utf8.encode('identity child'));
+        final idCid = identityCid(payload);
+        final dir = await storeDir(store, {'inline.txt': idCid});
+
+        final manager = ContentManager(
+          datastoreHandler: datastore,
+          newContentController: contentController,
+          blockStore: store,
+        );
+        expect(
+          await manager.get(dir.cid.encode(), path: 'inline.txt'),
+          equals(payload),
+        );
+      },
+    );
+
+    test('ls lists links to identity-CID children', () async {
+      final repoDir = await Directory.systemTemp.createTemp('ipfs_idls_');
+      addTearDown(() => repoDir.delete(recursive: true));
+
+      final store = BlockStore(path: repoDir.path);
+      final payload = Uint8List.fromList(utf8.encode('listed inline'));
+      final idCid = identityCid(payload);
+      final dir = await storeDir(store, {'inline.txt': idCid});
+
+      final manager = ContentManager(
+        datastoreHandler: datastore,
+        newContentController: contentController,
+        blockStore: store,
+      );
+      final links = await manager.ls(dir.cid.encode());
+      expect(links.single.name, equals('inline.txt'));
+      expect(links.single.cid.encode(), equals(idCid.encode()));
+    });
+
+    test('ls lists a directory carried by an identity CID', () async {
+      final repoDir = await Directory.systemTemp.createTemp('ipfs_idroot_');
+      addTearDown(() => repoDir.delete(recursive: true));
+
+      final store = BlockStore(path: repoDir.path);
+      final leaf = await Block.fromData(
+        Uint8List.fromList([7, 7]),
+        format: 'raw',
+      );
+      await store.putBlock(leaf);
+      final inner = MerkleDAGNode(
+        links: [Link(name: 'leaf.bin', cid: leaf.cid, size: leaf.data.length)],
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+      );
+      // The directory node itself is carried inline by an identity CID.
+      final idDirCid = identityCid(inner.toBytes(), codec: 'dag-pb');
+
+      final manager = ContentManager(
+        datastoreHandler: datastore,
+        newContentController: contentController,
+        blockStore: store,
+      );
+      final links = await manager.ls(idDirCid.encode());
+      expect(links.single.name, equals('leaf.bin'));
+      expect(links.single.cid.encode(), equals(leaf.cid.encode()));
+    });
+
+    test(
+      'denylisted identity CID is gated before synthesis',
+      () async {
+        final metrics = _FakeMetricsCollector();
+        final denylist = DenylistService(
+          const SecurityConfig(
+            enableDenylist: true,
+            denylistDefaultAction: 'block',
+          ),
+          metrics,
+        );
+        addTearDown(() => denylist.stop());
+
+        final payload = Uint8List.fromList(utf8.encode('blocked inline'));
+        final idCid = identityCid(payload);
+        denylist.blockCidString(idCid.encode());
+
+        final manager = ContentManager(
+          datastoreHandler: datastore,
+          newContentController: contentController,
+          denylistService: denylist,
+        );
+        await expectLater(
+          manager.get(idCid.encode()),
+          throwsA(isA<DenylistBlockedException>()),
+        );
+        expect(metrics.securityEvents, contains('denylist_blocked'));
+      },
+    );
   });
 
   group('ContentManager HTTP fallback', () {

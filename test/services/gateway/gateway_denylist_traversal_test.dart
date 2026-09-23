@@ -1,4 +1,5 @@
 // test/services/gateway/gateway_denylist_traversal_test.dart
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -12,6 +13,7 @@ import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' show MultihashInfo;
 import 'package:fixnum/fixnum.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shelf/shelf.dart';
@@ -276,6 +278,119 @@ void main() {
         ),
       );
       expect(response.statusCode, equals(200));
+    });
+
+    test('CAR traversal audits a denylisted identity-CID child', () async {
+      final denylist = makeDenylist();
+      final handler = makeHandler(denylist);
+
+      // An identity CID carries its data inline in the multihash digest —
+      // no block is ever stored or fetched for it.
+      final inlineData = Uint8List.fromList([31, 32, 33]);
+      final idCid = CID.v1(
+        'raw',
+        MultihashInfo(
+          code: 0x00,
+          name: 'identity',
+          digest: inlineData,
+          size: inlineData.length,
+        ),
+      );
+      final (dirCid, dirBytes) = await makeDir('inline.bin', idCid);
+      stubBlock(dirCid, dirBytes);
+
+      denylist.blockCidString(idCid.encode());
+
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/${dirCid.encode()}?format=car'),
+        ),
+      );
+      // Identity children are silently skipped — never fetched, never
+      // written to the CAR — but the denylist hit is audited as 'car'.
+      expect(response.statusCode, equals(200));
+      final body = await response.read().expand((i) => i).toList();
+      final sections = await CarReader.fromBytes(
+        Uint8List.fromList(body),
+      ).sections().toList();
+      expect(
+        sections.map((s) => s.cid.encode()).toList(),
+        equals([dirCid.encode()]),
+      );
+
+      final hit = denylist.getAuditLog().single;
+      expect(hit.cidOrMultihash, equals(idCid.encode()));
+      expect(hit.source, equals('car'));
+      expect(hit.action, equals('block'));
+    });
+
+    test('CAR traversal omits a non-denylisted identity-CID child', () async {
+      final handler = makeHandler(null);
+
+      final inlineData = Uint8List.fromList([41, 42, 43]);
+      final idCid = CID.v1(
+        'raw',
+        MultihashInfo(
+          code: 0x00,
+          name: 'identity',
+          digest: inlineData,
+          size: inlineData.length,
+        ),
+      );
+      final (dirCid, dirBytes) = await makeDir('inline.bin', idCid);
+      stubBlock(dirCid, dirBytes);
+
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/${dirCid.encode()}?format=car'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final body = await response.read().expand((i) => i).toList();
+      final sections = await CarReader.fromBytes(
+        Uint8List.fromList(body),
+      ).sections().toList();
+      // Identity content is inline in the link; the CAR data section holds
+      // only the directory block.
+      expect(
+        sections.map((s) => s.cid.encode()).toList(),
+        equals([dirCid.encode()]),
+      );
+      verifyNever(mockBlockStore.getBlock(idCid.encode()));
+    });
+
+    test('path serving returns content linked via an identity CID', () async {
+      final handler = makeHandler(null);
+
+      final inlineData = Uint8List.fromList(utf8.encode('inline file'));
+      final idCid = CID.v1(
+        'raw',
+        MultihashInfo(
+          code: 0x00,
+          name: 'identity',
+          digest: inlineData,
+          size: inlineData.length,
+        ),
+      );
+      final (dirCid, dirBytes) = await makeDir('inline.txt', idCid);
+      stubBlock(dirCid, dirBytes);
+
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/ipfs/${dirCid.encode()}/inline.txt',
+          ),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      expect(
+        await response.read().expand((i) => i).toList(),
+        equals(inlineData),
+      );
+      verifyNever(mockBlockStore.getBlock(idCid.encode()));
     });
   });
 }

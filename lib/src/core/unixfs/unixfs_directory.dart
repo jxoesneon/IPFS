@@ -204,7 +204,10 @@ Future<int> computeTsize(
       }
       var total = node.serializedSize;
       for (final link in node.pbNode.links) {
-        final childCid = CID.fromBytes(Uint8List.fromList(link.hash));
+        // Lenient decode tolerates zero-length identity digests; malformed
+        // link targets still surface the strict decoder's error.
+        final childCid = tryDecodeCidBytesLenient(link.hash) ??
+            CID.fromBytes(Uint8List.fromList(link.hash));
         total += await recurse(childCid, depth + 1);
       }
       return total;
@@ -328,7 +331,8 @@ Future<UnixFSNode> addChildToDirectory(
     entries.add(
       UnixFSDirectoryEntry(
         name: link.name,
-        cid: CID.fromBytes(Uint8List.fromList(link.hash)),
+        cid: tryDecodeCidBytesLenient(link.hash) ??
+            CID.fromBytes(Uint8List.fromList(link.hash)),
         tsize: link.size.toInt(),
       ),
     );

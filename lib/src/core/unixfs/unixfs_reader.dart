@@ -138,7 +138,10 @@ Future<void> _collectFileData(
   }
 
   for (final link in node.pbNode.links) {
-    final childCid = CID.fromBytes(Uint8List.fromList(link.hash));
+    // Lenient decode tolerates zero-length identity digests; malformed
+    // link targets still surface the strict decoder's error.
+    final childCid = tryDecodeCidBytesLenient(link.hash) ??
+        CID.fromBytes(Uint8List.fromList(link.hash));
     final childBlock = await fetchBlock(childCid);
     if (childBlock == null) {
       throw StateError('Missing linked block ${childCid.encode()}');
