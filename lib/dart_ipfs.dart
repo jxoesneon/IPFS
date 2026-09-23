@@ -170,5 +170,10 @@ export 'src/core/security/denylist_service.dart';
 export 'src/core/storage/datastore.dart';
 export 'src/ipfs.dart';
 export 'src/platform/platform.dart' show IpfsPlatform;
+// IPLD data-model types used by the selector and schema APIs — curated so
+// only the types needed for selector/schema work are visible, not the whole
+// generated protobuf surface.
+export 'src/proto/generated/ipld/data_model.pb.dart'
+    show IPLDNode, IPLDMap, IPLDList, IPLDLink, Kind;
 export 'src/protocols/dht/reprovider.dart';
 export 'src/protocols/pubsub/pubsub_message.dart';

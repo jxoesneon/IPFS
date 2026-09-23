@@ -67,10 +67,14 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
   bool isEmpty = true;
 
   /// Returns all entries in the tree using in-order traversal.
+  ///
+  /// The result is an unmodifiable snapshot: mutating it never affected the
+  /// tree, so mutation attempts now throw instead of being silently
+  /// discarded. Use [insert], [delete], or [remove] to change the tree.
   List<MapEntry<K_PeerId, V_PeerInfo>> get entries {
     final result = <MapEntry<K_PeerId, V_PeerInfo>>[];
     _inOrder(root, result);
-    return result;
+    return List.unmodifiable(result);
   }
 
   void _inOrder(

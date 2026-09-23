@@ -27,6 +27,7 @@ import '../../core/types/peer_id.dart';
 import '../../proto/generated/dht/kademlia.pb.dart' as kad;
 import '../../utils/logger.dart';
 import 'dht_client.dart';
+import 'xor_distance_metric.dart';
 
 /// Result of an optimistic provide operation.
 class OptimisticProvideResult {
@@ -169,13 +170,10 @@ class OptimisticProvider {
         );
       }
 
-      // Sort by XOR distance to the target.
+      // Sort by XOR distance to the target. Byte-wise comparison: no BigInt
+      // allocation per comparison.
       closestPeers.sort(
-        (a, b) => _dhtClient.kademliaRoutingTable
-            .calculateDistance(target, a)
-            .compareTo(
-              _dhtClient.kademliaRoutingTable.calculateDistance(target, b),
-            ),
+        (a, b) => compareXorDistanceToKey(a.value, b.value, target.value),
       );
 
       // Limit to maxPeersToContact.

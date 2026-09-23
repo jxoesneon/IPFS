@@ -145,6 +145,21 @@ void main() {
       expect(tree.entries.first.value, 'Updated');
     });
 
+    test('entries is an unmodifiable snapshot', () {
+      tree.insert(10, '10');
+      tree.insert(5, '5');
+
+      // Mutating the returned view must not silently discard writes: it
+      // throws, and the tree is left unchanged.
+      expect(
+        () => tree.entries.add(MapEntry(20, '20')),
+        throwsUnsupportedError,
+      );
+      expect(() => tree.entries.removeAt(0), throwsUnsupportedError);
+      expect(tree.size, 2);
+      expect(tree.entries.length, 2);
+    });
+
     test('Clear tree', () {
       tree.insert(10, '10');
       tree.insert(5, '5');

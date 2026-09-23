@@ -34,13 +34,6 @@ class Insertion<K_PeerId, V_PeerInfo> {
       } else {
         // Keys are equal - update existing node's value instead of adding duplicate
         x.value = node.value;
-        // Update the corresponding entry in the entries list
-        for (int i = 0; i < tree.entries.length; i++) {
-          if (tree.compare(tree.entries[i].key, node.key) == 0) {
-            tree.entries[i] = MapEntry(node.key, node.value);
-            break;
-          }
-        }
         return; // Don't insert a new node
       }
     }
@@ -71,9 +64,8 @@ class Insertion<K_PeerId, V_PeerInfo> {
     // Call fixInsertion to restore Red-Black Tree properties if necessary.
     fixViolationsInstance.fixInsertion(tree, node);
 
-    // Update tree size, entries, and isEmpty flag
+    // Update tree size and isEmpty flag
     tree.size++;
-    tree.entries.add(MapEntry(node.key, node.value));
     tree.isEmpty = false;
   }
 }

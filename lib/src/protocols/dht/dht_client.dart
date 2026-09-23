@@ -28,6 +28,7 @@ import 'dht_handler.dart';
 import 'kademlia_routing_adapter.dart';
 import 'kademlia_routing_table.dart';
 import 'provide_result.dart';
+import 'xor_distance_metric.dart';
 
 /// Kademlia DHT client implementation for IPFS.
 ///
@@ -303,7 +304,7 @@ class DHTClient {
 
     final queried = <PeerId>{};
     final providers = <PeerId>{};
-    final closest = _SortedPeerQueue(target, _kademliaRoutingTable);
+    final closest = _SortedPeerQueue(target);
 
     // Seed from routing table.
     closest.addAll(_kademliaRoutingTable.findClosestPeers(target, k));
@@ -367,7 +368,7 @@ class DHTClient {
       ..key = id.value;
 
     final queried = <PeerId>{};
-    final closest = _SortedPeerQueue(target, _kademliaRoutingTable);
+    final closest = _SortedPeerQueue(target);
     closest.addAll(_kademliaRoutingTable.findClosestPeers(target, k));
 
     while (closest.isNotEmpty && queried.length < maxQueries) {
@@ -441,10 +442,9 @@ class DHTClient {
 
     final closestPeers = _kademliaRoutingTable.findClosestPeers(target, k);
     // Sort by XOR distance to the target so closest peers are contacted first.
+    // Byte-wise comparison: no BigInt allocation per comparison.
     closestPeers.sort(
-      (a, b) => _kademliaRoutingTable
-          .calculateDistance(target, a)
-          .compareTo(_kademliaRoutingTable.calculateDistance(target, b)),
+      (a, b) => compareXorDistanceToKey(a.value, b.value, target.value),
     );
 
     var attempted = 0;
@@ -502,17 +502,22 @@ class DHTClient {
 
     final providerPeer = _convertPeerIdToKadPeer(PeerId.fromBase58(providerId));
 
+    // Snapshot the routing table once: the same candidate set serves every
+    // CID in the batch instead of re-walking all buckets per CID.
+    final candidates = _kademliaRoutingTable.peers;
+    // When the table holds no more peers than k, every CID shares the same
+    // closest set — the whole snapshot.
+    final List<PeerId>? sharedClosest = candidates.length <= k
+        ? candidates
+        : null;
+
     // Map target peer -> list of CIDs to announce.
     final peerCids = <PeerId, List<CID>>{};
 
     for (final cid in cids) {
-      final target = getRoutingKey(cid.toString());
-      final closest = _kademliaRoutingTable.findClosestPeers(target, k);
-      closest.sort(
-        (a, b) => _kademliaRoutingTable
-            .calculateDistance(target, a)
-            .compareTo(_kademliaRoutingTable.calculateDistance(target, b)),
-      );
+      final closest =
+          sharedClosest ??
+          closestPeersToKey(candidates, getRoutingKey(cid.toString()).value, k);
       for (final peer in closest) {
         peerCids.putIfAbsent(peer, () => []).add(cid);
       }
@@ -592,9 +597,7 @@ class DHTClient {
 
     final closestPeers = _kademliaRoutingTable.findClosestPeers(target, k);
     closestPeers.sort(
-      (a, b) => _kademliaRoutingTable
-          .calculateDistance(target, a)
-          .compareTo(_kademliaRoutingTable.calculateDistance(target, b)),
+      (a, b) => compareXorDistanceToKey(a.value, b.value, target.value),
     );
 
     final record = dht_proto.Record()
@@ -696,7 +699,7 @@ class DHTClient {
     }
 
     final queried = <PeerId>{};
-    final closest = _SortedPeerQueue(target, _kademliaRoutingTable);
+    final closest = _SortedPeerQueue(target);
     closest.addAll(_kademliaRoutingTable.findClosestPeers(target, k));
 
     while (closest.isNotEmpty && queried.length < maxQueries) {
@@ -1696,23 +1699,32 @@ class DHTClient {
 
 /// Sorted queue of peers by XOR distance to a target.
 class _SortedPeerQueue {
-  _SortedPeerQueue(this.target, this.routingTable);
+  _SortedPeerQueue(this.target);
 
   final PeerId target;
-  final KademliaRoutingTable routingTable;
   final List<PeerId> _peers = [];
 
   bool get isEmpty => _peers.isEmpty;
   bool get isNotEmpty => _peers.isNotEmpty;
 
+  /// Inserts [peer] at its sorted position by XOR distance to [target].
+  ///
+  /// Binary-search insertion keeps the queue ordered without re-sorting the
+  /// whole list per peer and without allocating [BigInt]s per comparison.
   void add(PeerId peer) {
     if (_peers.contains(peer)) return;
-    _peers.add(peer);
-    _peers.sort(
-      (a, b) => routingTable
-          .calculateDistance(target, a)
-          .compareTo(routingTable.calculateDistance(target, b)),
-    );
+    var lo = 0;
+    var hi = _peers.length;
+    while (lo < hi) {
+      final mid = (lo + hi) >> 1;
+      if (compareXorDistanceToKey(peer.value, _peers[mid].value, target.value) <
+          0) {
+        hi = mid;
+      } else {
+        lo = mid + 1;
+      }
+    }
+    _peers.insert(lo, peer);
   }
 
   void addAll(Iterable<PeerId> peers) {
