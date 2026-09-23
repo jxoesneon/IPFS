@@ -259,6 +259,10 @@ dag_pb.PBLink? resolveHAMTSegment(UnixFSNode node, String name, int level) {
 /// [hamtPrefixWidth]) which is stripped; links whose name is exactly the
 /// prefix address a child shard and are traversed recursively.
 ///
+/// [onFetch], when given, is invoked once per sub-shard block fetched from
+/// [store], so callers can count those fetches against a shared traversal
+/// budget.
+///
 /// Throws [PathResolutionError] when a link name is shorter than the prefix
 /// width or a referenced sub-shard block is missing, and [DAGCycleError]
 /// when shard nesting exceeds [maxDepth].
@@ -266,6 +270,7 @@ Future<List<UnixFSDirectoryEntry>> hamtLeafEntries(
   IBlockStore store,
   UnixFSNode shard, {
   int maxDepth = 32,
+  void Function()? onFetch,
 }) async {
   if (!shard.isHAMTShard) {
     throw ArgumentError('Not a HAMT shard node: ${shard.cid}');
@@ -278,8 +283,12 @@ Future<List<UnixFSDirectoryEntry>> hamtLeafEntries(
       throw DAGCycleError('HAMT shard nesting exceeds maximum depth');
     }
     for (final link in node.pbNode.links) {
-      final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+      // Lenient decode tolerates zero-length identity digests; malformed
+      // link targets still surface the strict decoder's error.
+      final linkCid = tryDecodeCidBytesLenient(link.hash) ??
+          CID.fromBytes(Uint8List.fromList(link.hash));
       if (link.name.length == width) {
+        onFetch?.call();
         final child = await unixfsGetNode(store, linkCid);
         if (child == null) {
           throw PathResolutionError('HAMT sub-shard block not found: $linkCid');

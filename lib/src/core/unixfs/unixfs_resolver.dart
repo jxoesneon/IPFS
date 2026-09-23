@@ -153,7 +153,7 @@ class UnixFSPathResolver {
         if (_isHAMTSubShardLink(node, link)) {
           return _resolve(
             root,
-            CID.fromBytes(Uint8List.fromList(link.hash)),
+            _decodeLinkCid(link.hash),
             currentPath,
             remaining,
             pathCids,
@@ -165,7 +165,7 @@ class UnixFSPathResolver {
         }
         return _resolve(
           root,
-          CID.fromBytes(Uint8List.fromList(link.hash)),
+          _decodeLinkCid(link.hash),
           <String>[...currentPath, segment],
           nextRemaining,
           pathCids,
@@ -191,7 +191,7 @@ class UnixFSPathResolver {
       }
       return _resolve(
         root,
-        CID.fromBytes(Uint8List.fromList(link.hash)),
+        _decodeLinkCid(link.hash),
         <String>[...currentPath, segment],
         nextRemaining,
         pathCids,
@@ -249,5 +249,13 @@ class UnixFSPathResolver {
     if (!node.isHAMTShard) return false;
     final width = hamtPrefixWidth(node.fanout);
     return link.name.length == width;
+  }
+
+  /// Decodes a DAG-PB link target, tolerating the zero-length identity
+  /// multihash that [CID.fromBytes] rejects. Malformed targets surface the
+  /// strict decoder's error.
+  static CID _decodeLinkCid(List<int> hash) {
+    return tryDecodeCidBytesLenient(hash) ??
+        CID.fromBytes(Uint8List.fromList(hash));
   }
 }

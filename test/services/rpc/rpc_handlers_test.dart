@@ -2772,6 +2772,235 @@ void main() {
       final sections = await reader.sections().toList();
       expect(sections.length, equals(2));
     });
+
+    group('identity CID fetch convergence', () {
+      /// A CIDv1 whose multihash is the identity function: [data] is carried
+      /// inline in the digest, so no block exists in any store.
+      CID identityCid(List<int> data, {String codec = 'raw'}) {
+        final digest = Uint8List.fromList(data);
+        return CID.v1(
+          codec,
+          core.MultihashInfo(
+            code: 0x00,
+            name: 'identity',
+            digest: digest,
+            size: digest.length,
+          ),
+        );
+      }
+
+      /// Stores a UnixFS directory node whose links point at the given CIDs.
+      Future<Block> storeDirWithLinks(Map<String, CID> links) async {
+        final node = dag_pb.PBNode(
+          data: unixfs_pb.Data(
+            type: unixfs_pb.Data_DataType.Directory,
+          ).writeToBuffer(),
+          links: [
+            for (final entry in links.entries)
+              dag_pb.PBLink(name: entry.key, hash: entry.value.toBytes()),
+          ],
+        );
+        final dir = await Block.fromData(
+          node.writeToBuffer(),
+          format: 'dag-pb',
+        );
+        storeBlock(dir);
+        return dir;
+      }
+
+      test('handleBlockGet returns the inline data of an identity CID',
+          () async {
+        final payload = utf8.encode('inline payload');
+        final idCid = identityCid(payload);
+
+        final response = await handlers.handleBlockGet(
+          Request(
+            'POST',
+            Uri.parse(
+              'http://localhost/api/v0/block/get?arg=${idCid.encode()}',
+            ),
+          ),
+        );
+        expect(response.statusCode, equals(200));
+        expect(
+          await response.read().expand((i) => i).toList(),
+          equals(payload),
+        );
+        // The identity block is synthesized — the store is never queried.
+        verifyNever(mockBlockStore.getBlock(idCid.encode()));
+      });
+
+      test('handleGet serves a file linked via an identity CID', () async {
+        final payload = utf8.encode('inline identity payload');
+        final idCid = identityCid(payload);
+        final dir = await storeDirWithLinks({'inline.txt': idCid});
+        when(mockNode.bitswap).thenReturn(null);
+
+        final response = await handlers.handleGet(
+          Request(
+            'POST',
+            Uri.parse(
+              'http://localhost/api/v0/get?arg=${dir.cid.encode()}',
+            ),
+          ),
+        );
+        expect(response.statusCode, equals(200));
+        final tar = await response.read().expand((i) => i).toList();
+        final text = utf8.decode(tar, allowMalformed: true);
+        expect(text, contains('inline.txt'));
+        expect(text, contains('inline identity payload'));
+        verifyNever(mockBlockStore.getBlock(idCid.encode()));
+      });
+
+      test('handleLs resolves a path through an identity-CID link', () async {
+        final file = await Block.fromData(
+          Uint8List.fromList(utf8.encode('leaf')),
+          format: 'raw',
+        );
+        storeBlock(file);
+        // The 'id' link target is a dag-pb directory carried inline.
+        final innerNode = dag_pb.PBNode(
+          data: unixfs_pb.Data(
+            type: unixfs_pb.Data_DataType.Directory,
+          ).writeToBuffer(),
+          links: [dag_pb.PBLink(name: 'file.txt', hash: file.cid.toBytes())],
+        );
+        final idDirCid = identityCid(
+          innerNode.writeToBuffer(),
+          codec: 'dag-pb',
+        );
+        final dir = await storeDirWithLinks({'id': idDirCid});
+        when(mockNode.bitswap).thenReturn(null);
+        when(mockNode.ls(file.cid.encode())).thenAnswer(
+          (_) async => [
+            Link(name: 'file.txt', cid: file.cid, size: file.data.length),
+          ],
+        );
+
+        final response = await handlers.handleLs(
+          Request(
+            'POST',
+            Uri.parse(
+              'http://localhost/api/v0/ls?arg=${dir.cid.encode()}/id/file.txt',
+            ),
+          ),
+        );
+        // Resolution succeeds only if the identity link target was
+        // synthesized — otherwise the resolver misses and returns 404.
+        expect(response.statusCode, equals(200));
+        verify(mockNode.ls(file.cid.encode())).called(1);
+        verifyNever(mockBlockStore.getBlock(idDirCid.encode()));
+      });
+
+      test('handleDagExport omits identity-CID children from the CAR',
+          () async {
+        final real = await Block.fromData(
+          Uint8List.fromList([1, 2, 3]),
+          format: 'raw',
+        );
+        storeBlock(real);
+        final idCid = identityCid([9, 9, 9]);
+        final dir = await storeDirWithLinks({
+          'real.bin': real.cid,
+          'inline.bin': idCid,
+        });
+
+        final response = await handlers.handleDagExport(
+          Request(
+            'POST',
+            Uri.parse(
+              'http://localhost/api/v0/dag/export?arg=${dir.cid.encode()}',
+            ),
+          ),
+        );
+        expect(response.statusCode, equals(200));
+        final reader = CarReader.fromBytes(
+          Uint8List.fromList(await response.read().expand((i) => i).toList()),
+        );
+        final cids = (await reader.sections().toList())
+            .map((s) => s.cid.encode())
+            .toSet();
+        // Identity content is inline in the link and MUST NOT appear in a
+        // CAR data section — only the dir and the real child are exported.
+        expect(cids, equals({dir.cid.encode(), real.cid.encode()}));
+        verifyNever(mockBlockStore.getBlock(idCid.encode()));
+      });
+
+      test('handleDagExport audits a denylisted identity-CID child',
+          () async {
+        final metrics = _MockMetricsCollector();
+        final denylist = DenylistService(
+          const SecurityConfig(
+            enableDenylist: true,
+            denylistDefaultAction: 'block',
+          ),
+          metrics,
+        );
+        addTearDown(denylist.stop);
+        when(mockNode.denylistService).thenReturn(denylist);
+        when(mockNode.bitswap).thenReturn(null);
+
+        final real = await Block.fromData(
+          Uint8List.fromList([1, 2, 3]),
+          format: 'raw',
+        );
+        storeBlock(real);
+        final idCid = identityCid([9, 9, 9]);
+        final dir = await storeDirWithLinks({
+          'real.bin': real.cid,
+          'inline.bin': idCid,
+        });
+        denylist.blockCidString(idCid.encode());
+
+        final response = await handlers.handleDagExport(
+          Request(
+            'POST',
+            Uri.parse(
+              'http://localhost/api/v0/dag/export?arg=${dir.cid.encode()}',
+            ),
+          ),
+        );
+        // The denylisted identity child is silently skipped (not exported,
+        // not fatal) — but the hit is audited with the CAR source.
+        expect(response.statusCode, equals(200));
+        final hit = denylist.getAuditLog().single;
+        expect(hit.cidOrMultihash, equals(idCid.encode()));
+        expect(hit.source, equals('car'));
+      });
+
+      test('handleDagExport still fails on a denylisted stored child',
+          () async {
+        final metrics = _MockMetricsCollector();
+        final denylist = DenylistService(
+          const SecurityConfig(
+            enableDenylist: true,
+            denylistDefaultAction: 'block',
+          ),
+          metrics,
+        );
+        addTearDown(denylist.stop);
+        when(mockNode.denylistService).thenReturn(denylist);
+        when(mockNode.bitswap).thenReturn(null);
+
+        final real = await Block.fromData(
+          Uint8List.fromList([1, 2, 3]),
+          format: 'raw',
+        );
+        storeBlock(real);
+        final dir = await storeDirWithLinks({'real.bin': real.cid});
+        denylist.blockCidString(real.cid.encode());
+
+        final response = await handlers.handleDagExport(
+          Request(
+            'POST',
+            Uri.parse(
+              'http://localhost/api/v0/dag/export?arg=${dir.cid.encode()}',
+            ),
+          ),
+        );
+        expect(response.statusCode, equals(451));
+      });
+    });
   });
 
   group('pubsub handlers', () {
