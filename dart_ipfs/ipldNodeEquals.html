@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the ipldNodeEquals function from the dart_ipfs library, for the Dart programming language.">
+  <title>ipldNodeEquals function - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li class="self-crumb">ipldNodeEquals function</li>
+  </ol>
+  <div class="self-name">ipldNodeEquals</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-function">ipldNodeEquals</span> function 
+ 
+</h1></div>
+
+    <section class="multi-line-signature">
+        
+<span class="returntype"><a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+<span class="name ">ipldNodeEquals</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="ipldNodeEquals-param-a"><span class="type-annotation"><a href="../dart_ipfs/IPLDNode-class.html">IPLDNode</a></span> <span class="parameter-name">a</span>, </span></li>
+<li><span class="parameter" id="ipldNodeEquals-param-b"><span class="type-annotation"><a href="../dart_ipfs/IPLDNode-class.html">IPLDNode</a></span> <span class="parameter-name">b</span></span></li>
+</ol>)
+
+        
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Structural equality for <a href="../dart_ipfs/IPLDNode-class.html">IPLDNode</a> values.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">bool ipldNodeEquals(IPLDNode a, IPLDNode b) {
+  if (a.kind != b.kind) return false;
+  switch (a.kind) {
+    case Kind.NULL:
+      return true;
+    case Kind.BOOL:
+      return a.boolValue == b.boolValue;
+    case Kind.INTEGER:
+      return a.intValue == b.intValue;
+    case Kind.BIG_INT:
+      return _bytesEqual(a.bigIntValue, b.bigIntValue);
+    case Kind.FLOAT:
+      return a.floatValue == b.floatValue;
+    case Kind.STRING:
+      return a.stringValue == b.stringValue;
+    case Kind.BYTES:
+      return _bytesEqual(a.bytesValue, b.bytesValue);
+    case Kind.LINK:
+      return a.linkValue.codec == b.linkValue.codec &amp;&amp;
+          _bytesEqual(a.linkValue.multihash, b.linkValue.multihash);
+    case Kind.LIST:
+      if (a.listValue.values.length != b.listValue.values.length) {
+        return false;
+      }
+      for (var i = 0; i &lt; a.listValue.values.length; i++) {
+        if (!ipldNodeEquals(a.listValue.values[i], b.listValue.values[i])) {
+          return false;
+        }
+      }
+      return true;
+    case Kind.MAP:
+      if (a.mapValue.entries.length != b.mapValue.entries.length) {
+        return false;
+      }
+      for (final entry in a.mapValue.entries) {
+        final other = _optionalField(b.mapValue, entry.key);
+        if (other == null || !ipldNodeEquals(entry.value, other)) {
+          return false;
+        }
+      }
+      return true;
+    &#47;&#47; coverage:ignore-start
+    default:
+      return false;
+    &#47;&#47; coverage:ignore-end
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+    <li class="self-crumb">ipldNodeEquals function</li>
+</ol>
+
+    <h5>dart_ipfs library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.19.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

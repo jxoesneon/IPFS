@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the IPLDNode class from the dart_ipfs library, for the Dart programming language.">
+  <title>IPLDNode class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li class="self-crumb">IPLDNode class</li>
+  </ol>
+  <div class="self-name">IPLDNode</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html"
+    data-below-sidebar="dart_ipfs&#47;IPLDNode-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">IPLDNode</span> class 
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>Main message wrapping all IPLD value types</p>
+</section>
+
+
+    <section>
+      <dl class="dl-horizontal">
+        
+  <dt>Inheritance</dt>
+  <dd>
+    <ul class="gt-separated dark clazz-relationships">
+      <li><a href="https://api.dart.dev/stable/3.13.4/dart-core/Object-class.html">Object</a></li>
+        <li><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage-class.html">GeneratedMessage</a></li>
+      <li>IPLDNode</li>
+    </ul>
+  </dd>
+
+        
+        
+
+
+        
+  <dt>Available extensions</dt>
+  <dd><ul class="comma-separated clazz-relationships">
+      <li><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessageGenericExtensions.html">GeneratedMessageGenericExtensions</a></li>
+      <li><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/TextFormatExtension.html">TextFormatExtension</a></li>
+  </ul></dd>
+        
+
+
+      </dl>
+    </section>
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="IPLDNode.new" class="callable">
+          <span class="name"><a href="../dart_ipfs/IPLDNode/IPLDNode.html">IPLDNode</a></span><span class="signature">({<span class="parameter" id="param-kind"><span class="type-annotation"><a href="../dart_ipfs/Kind-class.html">Kind</a>?</span> <span class="parameter-name">kind</span>, </span><span class="parameter" id="param-boolValue"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a>?</span> <span class="parameter-name">boolValue</span>, </span><span class="parameter" id="param-intValue"><span class="type-annotation"><a href="https://pub.dev/documentation/fixnum/1.1.1/fixnum/Int64-class.html">Int64</a>?</span> <span class="parameter-name">intValue</span>, </span><span class="parameter" id="param-floatValue"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">floatValue</span>, </span><span class="parameter" id="param-stringValue"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">stringValue</span>, </span><span class="parameter" id="param-bytesValue"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span>&gt;</span>?</span> <span class="parameter-name">bytesValue</span>, </span><span class="parameter" id="param-listValue"><span class="type-annotation"><a href="../dart_ipfs/IPLDList-class.html">IPLDList</a>?</span> <span class="parameter-name">listValue</span>, </span><span class="parameter" id="param-mapValue"><span class="type-annotation"><a href="../dart_ipfs/IPLDMap-class.html">IPLDMap</a>?</span> <span class="parameter-name">mapValue</span>, </span><span class="parameter" id="param-linkValue"><span class="type-annotation"><a href="../dart_ipfs/IPLDLink-class.html">IPLDLink</a>?</span> <span class="parameter-name">linkValue</span>, </span><span class="parameter" id="param-bigIntValue"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span>&gt;</span>?</span> <span class="parameter-name">bigIntValue</span></span>})</span>
+        </dt>
+        <dd>
+          
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+        <dt id="IPLDNode.fromBuffer" class="callable">
+          <span class="name"><a href="../dart_ipfs/IPLDNode/IPLDNode.fromBuffer.html">IPLDNode.fromBuffer</a></span><span class="signature">(<span class="parameter" id="fromBuffer-param-data"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span>&gt;</span></span> <span class="parameter-name">data</span>, [</span><span class="parameter" id="fromBuffer-param-registry"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/ExtensionRegistry-class.html">ExtensionRegistry</a></span> <span class="parameter-name">registry</span> = <span class="default-value">$pb.ExtensionRegistry.EMPTY</span></span>])</span>
+        </dt>
+        <dd>
+          
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+        <dt id="IPLDNode.fromJson" class="callable">
+          <span class="name"><a href="../dart_ipfs/IPLDNode/IPLDNode.fromJson.html">IPLDNode.fromJson</a></span><span class="signature">(<span class="parameter" id="fromJson-param-json"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span> <span class="parameter-name">json</span>, [</span><span class="parameter" id="fromJson-param-registry"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/ExtensionRegistry-class.html">ExtensionRegistry</a></span> <span class="parameter-name">registry</span> = <span class="default-value">$pb.ExtensionRegistry.EMPTY</span></span>])</span>
+        </dt>
+        <dd>
+          
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="bigIntValue" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/bigIntValue.html">bigIntValue</a></span>
+  <span class="signature">&#8596; <a href="https://api.dart.dev/stable/3.13.4/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Special case: big integers that don't fit in sint64
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="boolValue" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/boolValue.html">boolValue</a></span>
+  <span class="signature">&#8596; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Basic types
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="bytesValue" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/bytesValue.html">bytesValue</a></span>
+  <span class="signature">&#8596; <a href="https://api.dart.dev/stable/3.13.4/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="floatValue" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/floatValue.html">floatValue</a></span>
+  <span class="signature">&#8596; <a href="https://api.dart.dev/stable/3.13.4/dart-core/double-class.html">double</a></span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  Calculates a hash code based on the contents of the protobuf.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="info_" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/info_.html">info_</a></span>
+  <span class="signature">&#8594; <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/BuilderInfo-class.html">BuilderInfo</a></span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">no setter</span><span class="feature">override</span></div>
+
+</dd>
+
+        <dt id="intValue" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/intValue.html">intValue</a></span>
+  <span class="signature">&#8596; <a href="https://pub.dev/documentation/fixnum/1.1.1/fixnum/Int64-class.html">Int64</a></span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="isFrozen" class="property inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/isFrozen.html">isFrozen</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns <code>true</code> if this message is marked read-only. Otherwise <code>false</code>.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="kind" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/kind.html">kind</a></span>
+  <span class="signature">&#8596; <a href="../dart_ipfs/Kind-class.html">Kind</a></span>
+  
+
+</dt>
+<dd>
+  The kind of value stored
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="linkValue" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/linkValue.html">linkValue</a></span>
+  <span class="signature">&#8596; <a href="../dart_ipfs/IPLDLink-class.html">IPLDLink</a></span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="listValue" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/listValue.html">listValue</a></span>
+  <span class="signature">&#8596; <a href="../dart_ipfs/IPLDList-class.html">IPLDList</a></span>
+  
+
+</dt>
+<dd>
+  Complex types
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="mapValue" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/mapValue.html">mapValue</a></span>
+  <span class="signature">&#8596; <a href="../dart_ipfs/IPLDMap-class.html">IPLDMap</a></span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.13.4/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="stringValue" class="property">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/stringValue.html">stringValue</a></span>
+  <span class="signature">&#8596; <a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="unknownFields" class="property inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/unknownFields.html">unknownFields</a></span>
+  <span class="signature">&#8594; <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/UnknownFieldSet-class.html">UnknownFieldSet</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="addExtension" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/addExtension.html">addExtension</a></span><span class="signature">(<wbr><span class="parameter" id="addExtension-param-extension"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/Extension-class.html">Extension</a></span> <span class="parameter-name">extension</span>, </span><span class="parameter" id="addExtension-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Adds an extension field value to a repeated field.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="check" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/check.html">check</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Throws a <a href="https://api.dart.dev/stable/3.13.4/dart-core/StateError-class.html">StateError</a> if the message has required fields without a value.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="clear" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/clear.html">clear</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Clears all data that was set in this message.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="clearBigIntValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearBigIntValue.html">clearBigIntValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clearBoolValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearBoolValue.html">clearBoolValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clearBytesValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearBytesValue.html">clearBytesValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clearExtension" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/clearExtension.html">clearExtension</a></span><span class="signature">(<wbr><span class="parameter" id="clearExtension-param-extension"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/Extension-class.html">Extension</a></span> <span class="parameter-name">extension</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Clears an extension field and also removes the extension.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="clearField" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/clearField.html">clearField</a></span><span class="signature">(<wbr><span class="parameter" id="clearField-param-tagNumber"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span> <span class="parameter-name">tagNumber</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Clears the contents of a given field.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="clearFloatValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearFloatValue.html">clearFloatValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clearIntValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearIntValue.html">clearIntValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clearKind" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearKind.html">clearKind</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clearLinkValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearLinkValue.html">clearLinkValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clearListValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearListValue.html">clearListValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clearMapValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearMapValue.html">clearMapValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clearStringValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearStringValue.html">clearStringValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clearValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/clearValue.html">clearValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="clone" class="callable">
+  <span class="name deprecated"><a class="deprecated" href="../dart_ipfs/IPLDNode/clone.html">clone</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../dart_ipfs/IPLDNode-class.html">IPLDNode</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates a deep copy of the fields in this message.
+  <div class="features"><span class="feature">override</span></div>
+
+</dd>
+
+        <dt id="copyWith" class="callable">
+  <span class="name deprecated"><a class="deprecated" href="../dart_ipfs/IPLDNode/copyWith.html">copyWith</a></span><span class="signature">(<wbr><span class="parameter" id="copyWith-param-updates"><span class="type-annotation">void</span> <span class="parameter-name">updates</span>(<span class="parameter" id="param-"><span class="type-annotation"><a href="../dart_ipfs/IPLDNode-class.html">IPLDNode</a></span></span>)</span>)
+    <span class="returntype parameter">&#8594; <a href="../dart_ipfs/IPLDNode-class.html">IPLDNode</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Apply <code>updates</code> to a copy of this message.
+  <div class="features"><span class="feature">override</span></div>
+
+</dd>
+
+        <dt id="createEmptyInstance" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/createEmptyInstance.html">createEmptyInstance</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../dart_ipfs/IPLDNode-class.html">IPLDNode</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates an empty instance of the same message type as this.
+  <div class="features"><span class="feature">override</span></div>
+
+</dd>
+
+        <dt id="deepCopy" class="callable">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessageGenericExtensions/deepCopy.html">deepCopy</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; T</span>
+  </span>
+  
+
+</dt>
+<dd>
+      <p class="from-extension">
+        <span>Available on T,
+        provided by the <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessageGenericExtensions.html">GeneratedMessageGenericExtensions</a> extension</span>
+      </p>
+  Returns a writable deep copy of this message.
+  
+
+</dd>
+
+        <dt id="ensureLinkValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/ensureLinkValue.html">ensureLinkValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../dart_ipfs/IPLDLink-class.html">IPLDLink</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="ensureListValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/ensureListValue.html">ensureListValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../dart_ipfs/IPLDList-class.html">IPLDList</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="ensureMapValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/ensureMapValue.html">ensureMapValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../dart_ipfs/IPLDMap-class.html">IPLDMap</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="extensionsAreInitialized" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/extensionsAreInitialized.html">extensionsAreInitialized</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="freeze" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/freeze.html">freeze</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage-class.html">GeneratedMessage</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Make this message read-only.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="getDefaultForField" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/getDefaultForField.html">getDefaultForField</a></span><span class="signature">(<wbr><span class="parameter" id="getDefaultForField-param-tagNumber"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span> <span class="parameter-name">tagNumber</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns the default value for the given field.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="getExtension" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/getExtension.html">getExtension</a></span><span class="signature">(<wbr><span class="parameter" id="getExtension-param-extension"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/Extension-class.html">Extension</a></span> <span class="parameter-name">extension</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns the value of <code>extension</code>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="getField" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/getField.html">getField</a></span><span class="signature">(<wbr><span class="parameter" id="getField-param-tagNumber"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span> <span class="parameter-name">tagNumber</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns the value of the field associated with <code>tagNumber</code>, or the
+default value if it is not set.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="getFieldOrNull" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/getFieldOrNull.html">getFieldOrNull</a></span><span class="signature">(<wbr><span class="parameter" id="getFieldOrNull-param-tagNumber"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span> <span class="parameter-name">tagNumber</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns the value of a field, ignoring any defaults.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="getTagNumber" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/getTagNumber.html">getTagNumber</a></span><span class="signature">(<wbr><span class="parameter" id="getTagNumber-param-fieldName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span> <span class="parameter-name">fieldName</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a>?</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="hasBigIntValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/hasBigIntValue.html">hasBigIntValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="hasBoolValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/hasBoolValue.html">hasBoolValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="hasBytesValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/hasBytesValue.html">hasBytesValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="hasExtension" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/hasExtension.html">hasExtension</a></span><span class="signature">(<wbr><span class="parameter" id="hasExtension-param-extension"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/Extension-class.html">Extension</a></span> <span class="parameter-name">extension</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns <code>true</code> if a value of <code>extension</code> is present.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="hasField" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/hasField.html">hasField</a></span><span class="signature">(<wbr><span class="parameter" id="hasField-param-tagNumber"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span> <span class="parameter-name">tagNumber</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Whether this message has a field associated with <code>tagNumber</code>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="hasFloatValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/hasFloatValue.html">hasFloatValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="hasIntValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/hasIntValue.html">hasIntValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="hasKind" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/hasKind.html">hasKind</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="hasLinkValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/hasLinkValue.html">hasLinkValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="hasListValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/hasListValue.html">hasListValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="hasMapValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/hasMapValue.html">hasMapValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="hasRequiredFields" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/hasRequiredFields.html">hasRequiredFields</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Whether the message has required fields.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="hasStringValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/hasStringValue.html">hasStringValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="isInitialized" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/isInitialized.html">isInitialized</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Whether all required fields in the message and embedded messages are set.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="mergeFromBuffer" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/mergeFromBuffer.html">mergeFromBuffer</a></span><span class="signature">(<wbr><span class="parameter" id="mergeFromBuffer-param-input"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span>&gt;</span></span> <span class="parameter-name">input</span>, [</span><span class="parameter" id="mergeFromBuffer-param-extensionRegistry"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/ExtensionRegistry-class.html">ExtensionRegistry</a></span> <span class="parameter-name">extensionRegistry</span> = <span class="default-value">ExtensionRegistry.EMPTY</span></span>])
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Merges serialized protocol buffer data into this message.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="mergeFromCodedBufferReader" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/mergeFromCodedBufferReader.html">mergeFromCodedBufferReader</a></span><span class="signature">(<wbr><span class="parameter" id="mergeFromCodedBufferReader-param-input"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/CodedBufferReader-class.html">CodedBufferReader</a></span> <span class="parameter-name">input</span>, [</span><span class="parameter" id="mergeFromCodedBufferReader-param-extensionRegistry"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/ExtensionRegistry-class.html">ExtensionRegistry</a></span> <span class="parameter-name">extensionRegistry</span> = <span class="default-value">ExtensionRegistry.EMPTY</span></span>])
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Same as <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/mergeFromBuffer.html">mergeFromBuffer</a>, but takes a <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/CodedBufferReader-class.html">CodedBufferReader</a> input.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="mergeFromJson" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/mergeFromJson.html">mergeFromJson</a></span><span class="signature">(<wbr><span class="parameter" id="mergeFromJson-param-data"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span> <span class="parameter-name">data</span>, [</span><span class="parameter" id="mergeFromJson-param-extensionRegistry"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/ExtensionRegistry-class.html">ExtensionRegistry</a></span> <span class="parameter-name">extensionRegistry</span> = <span class="default-value">ExtensionRegistry.EMPTY</span></span>])
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Merges field values from <code>data</code>, a JSON object, encoded as described by
+<a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/writeToJson.html">GeneratedMessage.writeToJson</a>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="mergeFromJsonMap" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/mergeFromJsonMap.html">mergeFromJsonMap</a></span><span class="signature">(<wbr><span class="parameter" id="mergeFromJsonMap-param-json"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">json</span>, [</span><span class="parameter" id="mergeFromJsonMap-param-extensionRegistry"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/ExtensionRegistry-class.html">ExtensionRegistry</a></span> <span class="parameter-name">extensionRegistry</span> = <span class="default-value">ExtensionRegistry.EMPTY</span></span>])
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Merges field values from a JSON object represented as a Dart map.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="mergeFromMessage" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/mergeFromMessage.html">mergeFromMessage</a></span><span class="signature">(<wbr><span class="parameter" id="mergeFromMessage-param-other"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage-class.html">GeneratedMessage</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Merges the contents of the <code>other</code> into this message.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="mergeFromProto3Json" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/mergeFromProto3Json.html">mergeFromProto3Json</a></span><span class="signature">(<wbr><span class="parameter" id="mergeFromProto3Json-param-json"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">json</span>, {</span><span class="parameter" id="mergeFromProto3Json-param-typeRegistry"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/TypeRegistry-class.html">TypeRegistry</a></span> <span class="parameter-name">typeRegistry</span> = <span class="default-value">const TypeRegistry.empty()</span>, </span><span class="parameter" id="mergeFromProto3Json-param-ignoreUnknownFields"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">ignoreUnknownFields</span> = <span class="default-value">false</span>, </span><span class="parameter" id="mergeFromProto3Json-param-supportNamesWithUnderscores"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">supportNamesWithUnderscores</span> = <span class="default-value">true</span>, </span><span class="parameter" id="mergeFromProto3Json-param-permissiveEnums"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">permissiveEnums</span> = <span class="default-value">false</span></span>})
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Merges field values from <code>json</code>, a JSON object using proto3 encoding.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="mergeUnknownFields" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/mergeUnknownFields.html">mergeUnknownFields</a></span><span class="signature">(<wbr><span class="parameter" id="mergeUnknownFields-param-unknownFieldSet"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/UnknownFieldSet-class.html">UnknownFieldSet</a></span> <span class="parameter-name">unknownFieldSet</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.13.4/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="rebuild" class="callable">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessageGenericExtensions/rebuild.html">rebuild</a></span><span class="signature">(<wbr><span class="parameter" id="rebuild-param-updates"><span class="type-annotation">void</span> <span class="parameter-name">updates</span>(<span class="parameter" id="param-"><span class="type-annotation">T</span></span>)</span>)
+    <span class="returntype parameter">&#8594; T</span>
+  </span>
+  
+
+</dt>
+<dd>
+      <p class="from-extension">
+        <span>Available on T,
+        provided by the <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessageGenericExtensions.html">GeneratedMessageGenericExtensions</a> extension</span>
+      </p>
+  Apply <code>updates</code> to a copy of this message.
+  
+
+</dd>
+
+        <dt id="setExtension" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/setExtension.html">setExtension</a></span><span class="signature">(<wbr><span class="parameter" id="setExtension-param-extension"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/Extension-class.html">Extension</a></span> <span class="parameter-name">extension</span>, </span><span class="parameter" id="setExtension-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Sets the value of a non-repeated extension field to <code>value</code>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="setField" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/setField.html">setField</a></span><span class="signature">(<wbr><span class="parameter" id="setField-param-tagNumber"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span> <span class="parameter-name">tagNumber</span>, </span><span class="parameter" id="setField-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Sets the value of a field by its <code>tagNumber</code>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toBuilder" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/toBuilder.html">toBuilder</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage-class.html">GeneratedMessage</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Creates a writable, shallow copy of this message.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toDebugString" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/toDebugString.html">toDebugString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns a <a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a> representation of this message.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toProto3Json" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/toProto3Json.html">toProto3Json</a></span><span class="signature">(<wbr>{<span class="parameter" id="toProto3Json-param-typeRegistry"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/TypeRegistry-class.html">TypeRegistry</a></span> <span class="parameter-name">typeRegistry</span> = <span class="default-value">const TypeRegistry.empty()</span></span>})
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/Object-class.html">Object</a>?</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns an Object representing Proto3 JSON serialization of <code>this</code>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns a <a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a> representation of this message.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toTextFormat" class="callable">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/TextFormatExtension/toTextFormat.html">toTextFormat</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+      <p class="from-extension">
+        <span>Available on <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage-class.html">GeneratedMessage</a>,
+        provided by the <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/TextFormatExtension.html">TextFormatExtension</a> extension</span>
+      </p>
+  Returns a TextFormat <a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a> representation of this message.
+  
+
+</dd>
+
+        <dt id="whichValue" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/whichValue.html">whichValue</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; IPLDNode_Value</span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="writeTextFormat" class="callable">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/TextFormatExtension/writeTextFormat.html">writeTextFormat</a></span><span class="signature">(<wbr><span class="parameter" id="writeTextFormat-param-sink"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/StringSink-class.html">StringSink</a></span> <span class="parameter-name">sink</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+      <p class="from-extension">
+        <span>Available on <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage-class.html">GeneratedMessage</a>,
+        provided by the <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/TextFormatExtension.html">TextFormatExtension</a> extension</span>
+      </p>
+  Writes a TextFormat <a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a> representation of this message to <code>sink</code>.
+  
+
+</dd>
+
+        <dt id="writeToBuffer" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/writeToBuffer.html">writeToBuffer</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-typed_data/Uint8List-class.html">Uint8List</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Serialize the message as the protobuf binary format.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="writeToCodedBufferWriter" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/writeToCodedBufferWriter.html">writeToCodedBufferWriter</a></span><span class="signature">(<wbr><span class="parameter" id="writeToCodedBufferWriter-param-output"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/CodedBufferWriter-class.html">CodedBufferWriter</a></span> <span class="parameter-name">output</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Same as <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/writeToBuffer.html">writeToBuffer</a>, but serializes to the given <a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/CodedBufferWriter-class.html">CodedBufferWriter</a>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="writeToJson" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/writeToJson.html">writeToJson</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns a JSON string that encodes this message.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="writeToJsonMap" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/writeToJsonMap.html">writeToJsonMap</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns the JSON encoding of this message as a Dart <a href="https://api.dart.dev/stable/3.13.4/dart-core/Map-class.html">Map</a>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://pub.dev/documentation/protobuf/6.1.0/protobuf/GeneratedMessage/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+  <section class="summary offset-anchor" id="static-methods">
+    <h2>Static Methods</h2>
+    <dl class="callables">
+        <dt id="create" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/create.html">create</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../dart_ipfs/IPLDNode-class.html">IPLDNode</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="getDefault" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPLDNode/getDefault.html">getDefault</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../dart_ipfs/IPLDNode-class.html">IPLDNode</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+    <li class="self-crumb">IPLDNode class</li>
+</ol>
+
+    <h5>dart_ipfs library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.19.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the multiaddrFromBytes function from the dart_ipfs library, for the Dart programming language.">
+  <title>multiaddrFromBytes function - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li class="self-crumb">multiaddrFromBytes function</li>
+  </ol>
+  <div class="self-name">multiaddrFromBytes</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-function">multiaddrFromBytes</span> function 
+ 
+</h1></div>
+
+    <section class="multi-line-signature">
+        
+<span class="returntype"><a href="../dart_ipfs/FullAddress-class.html">FullAddress</a>?</span>
+<span class="name ">multiaddrFromBytes</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="multiaddrFromBytes-param-bytes"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-typed_data/Uint8List-class.html">Uint8List</a></span> <span class="parameter-name">bytes</span></span></li>
+</ol>)
+
+        
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Helper to decode binary multiaddr to FullAddress</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">FullAddress? multiaddrFromBytes(Uint8List bytes) {
+  try {
+    var offset = 0;
+    &#47;&#47; Protocol code 1
+    final p1 = bytes[offset++];
+
+    String? ip;
+    int? port;
+
+    if (p1 == 4) {
+      &#47;&#47; ip4
+      if (bytes.length &lt; offset + 4) return null;
+      ip = bytes.sublist(offset, offset + 4).join(&#39;.&#39;);
+      offset += 4;
+    } else if (p1 == 41) {
+      &#47;&#47; ip6
+      if (bytes.length &lt; offset + 16) return null;
+      &#47;&#47; Simple hex conversion for IPv6
+      final hex = bytes
+          .sublist(offset, offset + 16)
+          .map((b) =&gt; b.toRadixString(16).padLeft(2, &#39;0&#39;))
+          .toList();
+      final groups = &lt;String&gt;[];
+      for (var i = 0; i &lt; 16; i += 2) {
+        groups.add(&#39;${hex[i]}${hex[i + 1]}&#39;);
+      }
+      ip = groups.join(&#39;:&#39;);
+      if (ip == &#39;0000:0000:0000:0000:0000:0000:0000:0001&#39;) ip = &#39;::1&#39;;
+      offset += 16;
+    } else {
+      return null; &#47;&#47; Unsupported transport
+    }
+
+    if (offset &gt;= bytes.length) return null;
+    final p2 = bytes[offset++];
+
+    if (p2 == 6) {
+      &#47;&#47; tcp
+      if (bytes.length &lt; offset + 2) return null;
+      final portBytes = bytes.sublist(offset, offset + 2);
+      port = (portBytes[0] &lt;&lt; 8) | portBytes[1];
+      offset += 2;
+    } else if (p2 == 17) {
+      &#47;&#47; udp
+      if (bytes.length &lt; offset + 2) return null;
+      final portBytes = bytes.sublist(offset, offset + 2);
+      port = (portBytes[0] &lt;&lt; 8) | portBytes[1];
+      offset += 2;
+    }
+
+    if (port != null) {
+      return FullAddress(address: ip, port: port);
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+    <li class="self-crumb">multiaddrFromBytes function</li>
+</ol>
+
+    <h5>dart_ipfs library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.19.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

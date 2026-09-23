@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the write method from the MFSManager class, for the Dart programming language.">
+  <title>write method - MFSManager class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li><a href="../../dart_ipfs/MFSManager-class.html">MFSManager</a></li>
+    <li class="self-crumb">write method</li>
+  </ol>
+  <div class="self-name">write</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;MFSManager-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">write</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.dart.dev/stable/3.13.4/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+<span class="name ">write</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="write-param-path"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a></span> <span class="parameter-name">path</span>, </span></li>
+<li><span class="parameter" id="write-param-data"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-async/Stream-class.html">Stream</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.13.4/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a></span>&gt;</span></span>&gt;</span></span> <span class="parameter-name">data</span>, {</span></li>
+<li><span class="parameter" id="write-param-create"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">create</span> = <span class="default-value">false</span>, </span></li>
+<li><span class="parameter" id="write-param-offset"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a>?</span> <span class="parameter-name">offset</span>, </span></li>
+<li><span class="parameter" id="write-param-truncate"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">truncate</span> = <span class="default-value">false</span>, </span></li>
+<li><span class="parameter" id="write-param-count"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a>?</span> <span class="parameter-name">count</span>, </span></li>
+<li><span class="parameter" id="write-param-parents"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">parents</span> = <span class="default-value">false</span>, </span></li>
+<li><span class="parameter" id="write-param-cidVersion"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a>?</span> <span class="parameter-name">cidVersion</span>, </span></li>
+<li><span class="parameter" id="write-param-rawLeaves"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/bool-class.html">bool</a>?</span> <span class="parameter-name">rawLeaves</span>, </span></li>
+<li><span class="parameter" id="write-param-hash"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">hash</span>, </span></li>
+<li><span class="parameter" id="write-param-mode"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a>?</span> <span class="parameter-name">mode</span>, </span></li>
+<li><span class="parameter" id="write-param-mtimeSecs"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a>?</span> <span class="parameter-name">mtimeSecs</span>, </span></li>
+<li><span class="parameter" id="write-param-mtimeNsecs"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.4/dart-core/int-class.html">int</a>?</span> <span class="parameter-name">mtimeNsecs</span>, </span></li>
+</ol>})
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Writes <code>data</code> to a file at the given <code>path</code>.</p>
+<p>Mirrors Kubo <code>ipfs files write</code> semantics:</p>
+<ul>
+<li><code>create</code> (default false): create the file if it does not exist;
+without it, writing a missing path is an error.</li>
+<li><code>truncate</code> (default false): discard existing content and zero-fill up
+to <code>offset</code> before writing. With <code>truncate</code> false the existing tail
+beyond the written range is preserved.</li>
+<li><code>offset</code> starts writing at the given byte position; an offset beyond
+the current end of a non-truncated file is an error.</li>
+<li><code>count</code> limits how many bytes from <code>data</code> are written.</li>
+<li><code>parents</code> creates missing parent directories.</li>
+<li><code>cidVersion</code>, <code>rawLeaves</code> and <code>hash</code> control the CID format of the
+newly built UnixFS DAG.</li>
+<li><code>mode</code>, <code>mtimeSecs</code> and <code>mtimeNsecs</code> store optional UnixFS 1.5
+metadata; supplying any of them disables raw leaves, matching Kubo.</li>
+</ul>
+<p>When the existing file already stores an mtime and no explicit
+<code>mtimeSecs</code> is given, the mtime is bumped to the current time — matching
+Kubo's automatic mtime update on <code>files write</code>.</p>
+<p>Full preservation of existing chunk boundaries is future work; at present
+unmodified bytes are read back and the DAG is rebuilt from the merged
+byte stream.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; write(
+  String path,
+  Stream&lt;List&lt;int&gt;&gt; data, {
+  bool create = false,
+  int? offset,
+  bool truncate = false,
+  int? count,
+  bool parents = false,
+  int? cidVersion,
+  bool? rawLeaves,
+  String? hash,
+  int? mode,
+  int? mtimeSecs,
+  int? mtimeNsecs,
+}) async {
+  final parts = _splitPath(path);
+  if (parts.isEmpty) {
+    throw Exception(&#39;Cannot write to MFS root path: $path&#39;);
+  }
+  final startOffset = offset ?? 0;
+
+  if (startOffset &lt; 0) {
+    throw ArgumentError(&#39;Offset cannot be negative&#39;);
+  }
+  if (count != null &amp;&amp; count &lt; 0) {
+    throw ArgumentError(&#39;Count cannot be negative&#39;);
+  }
+
+  await _mutationLock.synchronized(() async {
+    final existingCid = await _resolvePath(_rootCid!, parts);
+    final bool hasExisting = existingCid != null;
+
+    if (!hasExisting &amp;&amp; !create) {
+      throw Exception(&#39;File does not exist and create is false: $path&#39;);
+    }
+
+    _NodeMetadata? existingMeta;
+    if (hasExisting) {
+      final existingType = await _unixfsType(existingCid);
+      if (existingType == Data_DataType.Directory) {
+        throw Exception(&#39;Cannot write over directory: $path&#39;);
+      }
+      existingMeta = await _readMetadata(existingCid);
+    }
+
+    final allBytes = await data.expand((b) =&gt; b).toList();
+    final bytes = count == null
+        ? Uint8List.fromList(allBytes)
+        : Uint8List.fromList(allBytes.take(count).toList());
+
+    Uint8List updatedBytes;
+    if (truncate) {
+      &#47;&#47; Truncate semantics: zero-fill up to offset, then write data.
+      final buffer = BytesBuilder()
+        ..add(Uint8List(startOffset))
+        ..add(bytes);
+      updatedBytes = buffer.toBytes();
+    } else {
+      &#47;&#47; Partial update: read existing file, patch the requested range, and
+      &#47;&#47; rebuild the DAG. A missing file (create=true) is treated as empty.
+      &#47;&#47; An offset beyond the end of file zero-fills the gap, matching
+      &#47;&#47; Kubo&#39;s DagModifier sparse expansion on seek.
+      &#47;&#47; Note: true chunk-boundary preservation is complex and
+      &#47;&#47; left as future work; we rebuild from the merged byte stream.
+      final existingBytes = hasExisting
+          ? await _readAllBytes(existingCid)
+          : Uint8List(0);
+      updatedBytes = Uint8List.fromList(
+        _patchBytes(existingBytes, bytes, startOffset),
+      );
+    }
+
+    &#47;&#47; Determine effective UnixFS 1.5 metadata. Explicit parameters win;
+    &#47;&#47; otherwise carry over stored metadata (with an mtime bump), matching
+    &#47;&#47; Kubo&#39;s mtime-preserving write behavior. Storing metadata forces a
+    &#47;&#47; dag-pb root and disables raw leaves.
+    final effectiveMode = mode ?? existingMeta?.mode;
+    var effectiveMtimeSecs = mtimeSecs ?? existingMeta?.mtimeSecs;
+    var effectiveMtimeNsecs = mtimeNsecs ?? existingMeta?.mtimeNsecs;
+    if (mtimeSecs == null &amp;&amp; existingMeta?.hasMtime == true) {
+      final now = DateTime.now().toUtc();
+      effectiveMtimeSecs = now.millisecondsSinceEpoch ~&#47; 1000;
+      effectiveMtimeNsecs = (now.millisecondsSinceEpoch % 1000) * 1000000;
+    }
+    final hasMeta =
+        effectiveMode != null ||
+        effectiveMtimeSecs != null ||
+        effectiveMtimeNsecs != null;
+
+    final builder = UnixFSBuilder(
+      cidVersion: cidVersion ?? 0,
+      rawLeaves: hasMeta ? false : (rawLeaves ?? false),
+      hashType: hash ?? &#39;sha2-256&#39;,
+    );
+    final blocks = await builder
+        .build(Stream.fromIterable([updatedBytes]))
+        .toList();
+    if (blocks.isEmpty) {
+      throw Exception(&#39;Failed to build UnixFS DAG&#39;);
+    }
+    var rootBlock = blocks.last;
+    for (final block in blocks) {
+      await _blockStore.putBlock(block);
+    }
+    if (hasMeta) {
+      rootBlock = await _applyMetadata(
+        rootBlock,
+        mode: effectiveMode,
+        mtimeSecs: effectiveMtimeSecs,
+        mtimeNsecs: effectiveMtimeNsecs,
+        hashType: hash ?? &#39;sha2-256&#39;,
+        cidVersion: cidVersion ?? 0,
+      );
+      await _blockStore.putBlock(rootBlock);
+    }
+    await _modifyPath(
+      parts,
+      (currentCid) async {
+        if (currentCid == null &amp;&amp; !create) {
+          &#47;&#47; Unreachable under the mutation lock: a missing file without
+          &#47;&#47; `create` already threw above, and an existing file resolves to
+          &#47;&#47; a non-null CID here. Kept as a defensive re-check.
+          &#47;&#47; coverage:ignore-start
+          throw Exception(&#39;File does not exist and create is false&#39;);
+          &#47;&#47; coverage:ignore-end
+        }
+        return rootBlock.cid;
+      },
+      recursive: parents,
+      isDirectory: false,
+    );
+  });
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/MFSManager-class.html">MFSManager</a></li>
+    <li class="self-crumb">write method</li>
+</ol>
+
+    <h5>MFSManager class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.19.0
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

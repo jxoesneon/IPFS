@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the toSpecSelector method from the IPLDSelector class, for the Dart programming language.">
+  <title>toSpecSelector method - IPLDSelector class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li><a href="../../dart_ipfs/IPLDSelector-class.html">IPLDSelector</a></li>
+    <li class="self-crumb">toSpecSelector method</li>
+  </ol>
+  <div class="self-name">toSpecSelector</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;IPLDSelector-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">toSpecSelector</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="../../dart_ipfs/Selector-class.html">Selector</a></span>
+<span class="name ">toSpecSelector</span>(<wbr>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Best-effort conversion to the official <a href="../../dart_ipfs/Selector-class.html">Selector</a> vocabulary.</p>
+<p>This is provided for backward compatibility with the legacy
+<a class="deprecated" href="../../dart_ipfs/IPLDSelector-class.html">IPLDSelector</a> API. Complex criteria and intersection semantics are
+approximated or dropped.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Selector toSpecSelector() {
+  switch (type) {
+    case SelectorType.all:
+      &#47;&#47; Match every visited node while recursing across the whole DAG.
+      return ExploreRecursive(
+        limit: const RecursionLimitNone(),
+        sequence: ExploreUnion(
+          members: [
+            const Matcher(),
+            const ExploreAll(next: ExploreRecursiveEdge()),
+          ],
+        ),
+      );
+    case SelectorType.none:
+      return ExploreFields(fields: &lt;String, Selector&gt;{});
+    case SelectorType.matcher:
+      return const Matcher();
+    case SelectorType.recursive:
+      final sub =
+          subSelectors?.firstOrNull?.toSpecSelector() ?? const Matcher();
+      return ExploreRecursive(
+        limit: DepthRecursionLimit(maxDepth ?? defaultSelectorMaxDepth),
+        sequence: ExploreUnion(
+          members: [
+            sub,
+            const ExploreAll(next: ExploreRecursiveEdge()),
+          ],
+        ),
+      );
+    case SelectorType.union:
+      return ExploreUnion(
+        members:
+            subSelectors?.map((s) =&gt; s.toSpecSelector()).toList() ?? const [],
+      );
+    case SelectorType.intersection:
+      &#47;&#47; Intersection is not part of the official vocabulary; approximate
+      &#47;&#47; with the first member.
+      return subSelectors?.firstOrNull?.toSpecSelector() ?? const Matcher();
+    case SelectorType.explore:
+      final sub =
+          subSelectors?.firstOrNull?.toSpecSelector() ?? const Matcher();
+      final segments = (fieldPath ?? &#39;&#39;)
+          .split(&#39;&#47;&#39;)
+          .where((s) =&gt; s.isNotEmpty)
+          .toList();
+      if (segments.isEmpty) return sub;
+      Selector current = sub;
+      for (var i = segments.length - 1; i &gt;= 0; i--) {
+        final segment = segments[i];
+        final index = int.tryParse(segment);
+        if (index != null) {
+          current = ExploreIndex(index: index, next: current);
+        } else {
+          current = ExploreFields(fields: {segment: current});
+        }
+      }
+      return current;
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/IPLDSelector-class.html">IPLDSelector</a></li>
+    <li class="self-crumb">toSpecSelector method</li>
+</ol>
+
+    <h5>IPLDSelector class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.19.0
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
