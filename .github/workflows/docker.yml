@@ -2,7 +2,7 @@ name: Docker Build, Scan, Sign, and Publish
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - Dockerfile
       - docker-compose.yml
@@ -14,7 +14,7 @@ on:
       - lib/**
       - pubspec.yaml
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - Dockerfile
       - docker-compose.yml
@@ -64,7 +64,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=edge,branch=master
+            type=edge,branch=main
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
@@ -78,7 +78,7 @@ jobs:
           flavor: |
             suffix=-debug,onlatest=false
           tags: |
-            type=edge,branch=master
+            type=edge,branch=main
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
@@ -91,7 +91,7 @@ jobs:
           flavor: |
             suffix=-builder,onlatest=false
           tags: |
-            type=edge,branch=master
+            type=edge,branch=main
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
