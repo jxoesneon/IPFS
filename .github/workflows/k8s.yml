@@ -2,13 +2,13 @@ name: Kubernetes Manifests & Helm Chart
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - k8s/**
       - helm/dart-ipfs/**
       - .github/workflows/k8s.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - k8s/**
       - helm/dart-ipfs/**
