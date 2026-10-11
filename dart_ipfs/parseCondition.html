@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the parseCondition function from the dart_ipfs library, for the Dart programming language.">
+  <title>parseCondition function - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li class="self-crumb">parseCondition function</li>
+  </ol>
+  <div class="self-name">parseCondition</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-function">parseCondition</span> function 
+ 
+</h1></div>
+
+    <section class="multi-line-signature">
+        
+<span class="returntype"><a href="../dart_ipfs/Condition-class.html">Condition</a></span>
+<span class="name ">parseCondition</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="parseCondition-param-node"><span class="type-annotation"><a href="../dart_ipfs/IPLDNode-class.html">IPLDNode</a></span> <span class="parameter-name">node</span></span></li>
+</ol>)
+
+        
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Parse a <a href="../dart_ipfs/Condition-class.html">Condition</a> from its data-model node.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Condition parseCondition(IPLDNode node) {
+  if (node.kind != Kind.MAP) {
+    throw SelectorParseError(&#39;Condition must be a keyed-union map&#39;);
+  }
+  final entries = node.mapValue.entries;
+  if (entries.length != 1) {
+    throw SelectorParseError(
+      &#39;Condition map must contain exactly one key, found ${entries.length}&#39;,
+    );
+  }
+  final key = entries.first.key;
+  final value = entries.first.value;
+
+  switch (key) {
+    case &#39;&#47;&#39;:
+      if (value.kind == Kind.LINK) {
+        return IsLinkCondition(target: _cidFromLinkNode(value));
+      }
+      if (value.kind == Kind.NULL) {
+        return const IsLinkCondition();
+      }
+      throw SelectorParseError(&#39;isLink condition must be a link or null&#39;);
+    case &#39;hasField&#39;:
+      return HasFieldCondition(_requireString(value, &#39;hasField condition&#39;));
+    case &#39;=&#39;:
+      return HasValueCondition(value);
+    case &#39;%&#39;:
+      return HasKindCondition(_requireString(value, &#39;hasKind condition&#39;));
+    case &#39;greaterThan&#39;:
+      return GreaterThanCondition(_requireNum(value, &#39;greaterThan&#39;));
+    case &#39;lessThan&#39;:
+      return LessThanCondition(_requireNum(value, &#39;lessThan&#39;));
+    case &#39;and&#39;:
+      final list = _requireList(value, &#39;and condition&#39;);
+      return AndCondition(list.values.map(parseCondition).toList());
+    case &#39;or&#39;:
+      final list = _requireList(value, &#39;or condition&#39;);
+      return OrCondition(list.values.map(parseCondition).toList());
+    default:
+      throw SelectorParseError(&#39;Unknown condition key: &quot;$key&quot;&#39;);
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+    <li class="self-crumb">parseCondition function</li>
+</ol>
+
+    <h5>dart_ipfs library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.19.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
