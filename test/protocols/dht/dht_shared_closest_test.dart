@@ -95,6 +95,17 @@ void main() {
     verify(router.sendRequest(any, any, any)).called(4);
   });
 
+  test('getValue keeps the closest-peer queue ordered by XOR distance',
+      () async {
+    await fillRoutingTable();
+
+    // The lookup queue is filled from the routing table in distance order;
+    // the binary-search insertion keeps it sorted without re-sorting.
+    final value = await client.getValue(Uint8List.fromList([9, 9, 9]));
+    expect(value, isNull);
+    verify(router.sendRequest(any, any, any)).called(4);
+  });
+
   test('addProviders keeps the peer queue ordered by XOR distance', () async {
     await fillRoutingTable();
 

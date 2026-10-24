@@ -359,6 +359,7 @@ void main() {
             reproviderBatchSize: 100,
             reproviderConcurrency: 10,
             reproviderSweepOptimization: true,
+            bucketSize: 2,
           ),
           dhtHandler: concreteDht,
           pinManager: pinManager,

@@ -1080,10 +1080,16 @@ class RPCHandlers {
     // CAR handler). The skip precedes the gated fetch so denylisted
     // identity links are audited (not rejected) via
     // [_recordSkippedIdentityLink].
+    //
+    // Defensive: the identity root is handled before the export starts
+    // (header-only CAR) and identity children are skipped at the link
+    // level below, so this branch is unreachable.
+    // coverage:ignore-start
     if (cid.multihash.code == 0x00) {
       _recordSkippedIdentityLink(cid);
       return;
     }
+    // coverage:ignore-end
 
     // Denylist-gated, local-only fetch: `dag/export` reads the local repo
     // like Kubo — a blocked or missing child aborts the export rather than
