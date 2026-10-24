@@ -71,9 +71,14 @@ dependencies:
   cryptography: ^2.9.0
 
   dart_lz4: ^1.4.0
-  port_forwarder: ^1.0.0
   get_it: ^9.3.0
   base32: ^2.2.0
+
+  # XML parsing for the vendored UPnP/NAT-PCP/NAT-PMP port-forwarding
+  # implementation (lib/src/vendor/port_forwarder). Declared directly so
+  # consumers resolve the patched 7.x line instead of the 6.x line that the
+  # upstream port_forwarder package pins.
+  xml: ^7.1.0
 
 dev_dependencies:
   test: ^1.33.0 # For unit and integration tests
@@ -98,14 +103,16 @@ macos:
 
 # Security-critical dependency overrides documented in SECURITY.md.
 # These are required during local development and CI because upstream packages
-# (e.g. port_forwarder) still allow older, vulnerable releases. Overrides are
-# not visible to package consumers, so the published package does not declare
-# these transitive dependencies directly. The publish workflow runs with these
-# overrides in place and accepts the resulting hints.
+# still allow older, vulnerable releases. Overrides are not visible to package
+# consumers, so the published package does not declare these transitive
+# dependencies directly. The publish workflow runs with these overrides in
+# place and accepts the resulting hints.
+#
+# `xml` is no longer overridden: it is a direct dependency now (see above),
+# because the port-forwarding implementation is vendored into
+# lib/src/vendor/port_forwarder and no longer inherits upstream's `xml ^6.5.0`
+# constraint.
 dependency_overrides:
-  # xml ^7.1.0: Required for security fixes and compatibility with latest dependencies
-  # Resolves potential XML parsing vulnerabilities and ensures proper encoding support
-  xml: ^7.1.0
   # dart_udx ^2.0.3: Required for UDP transport stability and security patches
   # Fixes buffer overflow issues in UDP datagram handling and improves rate limiting
   dart_udx: ^2.0.3

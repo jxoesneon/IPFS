@@ -12,6 +12,7 @@
 ### Security
 - `xml` security override raised from `^7.0.1` to `^7.1.0`.
 - `dart_ipfs_quic` now carries the umbrella's `dart_udx ^2.0.3` security override. Its `ipfs_libp2p` dependency still allows the older `dart_udx` releases, so the published satellite previously resolved the vulnerable version instead of the pinned one.
+- **`xml` now reaches consumers.** The `xml` pin used to live only in `dependency_overrides`, so pub.dev consumers kept resolving the older `xml` 6.x line — and declaring `xml` directly was not possible, because upstream `port_forwarder` constrains `xml` to `^6.5.0` and the two constraints cannot both be satisfied (that is what made the 1.11.6 release unresolvable; 1.11.7 reverted it). The UPnP / NAT-PCP / NAT-PMP port-forwarding implementation is now vendored into `lib/src/vendor/port_forwarder` (MIT, upstream v1.0.0), which removes the conflicting constraint. `xml ^7.1.0` is a direct dependency, and the `xml` override is gone.
 
 ## [1.19.0] - 2026-09-22
 

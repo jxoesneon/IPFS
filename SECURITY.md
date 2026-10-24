@@ -59,9 +59,6 @@ Dependencies are regularly audited. Security-critical overrides are documented i
 
 ```yaml
 dependency_overrides:
-  # xml ^7.1.0: Required for security fixes and compatibility with latest dependencies
-  # Resolves potential XML parsing vulnerabilities and ensures proper encoding support
-  xml: ^7.1.0
   # dart_udx ^2.0.3: Required for UDP transport stability and security patches
   # Fixes buffer overflow issues in UDP datagram handling and improves rate limiting
   dart_udx: ^2.0.3
@@ -71,6 +68,19 @@ The `dart_udx` pin is mirrored in the published `dart_ipfs_quic` satellite: its
 `ipfs_libp2p` dependency still allows the older `dart_udx` releases, so the
 satellite carries the same override instead of resolving the vulnerable
 versions.
+
+`xml` used to be pinned the same way, which meant the pin only applied to
+local development and CI — pub.dev consumers kept resolving the older `xml`
+6.x line, because overrides are not published. Declaring `xml` directly was
+not an option either: upstream `port_forwarder` constrains `xml` to `^6.5.0`,
+so a direct `^7.1.0` dependency made the package unresolvable for consumers
+(that is what broke the 1.11.6 release; 1.11.7 reverted it).
+
+The UPnP / NAT-PCP / NAT-PMP port-forwarding implementation is therefore
+vendored into `lib/src/vendor/port_forwarder` (MIT, upstream v1.0.0 — see the
+README in that directory), which removes the conflicting constraint. `xml` is
+now a direct dependency of `dart_ipfs` at `^7.1.0`, so consumers resolve the
+same version the project is tested against.
 
 ### Cryptography Dependency Consolidation (2026-01)
 

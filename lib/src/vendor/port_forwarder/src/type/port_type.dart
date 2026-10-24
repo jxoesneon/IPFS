@@ -1,0 +1,4 @@
+enum PortType {
+  tcp,
+  udp
+}
