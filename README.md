@@ -3,7 +3,7 @@
 A complete, production-ready IPFS (InterPlanetary File System) implementation in Dart, supporting offline, gateway, and full P2P modes. Built for a seamless multi-platform experience.
 
 [![pub package](https://img.shields.io/pub/v/dart_ipfs.svg)](https://pub.dev/packages/dart_ipfs)
-[![Dart](https://img.shields.io/badge/dart-%3E%3D3.10.0-blue.svg)](https://dart.dev/)
+[![Dart](https://img.shields.io/badge/dart-%3E%3D3.13.0-blue.svg)](https://dart.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) and Web (Chrome, Firefox, Safari). The `IpfsPlatform` abstraction automatically handles storage (File System vs. IndexedDB) based on the target platform.
@@ -62,7 +62,34 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
 
 ---
 
-## What's New in v1.19 (current: v1.19.0)
+## What's New in v2.0 (current: v2.0.0)
+
+### Breaking Changes
+
+| Change | Description |
+| ------- | ----------- |
+| **Minimum Dart SDK 3.13.0** | The dependency set is refreshed to the latest releases, several of which require Dart 3.11-3.13 (`web`, `xml`, `idb_shim`, `synchronized`, `test`, `build_runner`, `very_good_analysis`). Consumers on Dart 3.10-3.12 must move to Dart 3.13 before upgrading. |
+| **`flutter_ipfs` requires Flutter 3.47+** | The first stable Flutter line bundling Dart 3.13. |
+| **`dart_ipfs_quic` requires Dart 3.11+** | Matches the toolchain its own dev dependencies need. |
+
+### Dependencies
+
+| Change | Description |
+| ------- | ----------- |
+| **Dart packages on latest** | `uuid 4.6.0`, `web 1.1.2`, `protobuf 6.1.0`, `async 2.13.1`, `idb_shim 2.10.1+1`, `archive 4.5.2`, `cbor 6.5.1`, `shelf_router 1.1.5`, `intl 0.20.3`, `markdown 7.3.1`, `synchronized 3.5.0`, `multicast_dns 0.3.3+1`, `cipherlib 0.7.2`, `jose 0.3.5+2`, `mime 2.1.0`, `args 2.7.0`, `yaml 3.1.4`, `meta 1.19.0`, `shelf 1.4.3`, `grpc 5.2.0`, `dart_lz4 1.4.0`, `get_it 9.3.0`, `test 1.33.0`, `coverage 1.16.0`, `mockito 5.8.1`, `fake_async 1.3.3` — plus the latest releases across the `dart_ipfs_core`, `dart_ipfs_quic`, and `flutter_ipfs` satellites. |
+| **Helia interop harness refreshed** | `helia 5.5.1`, `libp2p 2.10.0`, `express 5.3.0`, `@ipld/car 5.4.7` and the latest `@helia/*` releases. The harness stays on the libp2p 2.x line because `@chainsafe/libp2p-gossipsub` has not shipped a libp2p 3 release. |
+| **Fewer npm advisories** | The refreshed lockfile fixes the `body-parser`, `follow-redirects`, and `undici` advisories in the interop harness (high-severity findings: 7 -> 4). |
+
+### Security
+
+| Change | Description |
+| ------- | ----------- |
+| **`xml` pin raised** | The `xml` security override moves from `^7.0.1` to `^7.1.0`. |
+| **`dart_udx` pin mirrored** | `dart_ipfs_quic` now carries the umbrella's `dart_udx ^2.0.3` override, so the published satellite no longer resolves the older `dart_udx` release its `ipfs_libp2p` dependency still allows. |
+
+---
+
+## What's New in v1.19
 
 ### Major Features & Security
 
@@ -222,7 +249,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.19.0
+  dart_ipfs: ^2.0.0
 ```
 
 Or from Git for latest development:

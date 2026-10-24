@@ -1,6 +1,6 @@
 name: dart_ipfs_core
 description: Stable core primitives for dart_ipfs (CID, multihash, multibase, block, codecs, crypto).
-version: 1.13.0
+version: 1.14.0
 homepage: https://github.com/jxoesneon/IPFS
 repository: https://github.com/jxoesneon/IPFS
 issue_tracker: https://github.com/jxoesneon/IPFS/issues
@@ -14,7 +14,7 @@ dependencies:
   dart_multihash: ^1.0.1
 
   # Serialization
-  cbor: ^6.3.7
+  cbor: ^6.5.1
   convert: ^3.1.2
 
   # Cryptography
@@ -23,9 +23,9 @@ dependencies:
 
   # Common utilities
   collection: ^1.19.1
-  meta: ^1.17.0
+  meta: ^1.19.0
 
 dev_dependencies:
-  test: ^1.28.0
+  test: ^1.33.0
   lints: ^6.1.0
-  very_good_analysis: ^10.1.0
+  very_good_analysis: ">=10.1.0 <12.0.0"

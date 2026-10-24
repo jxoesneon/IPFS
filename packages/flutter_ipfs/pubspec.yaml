@@ -7,8 +7,8 @@ repository: https://github.com/jxoesneon/IPFS
 issue_tracker: https://github.com/jxoesneon/IPFS/issues
 
 environment:
-  sdk: '>=3.5.0 <4.0.0'
-  flutter: ">=3.16.0"
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: ">=3.47.0"
 
 dependencies:
   flutter:
@@ -16,12 +16,12 @@ dependencies:
   dart_ipfs:
     path: ../../
   collection: ^1.19.1
-  meta: ^1.16.0
+  meta: ^1.19.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 dependency_overrides:
   dart_ipfs_core:

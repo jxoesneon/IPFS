@@ -5,6 +5,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] - 2026-10-24
+
+### Changed
+- Dependencies updated to their latest releases: `cbor 6.5.1`, `meta 1.19.0`, `test 1.33.0`. The `very_good_analysis` dev constraint is widened to `>=10.1.0 <12.0.0` so the lint set tracks the current release on Dart 3.13 while still resolving on Dart 3.10.
+
 ## [1.13.0] - 2026-09-22
 
 ### Changed
