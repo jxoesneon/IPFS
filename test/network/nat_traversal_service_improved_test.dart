@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-import 'package:port_forwarder/port_forwarder.dart';
+import 'package:dart_ipfs/src/vendor/port_forwarder/port_forwarder.dart';
 import 'package:dart_ipfs/src/network/nat_traversal_service.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 

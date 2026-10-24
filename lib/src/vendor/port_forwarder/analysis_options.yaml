@@ -1,0 +1,28 @@
+# Analysis options for the vendored `port_forwarder` copy.
+#
+# This directory is a verbatim copy of the MIT-licensed `port_forwarder`
+# package (https://github.com/Auties00/port_forwarder, v1.0.0 — see LICENSE).
+# It is kept as close to upstream as possible so it can be re-synced when
+# upstream publishes a new release, which means it intentionally does not
+# follow the project's lint policy: upstream has no doc comments, uses double
+# quotes, and orders members differently.
+#
+# The project's own rules still apply to every file outside this directory.
+include: package:lints/recommended.yaml
+
+analyzer:
+  errors:
+    public_member_api_docs: ignore
+
+linter:
+  rules:
+    directives_ordering: false
+    prefer_single_quotes: false
+    sort_constructors_first: false
+    always_declare_return_types: false
+    prefer_final_fields: false
+    prefer_const_constructors: false
+    prefer_const_literals_to_create_immutables: false
+    unawaited_futures: false
+    avoid_print: false
+    prefer_initializing_formals: false

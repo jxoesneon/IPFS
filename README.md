@@ -85,6 +85,7 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
 | Change | Description |
 | ------- | ----------- |
 | **`xml` pin raised** | The `xml` security override moves from `^7.0.1` to `^7.1.0`. |
+| **`xml` now reaches consumers** | The UPnP / NAT-PCP / NAT-PMP port-forwarding implementation is vendored into `lib/src/vendor/port_forwarder` (MIT, upstream v1.0.0), removing upstream's conflicting `xml ^6.5.0` constraint. `xml ^7.1.0` is now a direct dependency, so consumers resolve the same version the project is tested against instead of the older 6.x line. |
 | **`dart_udx` pin mirrored** | `dart_ipfs_quic` now carries the umbrella's `dart_udx ^2.0.3` override, so the published satellite no longer resolves the older `dart_udx` release its `ipfs_libp2p` dependency still allows. |
 
 ---
