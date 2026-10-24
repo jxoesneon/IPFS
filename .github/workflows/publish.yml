@@ -104,11 +104,15 @@ jobs:
         if: steps.targets.outputs.umbrella == 'true'
         run: dart test --coverage=coverage --reporter=expanded
 
+      - name: Prune empty coverage reports (umbrella)
+        if: steps.targets.outputs.umbrella == 'true'
+        run: dart run tool/prune_empty_coverage.dart --dir=coverage
+
       - name: Changed-line coverage gate (umbrella)
         if: steps.targets.outputs.umbrella == 'true'
         run: |
           dart pub global run coverage:format_coverage \
-            --lcov --in=coverage --out=coverage/lcov.info \
+            --check-ignore --lcov --in=coverage --out=coverage/lcov.info \
             --packages=.dart_tool/package_config.json --report-on=lib
           dart run tool/changed_line_coverage.dart \
             --base="${{ steps.base.outputs.base }}" --lcov=coverage/lcov.info
@@ -118,6 +122,10 @@ jobs:
         working-directory: packages/dart_ipfs_core
         run: dart pub get
 
+      - name: Prune empty coverage reports (core)
+        if: steps.targets.outputs.core == 'true'
+        run: dart run tool/prune_empty_coverage.dart --dir=packages/dart_ipfs_core/coverage
+
       - name: Analyze + test core (with coverage)
         if: steps.targets.outputs.core == 'true'
         working-directory: packages/dart_ipfs_core
@@ -125,7 +133,7 @@ jobs:
           dart analyze --fatal-warnings
           dart test --coverage=coverage --reporter=expanded
           dart pub global run coverage:format_coverage \
-            --lcov --in=coverage --out=coverage/lcov.info \
+            --check-ignore --lcov --in=coverage --out=coverage/lcov.info \
             --packages=.dart_tool/package_config.json --report-on=lib
 
       - name: Changed-line coverage gate (core)
@@ -141,6 +149,10 @@ jobs:
         working-directory: packages/dart_ipfs_quic
         run: dart pub get
 
+      - name: Prune empty coverage reports (quic)
+        if: steps.targets.outputs.quic == 'true'
+        run: dart run tool/prune_empty_coverage.dart --dir=packages/dart_ipfs_quic/coverage
+
       - name: Analyze + test quic (with coverage)
         if: steps.targets.outputs.quic == 'true'
         working-directory: packages/dart_ipfs_quic
@@ -148,7 +160,7 @@ jobs:
           dart analyze --fatal-warnings
           dart test --coverage=coverage --reporter=expanded
           dart pub global run coverage:format_coverage \
-            --lcov --in=coverage --out=coverage/lcov.info \
+            --check-ignore --lcov --in=coverage --out=coverage/lcov.info \
             --packages=.dart_tool/package_config.json --report-on=lib
 
       - name: Changed-line coverage gate (quic)

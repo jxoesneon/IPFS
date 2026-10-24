@@ -307,6 +307,24 @@ void main() {
         final response = await handler.handlePath(request);
         expect(response.statusCode, equals(404));
       });
+
+      test('returns 404 when the Bitswap leg throws', () async {
+        when(
+          mockBlockStore.getBlock(cidStr),
+        ).thenAnswer((_) async => notFoundResponse());
+        // A Bitswap retrieval that throws is logged and reported as a
+        // miss — the gateway must not fail the request with it.
+        when(
+          mockBitswap.wantBlock(cidStr),
+        ).thenThrow(Exception('bitswap unavailable'));
+
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/$cidStr?format=raw'),
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(404));
+      });
     });
 
     group('?format=car', () {

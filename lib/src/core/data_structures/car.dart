@@ -619,6 +619,21 @@ class CarWriter {
     return builder.toBytes();
   }
 
+  /// Builds a header-only CAR v1 archive whose single root is [root].
+  ///
+  /// Identity CIDs carry their content inline and MUST NOT appear in a CAR
+  /// data section, so a CAR rooted at an identity CID advertises the root in
+  /// the header and carries no data section at all. [close] cannot produce
+  /// that archive — it requires every root to be written as a section — so
+  /// callers serving an identity root use this instead.
+  static Future<Uint8List> headerOnlyCar(CID root) async {
+    final headerBytes = await CarHeader(version: 1, roots: [root])._toBytes();
+    return Uint8List.fromList([
+      ..._encodeVarint(headerBytes.length),
+      ...headerBytes,
+    ]);
+  }
+
   /// Emits the complete file as a stream of byte chunks.
   ///
   /// For CAR v2 with [index] the entire payload is still materialised in

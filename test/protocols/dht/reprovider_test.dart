@@ -317,6 +317,63 @@ void main() {
     );
 
     test(
+      'sweep groups CIDs per closest peer when the routing table is full',
+      () async {
+        // More peers than the bucket size: the sweep cannot reuse one
+        // closest-peer snapshot for every CID and groups them per key.
+        final router = FakeRouter();
+        final nodeConfig = IPFSConfig(
+          dht: const DHTConfig(
+            bucketSize: 2,
+            requestTimeout: Duration(milliseconds: 100),
+          ),
+        );
+        final networkHandler = NetworkHandler(nodeConfig, router: router);
+        final concreteDht = DHTHandler(
+          nodeConfig,
+          router,
+          networkHandler,
+          storage: datastore,
+        );
+        await concreteDht.dhtClient.initialize();
+        addTearDown(() async {
+          await concreteDht.stop();
+        });
+
+        for (var seed = 1; seed <= 3; seed++) {
+          final peer = PeerId(
+            value: Uint8List.fromList(
+              List.generate(32, (i) => (seed * 10 + i) % 256),
+            ),
+          );
+          await concreteDht.dhtClient.kademliaRoutingTable.addPeer(peer, peer);
+        }
+
+        final cid = await addBlock(Uint8List.fromList([81, 82, 83]));
+        await pinRecursive(cid);
+
+        reprovider = Reprovider(
+          config: const DHTConfig(
+            reproviderEnabled: false,
+            reproviderStrategy: 'pinned',
+            reproviderBatchSize: 100,
+            reproviderConcurrency: 10,
+            reproviderSweepOptimization: true,
+          ),
+          dhtHandler: concreteDht,
+          pinManager: pinManager,
+          mfsManager: mfsManager,
+          metrics: metrics,
+        );
+
+        final result = await reprovider.trigger(wait: true);
+
+        expect(result.groupedCids, isNotNull);
+        expect(result.groupedCids!.values.expand((c) => c), contains(cid));
+      },
+    );
+
+    test(
       'sweep provides CIDs in XOR-distance order from the local peer',
       () async {
         final router = FakeRouter();

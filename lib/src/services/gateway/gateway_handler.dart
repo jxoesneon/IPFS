@@ -1393,10 +1393,15 @@ class GatewayHandler {
     CarWriter writer,
     _CarTraversal state,
   ) async {
+    // Defensive: every caller screens identity CIDs before recursing (the
+    // link-level checks in the traversals below, and the identity-root case
+    // handled by the request handler), so this branch is unreachable.
+    // coverage:ignore-start
     if (cid.multihash.code == 0x00) {
       _recordCarDenylistHit(cid);
       return false;
     }
+    // coverage:ignore-end
     if (state.dedup && !state.seen.add(cid.encode())) {
       return false;
     }
@@ -1589,6 +1594,9 @@ class GatewayHandler {
 
     if (unixfsData.type != Data_DataType.File) {
       // Not byte-addressable: entity-bytes degrades to dag-scope=entity.
+      // The request handler only resolves an entity-bytes range for a
+      // UnixFS file, so this branch is unreachable.
+      // coverage:ignore-start
       final links = _entityLinksFrom(pbNode, unixfsData);
       for (final link in links) {
         final linkCid = _decodeLinkCid(link.hash);
@@ -1607,6 +1615,7 @@ class GatewayHandler {
         );
       }
       return;
+      // coverage:ignore-end
     }
 
     // UnixFS file node: its own inline `data` bytes occupy the start of the

@@ -171,6 +171,10 @@ bool _looksExecutable(String line) {
     return false;
   }
   if (RegExp(r'^(import|export|part|library)\b').hasMatch(t)) return false;
+  // `show`/`hide` clauses continue an import/export directive — the
+  // continuation line carries no executable code (e.g. a multi-line export
+  // in the umbrella barrel file).
+  if (RegExp(r'^(show|hide)\b').hasMatch(t)) return false;
   if (RegExp(r'^[{}()\[\];,.]*$').hasMatch(t)) return false;
   // `const` declarations are compile-time — the VM still emits DA rows that
   // can never report a hit (e.g. the package version constant).
@@ -178,9 +182,8 @@ bool _looksExecutable(String line) {
   if (t.endsWith('{') &&
       !t.contains('=') &&
       RegExp(r'^\w[\w<>\[\]?]*\s+\w+\s*\(').hasMatch(t) &&
-      !RegExp(
-        r'^(if|for|while|switch|return|throw|await|yield|assert|case)\b',
-      ).hasMatch(t)) {
+      !RegExp(r'^(if|for|while|switch|return|throw|await|yield|assert|case)\b')
+          .hasMatch(t)) {
     return false;
   }
   return true;

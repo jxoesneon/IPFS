@@ -43,6 +43,20 @@ awk '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END {printf "%.2f%%\n", lh/lf*100}' coverage/
 ```
 Target: 80% line coverage. As of 2026-07-09: 85.79% achieved.
 
+**Empty coverage reports:** `dart test --coverage` writes one `*.vm.json` per
+suite, and a suite that never runs (the Docker-gated interop tests are
+skipped by default) produces an empty `{}` report. `coverage` 1.16 rejects
+those outright, so the reports must be pruned before formatting:
+
+```bash
+dart run tool/prune_empty_coverage.dart --dir=coverage
+```
+
+The publish workflow runs this step before `format_coverage` for the umbrella
+and both satellites. `format_coverage --check-ignore` is used as well, so the
+`coverage:ignore-file` markers (the vendored third-party tree) are excluded
+from the reported figure the same way the changed-line gate excludes them.
+
 **Release gate (since 1.16.0):** after implementation and before publishing or tagging, new and changed code must be at ~100% line coverage. Scope the check to the diff: run `dart test --coverage=coverage` over the affected test trees, then compute per-file coverage for the files changed in the release. Close any gaps with focused tests before tagging; do not publish with uncovered new lines.
 
 **Merging coverage from multiple runs:** `format_coverage` emits one `SF` record per VM JSON input rather than combining hits — concatenating JSON files and re-formatting produces duplicate source-file records that the changed-line gate reads as uncovered. Worse, a targeted run emits `DA:<line>,0` rows for lines the full suite never instrumented (lazy compilation differences — e.g. class declaration lines), so naive per-line `max()` merging manufactures false uncovered lines. Correct merge: the full suite's `DA` row set is authoritative — for each `SF`, keep the base rows and apply `hits = max(base, delta)`; add delta rows only when `hits > 0` (a positive hit proves the line coverable); drop delta-only zero-hit rows. See `tool/changed_line_coverage.dart` consumers before rerunning partial coverage.

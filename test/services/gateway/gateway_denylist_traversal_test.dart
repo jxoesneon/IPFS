@@ -53,9 +53,8 @@ void main() {
   }
 
   void stubBlock(CID cid, Uint8List data) {
-    when(
-      mockBlockStore.getBlock(cid.encode()),
-    ).thenAnswer((_) async => foundResponse(Block(cid: cid, data: data)));
+    when(mockBlockStore.getBlock(cid.encode()))
+        .thenAnswer((_) async => foundResponse(Block(cid: cid, data: data)));
   }
 
   /// Builds a UnixFS directory node with a single named link to [childCid]
@@ -65,9 +64,8 @@ void main() {
       links: <dag_pb.PBLink>[
         dag_pb.PBLink(name: linkName, hash: childCid.toBytes()),
       ],
-      data: unixfs_pb.Data(
-        type: unixfs_pb.Data_DataType.Directory,
-      ).writeToBuffer(),
+      data: unixfs_pb.Data(type: unixfs_pb.Data_DataType.Directory)
+          .writeToBuffer(),
     );
     final bytes = Uint8List.fromList(node.writeToBuffer());
     return (await CID.computeForData(bytes, format: 'dag-pb'), bytes);
@@ -93,9 +91,8 @@ void main() {
   setUp(() {
     mockBlockStore = MockBlockStore();
     metrics = _MockMetricsCollector();
-    when(
-      mockBlockStore.getBlock(any),
-    ).thenAnswer((_) async => GetBlockResponse()..found = false);
+    when(mockBlockStore.getBlock(any))
+        .thenAnswer((_) async => GetBlockResponse()..found = false);
   });
 
   group('denylist traversal gating', () {
@@ -311,9 +308,9 @@ void main() {
       // written to the CAR — but the denylist hit is audited as 'car'.
       expect(response.statusCode, equals(200));
       final body = await response.read().expand((i) => i).toList();
-      final sections = await CarReader.fromBytes(
-        Uint8List.fromList(body),
-      ).sections().toList();
+      final sections = await CarReader.fromBytes(Uint8List.fromList(body))
+          .sections()
+          .toList();
       expect(
         sections.map((s) => s.cid.encode()).toList(),
         equals([dirCid.encode()]),
@@ -349,9 +346,9 @@ void main() {
       );
       expect(response.statusCode, equals(200));
       final body = await response.read().expand((i) => i).toList();
-      final sections = await CarReader.fromBytes(
-        Uint8List.fromList(body),
-      ).sections().toList();
+      final sections = await CarReader.fromBytes(Uint8List.fromList(body))
+          .sections()
+          .toList();
       // Identity content is inline in the link; the CAR data section holds
       // only the directory block.
       expect(
@@ -380,9 +377,7 @@ void main() {
       final response = await handler.handlePath(
         Request(
           'GET',
-          Uri.parse(
-            'http://localhost/ipfs/${dirCid.encode()}/inline.txt',
-          ),
+          Uri.parse('http://localhost/ipfs/${dirCid.encode()}/inline.txt'),
         ),
       );
       expect(response.statusCode, equals(200));
@@ -391,6 +386,259 @@ void main() {
         equals(inlineData),
       );
       verifyNever(mockBlockStore.getBlock(idCid.encode()));
+    });
+
+    test('a CAR request for an identity-CID root writes no section', () async {
+      final handler = makeHandler(null);
+
+      // The root's content is inline in the digest, so there is nothing to
+      // write: identity CIDs never appear in CAR data sections.
+      final inlineData = Uint8List.fromList([51, 52, 53]);
+      final idCid = CID.v1(
+        'raw',
+        MultihashInfo(
+          code: 0x00,
+          name: 'identity',
+          digest: inlineData,
+          size: inlineData.length,
+        ),
+      );
+
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/${idCid.encode()}?format=car'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final body = await response.read().expand((i) => i).toList();
+      final reader = CarReader.fromBytes(Uint8List.fromList(body));
+      // The header names the identity root, but no data section is written
+      // for it — identity CIDs never appear in CAR data sections.
+      expect(
+        (await reader.header).roots.map((c) => c.encode()).toList(),
+        equals([idCid.encode()]),
+      );
+      await expectLater(
+        reader.sections().toList(),
+        throwsA(isA<CarException>()),
+      );
+    });
+
+    test('entity scope skips an identity-CID child', () async {
+      final handler = makeHandler(null);
+
+      final inlineData = Uint8List.fromList([61, 62, 63]);
+      final idCid = CID.v1(
+        'raw',
+        MultihashInfo(
+          code: 0x00,
+          name: 'identity',
+          digest: inlineData,
+          size: inlineData.length,
+        ),
+      );
+      final (dirCid, dirBytes) = await makeDir('inline.bin', idCid);
+      stubBlock(dirCid, dirBytes);
+
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/ipfs/${dirCid.encode()}'
+            '?format=car&dag-scope=entity',
+          ),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final body = await response.read().expand((i) => i).toList();
+      final sections = await CarReader.fromBytes(Uint8List.fromList(body))
+          .sections()
+          .toList();
+      // Only the directory itself is part of the entity — the identity
+      // child is skipped, never fetched and never written.
+      expect(
+        sections.map((s) => s.cid.encode()).toList(),
+        equals([dirCid.encode()]),
+      );
+      verifyNever(mockBlockStore.getBlock(idCid.encode()));
+    });
+
+    test('entity scope over a byte range skips identity children', () async {
+      final handler = makeHandler(null);
+
+      // A directory is not byte-addressable, so an entity-bytes request
+      // degrades to entity scope; the identity child is skipped there too.
+      final inlineData = Uint8List.fromList([71, 72, 73]);
+      final idCid = CID.v1(
+        'raw',
+        MultihashInfo(
+          code: 0x00,
+          name: 'identity',
+          digest: inlineData,
+          size: inlineData.length,
+        ),
+      );
+      final (dirCid, dirBytes) = await makeDir('inline.bin', idCid);
+      stubBlock(dirCid, dirBytes);
+
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/ipfs/${dirCid.encode()}'
+            '?format=car&entity-bytes=0:2',
+          ),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final body = await response.read().expand((i) => i).toList();
+      final sections = await CarReader.fromBytes(Uint8List.fromList(body))
+          .sections()
+          .toList();
+      expect(
+        sections.map((s) => s.cid.encode()).toList(),
+        equals([dirCid.encode()]),
+      );
+      verifyNever(mockBlockStore.getBlock(idCid.encode()));
+    });
+
+    test('entity scope over a file skips identity chunks', () async {
+      final handler = makeHandler(null);
+
+      final inlineData = Uint8List.fromList([81, 82, 83]);
+      final idCid = CID.v1(
+        'raw',
+        MultihashInfo(
+          code: 0x00,
+          name: 'identity',
+          digest: inlineData,
+          size: inlineData.length,
+        ),
+      );
+      // A UnixFS file whose chunk is an identity CID: the chunk is skipped
+      // in the entity traversal (and in the byte-range traversal).
+      final node = dag_pb.PBNode(
+        links: <dag_pb.PBLink>[
+          dag_pb.PBLink(hash: idCid.toBytes(), size: Int64(3)),
+        ],
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.File,
+          filesize: Int64(3),
+          blocksizes: [Int64(3)],
+        ).writeToBuffer(),
+      );
+      final fileBytes = Uint8List.fromList(node.writeToBuffer());
+      final fileCid = await CID.computeForData(fileBytes, format: 'dag-pb');
+      stubBlock(fileCid, fileBytes);
+
+      for (final query in const [
+        '?format=car&dag-scope=entity',
+        '?format=car&entity-bytes=0:2',
+      ]) {
+        final response = await handler.handlePath(
+          Request(
+            'GET',
+            Uri.parse('http://localhost/ipfs/${fileCid.encode()}$query'),
+          ),
+        );
+        expect(response.statusCode, equals(200), reason: query);
+        final body = await response.read().expand((i) => i).toList();
+        final sections = await CarReader.fromBytes(Uint8List.fromList(body))
+            .sections()
+            .toList();
+        expect(
+          sections.map((s) => s.cid.encode()).toList(),
+          equals([fileCid.encode()]),
+          reason: query,
+        );
+      }
+      verifyNever(mockBlockStore.getBlock(idCid.encode()));
+    });
+
+    test(
+      'entity scope over a file without blocksizes skips identity chunks',
+      () async {
+        final handler = makeHandler(null);
+
+        final inlineData = Uint8List.fromList([91, 92, 93]);
+        final idCid = CID.v1(
+          'raw',
+          MultihashInfo(
+            code: 0x00,
+            name: 'identity',
+            digest: inlineData,
+            size: inlineData.length,
+          ),
+        );
+        // No blocksizes: the traversal cannot map the file's byte range, so it
+        // falls back to walking the node's links.
+        final node = dag_pb.PBNode(
+          links: <dag_pb.PBLink>[
+            dag_pb.PBLink(hash: idCid.toBytes(), size: Int64(3)),
+          ],
+          data: unixfs_pb.Data(
+            type: unixfs_pb.Data_DataType.File,
+            filesize: Int64(3),
+          ).writeToBuffer(),
+        );
+        final fileBytes = Uint8List.fromList(node.writeToBuffer());
+        final fileCid = await CID.computeForData(fileBytes, format: 'dag-pb');
+        stubBlock(fileCid, fileBytes);
+
+        final response = await handler.handlePath(
+          Request(
+            'GET',
+            Uri.parse(
+              'http://localhost/ipfs/${fileCid.encode()}'
+              '?format=car&entity-bytes=0:2',
+            ),
+          ),
+        );
+        expect(response.statusCode, equals(200));
+        final body = await response.read().expand((i) => i).toList();
+        final sections = await CarReader.fromBytes(Uint8List.fromList(body))
+            .sections()
+            .toList();
+        expect(
+          sections.map((s) => s.cid.encode()).toList(),
+          equals([fileCid.encode()]),
+        );
+        verifyNever(mockBlockStore.getBlock(idCid.encode()));
+      },
+    );
+
+    test('a malformed link target surfaces the decoder error', () async {
+      final handler = makeHandler(null);
+
+      // A link target that is neither a CID nor an identity CID: the
+      // traversal surfaces the strict decoder's error instead of crashing.
+      // A UnixFS file node is used because a directory's links are not part
+      // of its entity.
+      final node = dag_pb.PBNode(
+        links: <dag_pb.PBLink>[
+          dag_pb.PBLink(name: 'broken', hash: Uint8List.fromList([0x02, 0x03])),
+        ],
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.File,
+          filesize: Int64(3),
+          blocksizes: [Int64(3)],
+        ).writeToBuffer(),
+      );
+      final fileBytes = Uint8List.fromList(node.writeToBuffer());
+      final fileCid = await CID.computeForData(fileBytes, format: 'dag-pb');
+      stubBlock(fileCid, fileBytes);
+
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/ipfs/${fileCid.encode()}'
+            '?format=car&dag-scope=entity',
+          ),
+        ),
+      );
+      expect(response.statusCode, isNot(equals(200)));
     });
   });
 }

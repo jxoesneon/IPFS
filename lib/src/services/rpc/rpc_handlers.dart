@@ -217,9 +217,8 @@ class RPCHandlers {
         final contentDisposition = part.headers['content-disposition'];
         String name = cid; // Fallback name
         if (contentDisposition != null) {
-          final nameMatch = RegExp(
-            r'filename="([^"]+)"',
-          ).firstMatch(contentDisposition);
+          final nameMatch = RegExp(r'filename="([^"]+)"')
+              .firstMatch(contentDisposition);
           if (nameMatch != null) {
             name = nameMatch.group(1)!;
           }
@@ -341,9 +340,8 @@ class RPCHandlers {
       );
     }
 
-    final dirData = unixfs_pb.Data(
-      type: unixfs_pb.Data_DataType.Directory,
-    ).writeToBuffer();
+    final dirData = unixfs_pb.Data(type: unixfs_pb.Data_DataType.Directory)
+        .writeToBuffer();
     final node_ = dag_pb.PBNode(data: dirData, links: links);
     final serialized = marshalDagPBNode(node_);
 
@@ -653,7 +651,8 @@ class RPCHandlers {
         for (final link in pbNode.links) {
           // Lenient decode tolerates zero-length identity digests; malformed
           // link targets still surface the strict decoder's error.
-          final childCid = tryDecodeCidBytesLenient(link.hash) ??
+          final childCid =
+              tryDecodeCidBytesLenient(link.hash) ??
               CID.fromBytes(Uint8List.fromList(link.hash));
           final child = await _rpcGetBlock(childCid.encode());
           if (child == null) {
@@ -1042,6 +1041,11 @@ class RPCHandlers {
     if (root == null) {
       throw FormatException('Invalid CID: $rootCidStr');
     }
+    if (root.multihash.code == 0x00) {
+      // An identity root carries its content inline, so it never appears in
+      // a CAR data section: the archive advertises the root and stops there.
+      return CarWriter.headerOnlyCar(root);
+    }
     final writer = CarWriter(roots: [root]);
     final visited = <String>{};
     // CAR output is fully buffered, so bound payload bytes as well as
@@ -1100,7 +1104,8 @@ class RPCHandlers {
         // never fetched or written to the CAR — matching Kubo, which omits
         // them from exports. The lenient decode also tolerates zero-length
         // identity digests; malformed targets surface the strict error.
-        final linkCid = tryDecodeCidBytesLenient(link.hash) ??
+        final linkCid =
+            tryDecodeCidBytesLenient(link.hash) ??
             CID.fromBytes(Uint8List.fromList(link.hash));
         if (linkCid.multihash.code == 0x00) {
           _recordSkippedIdentityLink(linkCid);
@@ -1428,8 +1433,12 @@ class RPCHandlers {
         return _errorResponse('Block not found', code: 404);
       }
       return Response.ok(block.data);
+      // Defensive: the denylist gate above already answered a blocked CID,
+      // so the fetcher's own gate cannot throw for the same CID.
+      // coverage:ignore-start
     } on DenylistBlockedException {
       return _denylistBlockedResponse();
+      // coverage:ignore-end
     } catch (e, st) {
       _logger.error('Block get failed for cid: $cid', e, st);
       return _errorResponse('Block get failed');

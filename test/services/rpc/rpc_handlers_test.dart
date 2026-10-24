@@ -8,7 +8,8 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/data_structures/car.dart' show CarReader;
+import 'package:dart_ipfs/src/core/data_structures/car.dart'
+    show CarException, CarReader;
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
@@ -856,6 +857,34 @@ void main() {
       expect(response.statusCode, equals(500));
     });
 
+    test('handleGet surfaces a malformed link target in the TAR export',
+        () async {
+      // A directory whose child link target is neither a CID nor an
+      // identity CID: the TAR export surfaces the strict decoder's error.
+      final node = dag_pb.PBNode(
+        links: <dag_pb.PBLink>[
+          dag_pb.PBLink(name: 'broken', hash: Uint8List.fromList([0x02, 0x03])),
+        ],
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+      );
+      final bytes = Uint8List.fromList(node.writeToBuffer());
+      final block = await Block.fromData(bytes, format: 'dag-pb');
+      when(mockBlockStore.getBlock(block.cid.encode())).thenAnswer(
+        (_) async => GetBlockResponse()
+          ..found = true
+          ..block = block.toProto(),
+      );
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/get?arg=/ipfs/${block.cid}'),
+      );
+      final response = await handlers.handleGet(request);
+      expect(response.statusCode, isNot(equals(200)));
+    });
+
     test('handleGet returns a TAR archive for a file', () async {
       final block = await Block.fromData(
         Uint8List.fromList(utf8.encode('tar me')),
@@ -1245,6 +1274,81 @@ void main() {
       when(
         mockBlockStore.getBlock(block.cid.toString()),
       ).thenAnswer((_) async => GetBlockResponse()..found = false);
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dag/export?arg=${block.cid}'),
+      );
+      final response = await handlers.handleDagExport(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleDagExport rejects an invalid root CID', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dag/export?arg=not-a-cid'),
+      );
+      final response = await handlers.handleDagExport(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleDagExport skips an identity-CID root', () async {
+      // An identity CID carries its content inline, so there is nothing to
+      // fetch and nothing to write: the CAR advertises the root but has no
+      // data section.
+      final inlineData = Uint8List.fromList([31, 32, 33]);
+      final idCid = core.CID.v1(
+        'raw',
+        core.MultihashInfo(
+          code: 0x00,
+          name: 'identity',
+          digest: inlineData,
+          size: inlineData.length,
+        ),
+      );
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dag/export?arg=${idCid.encode()}'),
+      );
+      final response = await handlers.handleDagExport(request);
+      expect(response.statusCode, equals(200));
+
+      final body = await response.read().expand((i) => i).toList();
+      final reader = CarReader.fromBytes(Uint8List.fromList(body));
+      expect(
+        (await reader.header).roots.map((c) => c.encode()).toList(),
+        equals([idCid.encode()]),
+      );
+      await expectLater(
+        reader.sections().toList(),
+        throwsA(isA<CarException>()),
+      );
+      verifyNever(mockBlockStore.getBlock(any));
+    });
+
+    test('handleDagExport surfaces a malformed link target', () async {
+      // A link target that is neither a CID nor an identity CID: the export
+      // surfaces the strict decoder's error instead of crashing.
+      final node = dag_pb.PBNode(
+        links: <dag_pb.PBLink>[
+          dag_pb.PBLink(name: 'broken', hash: Uint8List.fromList([0x02, 0x03])),
+        ],
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.File,
+          filesize: Int64(3),
+          blocksizes: [Int64(3)],
+        ).writeToBuffer(),
+      );
+      final bytes = Uint8List.fromList(node.writeToBuffer());
+      final block = await Block.fromData(bytes, format: 'dag-pb');
+      when(
+        mockBlockStore.getBlock(block.cid.toString()),
+      ).thenAnswer(
+        (_) async => GetBlockResponse()
+          ..found = true
+          ..block = block.toProto(),
+      );
 
       final request = Request(
         'POST',
