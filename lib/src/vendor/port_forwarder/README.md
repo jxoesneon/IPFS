@@ -43,3 +43,15 @@ release:
 
 The protocol implementations (UPnP, NAT-PCP, NAT-PMP) are unchanged from
 upstream; only the import paths differ.
+
+## Coverage
+
+Each file in this directory starts with `// coverage:ignore-file`. The
+changed-line coverage gate (`tool/changed_line_coverage.dart`) requires new
+code to be covered; vendored third-party code is excluded with the gate's
+own `coverage:ignore-file` escape hatch, the same way the generated protobuf
+codecs are excluded. Upstream ships no tests for this package, and
+re-implementing its protocol suites is out of scope for a dependency refresh.
+
+If this copy is ever un-vendored or substantially rewritten, remove the
+markers and add real tests instead.

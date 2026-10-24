@@ -1,3 +1,5 @@
+// coverage:ignore-file
+
 import '../../port_forwarder.dart';
 
 class UPnPError extends GatewayError {

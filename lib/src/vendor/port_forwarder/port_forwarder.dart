@@ -1,3 +1,5 @@
+// coverage:ignore-file
+
 /// UPnP / NAT-PCP / NAT-PMP port forwarding.
 ///
 /// Vendored from the MIT-licensed `port_forwarder` package:

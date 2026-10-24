@@ -1,17 +1,17 @@
 # Changelog
 
-## 0.3.0
+## [0.3.0] - 2026-10-24
 
 - Minimum Dart SDK raised to 3.11.0 (from 3.4.0) to match the toolchain the package's dev dependencies need.
 - Dependencies updated to their latest releases: `ipfs_libp2p 0.5.11`, `dart_ipfs_core 1.14.0`, `collection 1.19.1`, `meta 1.19.0`, `logging 1.3.0`, `uuid 4.6.0`, `test 1.33.0`, `lints 6.1.0`.
 - Added the `dart_udx ^2.0.3` dependency override, mirroring the umbrella package's security pin. `ipfs_libp2p` still allows the older `dart_udx` releases, so without the override this published package resolved the vulnerable version.
 
-## 0.2.1
+## [0.2.1] - 2026-09-22
 
 - Excised dead native `quiche.dll` binary (3.2 MB), `quiche.h` C headers, and legacy `ffigen.yaml` configuration.
 - Bumped `dart_ipfs_core` dependency constraint to `^1.11.6`.
 
-## 0.2.0
+## [0.2.0] - 2026-09-01
 
 - Replaced Cloudflare quiche FFI backend with the pure-Dart `quic_lib` package from pub.dev.
 - Added `QuicTransport` implementing `package:ipfs_libp2p`'s `Transport` interface.
@@ -24,7 +24,7 @@
 - Fixed `QuicP2PStream.read()` buffering so incoming data is always buffered and `maxLength` reads work correctly.
 - Added comprehensive tests for `QuicListener`, `QuicP2PStream` read/write/close/reset, and `QuicConnection` metadata.
 
-## 0.1.0
+## [0.1.0] - 2026-08-01
 
 - Initial foundation package.
 - Hand-written FFI bindings to quiche 0.23.0 C API.
