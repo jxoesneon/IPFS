@@ -1,7 +1,7 @@
 # dart_ipfs Roadmap
 
-**Current Version**: 1.19.0 (Multi-Platform Production Ready)  
-**Last Updated**: 2026-09-17
+**Current Version**: 2.0.0 (Multi-Platform Production Ready)  
+**Last Updated**: 2026-10-24
 
 ---
 
@@ -72,7 +72,16 @@ dart_ipfs **v1.16.2** is **multi-platform production ready** with:
 
 ---
 
-### v2.0 - Q1 2027 (Pure-Dart WasmGC & Modular Core) [PLANNED]
+### v2.0 - Q4 2026 (Dependency Refresh & Dart 3.13 Floor) [SHIPPED]
+**Focus**: Move the whole dependency set onto the latest releases and raise the minimum Dart SDK accordingly.
+
+#### Key Deliverables
+- [x] Every direct Dart dependency on its latest resolvable release across the umbrella and the `dart_ipfs_core` / `dart_ipfs_quic` / `flutter_ipfs` satellites.
+- [x] Minimum Dart SDK raised to 3.13.0; `flutter_ipfs` requires Flutter 3.47+.
+- [x] Helia interop harness refreshed (`helia 5.5.1`, `libp2p 2.10.0`), npm advisories down from 7 to 4 high-severity.
+- [x] `xml` security override raised to `^7.1.0`; `dart_udx ^2.0.3` pin mirrored into the published `dart_ipfs_quic` satellite.
+
+### v2.1 - Q1 2027 (Pure-Dart WasmGC & Modular Core) [PLANNED]
 **Focus**: Zero deep imports, browser WasmGC compilation, and published monorepo packages.
 
 #### Key Deliverables
@@ -467,7 +476,7 @@ This roadmap is updated as priorities change. Feedback is welcome on:
 
 ---
 
-**Last Updated**: 2026-09-17 (v1.19.0) — parity and superiority backlog added
+**Last Updated**: 2026-10-24 (v2.0.0) — dependency refresh, Dart 3.13 floor
 **Status**: Active Development  
-**Current Version:** 1.19.0
-**Target for Next Release:** 2.0.0 (Q4 2026)
+**Current Version:** 2.0.0
+**Target for Next Release:** 2.1.0 (Q1 2027)

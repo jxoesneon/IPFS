@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [2.0.0] - 2026-10-24
 
 ### Changed
 - **Minimum Dart SDK is now 3.13.0** (was 3.10.0). The refreshed dependency set pulls in packages that require Dart 3.11–3.13 (`web`, `xml`, `idb_shim`, `synchronized`, `test`, `build_runner`, `very_good_analysis`). This drops support for consumers on Dart 3.10–3.12, so the next release must ship as **2.0.0**.
