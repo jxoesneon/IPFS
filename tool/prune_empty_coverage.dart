@@ -37,8 +37,9 @@ void main(List<String> args) {
 
   final root = Directory(dir);
   if (!root.existsSync()) {
-    stderr.writeln('coverage directory not found: $dir');
-    exit(2);
+    // Nothing to prune — the coverage run has not produced reports yet.
+    print('no coverage directory at $dir; nothing to prune');
+    return;
   }
 
   var removed = 0;
