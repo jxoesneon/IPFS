@@ -6,7 +6,7 @@ repository: https://github.com/jxoesneon/IPFS
 issue_tracker: https://github.com/jxoesneon/IPFS/issues
 
 environment:
-  sdk: ^3.10.0
+  sdk: ^3.13.0
 
 dependencies:
   catalyst_cose: ^1.0.0
@@ -14,8 +14,8 @@ dependencies:
   http: ^1.6.0
   fixnum: ^1.1.1
   convert: ^3.1.2
-  uuid: ^4.5.2
-  web: ^1.1.1
+  uuid: ^4.6.0
+  web: ^1.1.2
 
   # Networking and P2P
 
@@ -24,12 +24,12 @@ dependencies:
   pointycastle: ^4.0.0
 
   # Serialization
-  protobuf: ^6.0.0
-  async: ^2.13.0
+  protobuf: ^6.1.0
+  async: ^2.13.1
 
   # Data Storage
   hive: ^2.2.3
-  idb_shim: ^2.9.2 # IndexedDB for web storage
+  idb_shim: ^2.10.1+1 # IndexedDB for web storage
 
   # Logging
   logging: ^1.3.0
@@ -40,19 +40,19 @@ dependencies:
   dart_merkle_lib: ^1.0.1
   multibase: ^1.0.0
   dart_multihash: ^1.0.1
-  archive: ^4.0.7
+  archive: ^4.5.2
   murmurhash: ^1.0.1
-  cbor: ^6.3.7
-  shelf_router: ^1.1.4
-  intl: ^0.20.2
-  markdown: ^7.3.0
-  synchronized: ^3.4.0
-  multicast_dns: ^0.3.3
+  cbor: ^6.5.1
+  shelf_router: ^1.1.5
+  intl: ^0.20.3
+  markdown: ^7.3.1
+  synchronized: ^3.5.0
+  multicast_dns: ^0.3.3+1
   ipfs_libp2p: ^0.5.11
-  cipherlib: ^0.7.1
+  cipherlib: ^0.7.2
 
-  jose: ^0.3.5
-  mime: ^2.0.0
+  jose: ^0.3.5+2
+  mime: ^2.1.0
   http_parser: ^4.1.2
 
   # Core package (hosted)
@@ -62,28 +62,28 @@ dependencies:
   dart_ipfs_quic: ^0.2.1
 
   # Common packages
-  args: ^2.6.0
-  yaml: ^3.1.3
-  meta: ^1.17.0
-  shelf: ^1.4.2
+  args: ^2.7.0
+  yaml: ^3.1.4
+  meta: ^1.19.0
+  shelf: ^1.4.3
   path: ^1.9.1
-  grpc: ^5.1.0
+  grpc: ^5.2.0
   cryptography: ^2.9.0
 
-  dart_lz4: ^1.2.0
+  dart_lz4: ^1.4.0
   port_forwarder: ^1.0.0
-  get_it: ^9.2.1
+  get_it: ^9.3.0
   base32: ^2.2.0
 
 dev_dependencies:
-  test: ^1.28.0 # For unit and integration tests
+  test: ^1.33.0 # For unit and integration tests
   lints: ^6.1.0 # For code style analysis
-  coverage: ^1.15.0
-  mockito: ^5.6.1
-  build_runner: ^2.10.4
+  coverage: ^1.16.0
+  mockito: ^5.8.1
+  build_runner: ^2.16.2
   very_good_analysis: ">=10.1.0 <12.0.0"
   flutter_lints: ^6.0.0
-  fake_async: ^1.3.1
+  fake_async: ^1.3.3
 
 # Assets used in the project, such as images or other static files.
 assets:
@@ -103,9 +103,9 @@ macos:
 # these transitive dependencies directly. The publish workflow runs with these
 # overrides in place and accepts the resulting hints.
 dependency_overrides:
-  # xml ^7.0.1: Required for security fixes and compatibility with latest dependencies
+  # xml ^7.1.0: Required for security fixes and compatibility with latest dependencies
   # Resolves potential XML parsing vulnerabilities and ensures proper encoding support
-  xml: ^7.0.1
+  xml: ^7.1.0
   # dart_udx ^2.0.3: Required for UDP transport stability and security patches
   # Fixes buffer overflow issues in UDP datagram handling and improves rate limiting
   dart_udx: ^2.0.3

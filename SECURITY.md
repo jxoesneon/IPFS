@@ -59,13 +59,18 @@ Dependencies are regularly audited. Security-critical overrides are documented i
 
 ```yaml
 dependency_overrides:
-  # xml ^7.0.1: Required for security fixes and compatibility with latest dependencies
+  # xml ^7.1.0: Required for security fixes and compatibility with latest dependencies
   # Resolves potential XML parsing vulnerabilities and ensures proper encoding support
-  xml: ^7.0.1
+  xml: ^7.1.0
   # dart_udx ^2.0.3: Required for UDP transport stability and security patches
   # Fixes buffer overflow issues in UDP datagram handling and improves rate limiting
   dart_udx: ^2.0.3
 ```
+
+The `dart_udx` pin is mirrored in the published `dart_ipfs_quic` satellite: its
+`ipfs_libp2p` dependency still allows the older `dart_udx` releases, so the
+satellite carries the same override instead of resolving the vulnerable
+versions.
 
 ### Cryptography Dependency Consolidation (2026-01)
 

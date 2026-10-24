@@ -3,7 +3,7 @@
 A complete, production-ready IPFS (InterPlanetary File System) implementation in Dart, supporting offline, gateway, and full P2P modes. Built for a seamless multi-platform experience.
 
 [![pub package](https://img.shields.io/pub/v/dart_ipfs.svg)](https://pub.dev/packages/dart_ipfs)
-[![Dart](https://img.shields.io/badge/dart-%3E%3D3.10.0-blue.svg)](https://dart.dev/)
+[![Dart](https://img.shields.io/badge/dart-%3E%3D3.13.0-blue.svg)](https://dart.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) and Web (Chrome, Firefox, Safari). The `IpfsPlatform` abstraction automatically handles storage (File System vs. IndexedDB) based on the target platform.
