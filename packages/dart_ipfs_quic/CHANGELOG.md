@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.0] - 2026-10-25
+
+### Changed
+- Depend on `ipfs_libp2p ^0.6.0`. Remove the `dart_udx` `dependency_overrides` entry; the patched dependency is provided transitively.
+
 ## [0.3.0] - 2026-10-24
 
 - Minimum Dart SDK raised to 3.11.0 (from 3.4.0) to match the toolchain the package's dev dependencies need.
