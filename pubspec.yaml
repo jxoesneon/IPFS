@@ -1,5 +1,5 @@
 name: dart_ipfs
-version: 2.0.0
+version: 2.0.1
 description: A comprehensive IPFS implementation in Dart, supporting CID, Bitswap, UnixFS, and DHT.
 homepage: https://github.com/jxoesneon/IPFS
 repository: https://github.com/jxoesneon/IPFS
@@ -48,7 +48,7 @@ dependencies:
   markdown: ^7.3.1
   synchronized: ^3.5.0
   multicast_dns: ^0.3.3+1
-  ipfs_libp2p: ^0.5.11
+  ipfs_libp2p: ^0.6.0
   cipherlib: ^0.7.2
 
   jose: ^0.3.5+2
@@ -59,7 +59,7 @@ dependencies:
   dart_ipfs_core: ^1.14.0
 
   # Optional native QUIC transport adapter (hosted)
-  dart_ipfs_quic: ^0.3.0
+  dart_ipfs_quic: ^0.4.0
 
   # Common packages
   args: ^2.7.0
@@ -113,9 +113,9 @@ macos:
 # lib/src/vendor/port_forwarder and no longer inherits upstream's `xml ^6.5.0`
 # constraint.
 dependency_overrides:
-  # dart_udx ^2.0.3: Required for UDP transport stability and security patches
-  # Fixes buffer overflow issues in UDP datagram handling and improves rate limiting
-  dart_udx: ^2.0.3
+  # Use local fork of ipfs_libp2p until published
+  ipfs_libp2p:
+    path: /data/data/com.termux/files/home/work/ipfs_libp2p
   # Monorepo path overrides for unreleased satellite packages
   dart_ipfs_core:
     path: packages/dart_ipfs_core

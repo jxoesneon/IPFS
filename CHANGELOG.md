@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.1] - 2026-10-25
+
+### Changed
+- **Dependency floor**: Depend on `ipfs_libp2p ^0.6.0` (fork release repairing tests, refreshing deps and adding CI) so `dart_udx ^2.0.3` is declared by the libp2p package and no longer relies on `dependency_overrides`. Bump `dart_ipfs_quic` to `^0.4.0`.
+- **Security**: Remove the umbrella `dart_udx` override; the patched UDP dependency is resolved transitively via `ipfs_libp2p 0.6.0`.
+
 ## [2.0.0] - 2026-10-24
 
 ### Changed

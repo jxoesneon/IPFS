@@ -1,6 +1,6 @@
 name: dart_ipfs_quic
 description: Native QUIC transport for dart_ipfs backed by the pure-Dart quic_lib package.
-version: 0.3.0
+version: 0.4.0
 homepage: https://github.com/jxoesneon/IPFS
 repository: https://github.com/jxoesneon/IPFS
 issue_tracker: https://github.com/jxoesneon/IPFS/issues
@@ -9,7 +9,7 @@ environment:
   sdk: '>=3.11.0 <4.0.0'
 
 dependencies:
-  ipfs_libp2p: ^0.5.11
+  ipfs_libp2p: ^0.6.0
   quic_lib: ^1.13.0
 
   dart_ipfs_core: ^1.14.0
@@ -24,11 +24,8 @@ dev_dependencies:
   lints: ^6.1.0
 
 dependency_overrides:
-  # dart_udx ^2.0.3: Mirrors the umbrella package's security pin (see
-  # SECURITY.md). ipfs_libp2p still allows the older dart_udx releases, so the
-  # published satellite must carry the same override to avoid resolving the
-  # vulnerable versions.
-  dart_udx: ^2.0.3
+  ipfs_libp2p:
+    path: /data/data/com.termux/files/home/work/ipfs_libp2p
   # Monorepo path override for the unreleased core package.
   dart_ipfs_core:
     path: ../dart_ipfs_core

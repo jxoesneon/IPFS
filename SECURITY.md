@@ -64,10 +64,10 @@ dependency_overrides:
   dart_udx: ^2.0.3
 ```
 
-The `dart_udx` pin is mirrored in the published `dart_ipfs_quic` satellite: its
-`ipfs_libp2p` dependency still allows the older `dart_udx` releases, so the
-satellite carries the same override instead of resolving the vulnerable
-versions.
+`dart_udx ^2.0.3` is now declared by `ipfs_libp2p 0.6.0`. The umbrella
+`dart_ipfs 2.0.1` and `dart_ipfs_quic 0.4.0` depend on `ipfs_libp2p ^0.6.0` so
+the patched version is resolved transitively without relying on
+`dependency_overrides`.
 
 `xml` used to be pinned the same way, which meant the pin only applied to
 local development and CI — pub.dev consumers kept resolving the older `xml`
